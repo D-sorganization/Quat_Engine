@@ -1,12 +1,12 @@
-# ForceFieldEngine
+# QuatEngine
 
-A modern C++ 3D game engine built from the ground up, evolving from a Python raycaster to a full mesh-based renderer with quaternion rotation and SLERP interpolation.
+A modern C++ 3D game engine built from the ground up, with quaternion-based rotation and SLERP interpolation at its core. A completely separate project from the Python raycaster games.
 
 ## Architecture
 
 ```
-ForceFieldEngine/
-├── CMakeLists.txt          # Build system
+QuatEngine/
+├── CMakeLists.txt          # Build system (CMake 4.2+)
 ├── src/
 │   ├── math/               # Vec3, Quaternion (SLERP), Mat4
 │   ├── core/               # Transform, Camera (Phase 2)
@@ -35,7 +35,7 @@ ForceFieldEngine/
 ### Command Line (Developer PowerShell)
 
 ```powershell
-# From the ForceFieldEngine directory:
+# From the QuatEngine directory:
 cmake -B build -G "Visual Studio 18 2026"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
@@ -43,7 +43,7 @@ ctest --test-dir build -C Release --output-on-failure
 
 ### Visual Studio IDE
 
-1. Open Visual Studio → "Open a local folder" → select `ForceFieldEngine/`
+1. Open Visual Studio → "Open a local folder" → select `QuatEngine/`
 2. Visual Studio auto-detects `CMakeLists.txt`
 3. Select `test_math.exe` as startup project
 4. Build and Run (F5)
@@ -56,14 +56,14 @@ ctest --test-dir build -C Release --output-on-failure
 | 2     | SDL2 window + OpenGL context + basic rendering | 🔲 Planned  |
 | 3     | FPS/TPS camera with quaternion rotation        | 🔲 Planned  |
 | 4     | Mesh loading (OBJ/glTF) + lighting             | 🔲 Planned  |
-| 5     | Force Field game mechanics in 3D               | 🔲 Planned  |
+| 5     | 3D game mechanics (FPS/TPS shooter)            | 🔲 Planned  |
 | 6     | Unreal Engine migration (optional)             | 🔲 Future   |
 
 ## Key Concepts
 
 ### Quaternions & SLERP
 
-This engine uses quaternions for all rotation instead of Euler angles:
+This engine uses quaternions (`qe::math::Quaternion`) for all rotation instead of Euler angles:
 
 - **No gimbal lock** — quaternions represent rotations without singularities
 - **SLERP** (Spherical Linear Interpolation) — smooth, constant-velocity rotation blending

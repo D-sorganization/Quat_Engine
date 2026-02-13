@@ -14,7 +14,7 @@
 #include <array>
 #include <cmath>
 
-namespace ffe {
+namespace qe {
 namespace math {
 
 struct Mat4 {
@@ -203,4 +203,4 @@ struct Mat4 {
 };
 
 } // namespace math
-} // namespace ffe
+} // namespace qe

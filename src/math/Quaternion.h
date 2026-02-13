@@ -24,7 +24,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace ffe {
+namespace qe {
 namespace math {
 
 struct Quaternion {
@@ -326,4 +326,4 @@ struct Quaternion {
 };
 
 } // namespace math
-} // namespace ffe
+} // namespace qe

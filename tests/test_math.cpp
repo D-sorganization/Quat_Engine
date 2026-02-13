@@ -70,8 +70,8 @@ static int g_tests_failed = 0;
                   << std::endl;                                              \
     } while (0)
 
-using namespace ffe::math;
-using namespace ffe::core;
+using namespace qe::math;
+using namespace qe::core;
 
 constexpr float PI = 3.14159265358979f;
 constexpr float EPS = 1e-4f;
@@ -487,7 +487,7 @@ void test_transform_matrix() {
 // ============================================================================
 
 int main() {
-    std::cout << "=== ForceFieldEngine Math Tests ===" << std::endl;
+    std::cout << "=== QuatEngine Math Tests ===" << std::endl;
 
     std::cout << "\n--- Vec3 ---" << std::endl;
     RUN_TEST(test_vec3_default_constructor);

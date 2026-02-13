@@ -11,7 +11,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace ffe {
+namespace qe {
 namespace math {
 
 struct Vec3 {
@@ -141,4 +141,4 @@ constexpr Vec3 operator*(float scalar, const Vec3& v) noexcept {
 }
 
 } // namespace math
-} // namespace ffe
+} // namespace qe

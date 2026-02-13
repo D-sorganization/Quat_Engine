@@ -16,7 +16,7 @@
 #include "../math/Quaternion.h"
 #include "../math/Vec3.h"
 
-namespace ffe {
+namespace qe {
 namespace core {
 
 class Transform {
@@ -145,4 +145,4 @@ private:
 };
 
 } // namespace core
-} // namespace ffe
+} // namespace qe
