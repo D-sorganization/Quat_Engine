@@ -6,24 +6,39 @@ A modern C++ 3D game engine built from the ground up, with quaternion-based rota
 
 ```
 QuatEngine/
-├── CMakeLists.txt          # Build system (CMake 4.2+)
+├── CMakeLists.txt          # Build system (CMake 4.2+, auto-downloads SDL2)
 ├── src/
 │   ├── math/               # Vec3, Quaternion (SLERP), Mat4
-│   ├── core/               # Transform, Camera (Phase 2)
-│   └── renderer/           # OpenGL mesh rendering (Phase 2)
-├── tests/                  # Comprehensive math + engine tests
-├── assets/                 # Models, textures (Phase 3)
-├── shaders/                # GLSL shaders (Phase 2)
+│   ├── core/               # Transform component
+│   └── renderer/           # OpenGL rendering (GLLoader, Shader, Mesh, Camera)
+├── shaders/                # GLSL 3.30 shaders (vertex + fragment)
+├── tests/                  # Math + engine tests
+├── assets/                 # Models, textures (Phase 4)
 └── docs/development/       # Design documents
 ```
 
-## Phase 1: Math Foundation (Current)
+## Current: Phase 2 — SDL2 + OpenGL + Quaternion Camera
 
-- ✅ `Vec3` — 3D vector with dot, cross, normalize, lerp
-- ✅ `Quaternion` — Hamilton product, SLERP/NLERP, axis-angle, Euler, rotation
-- ✅ `Mat4` — 4x4 transform matrix, perspective, look-at, TRS
-- ✅ `Transform` — Position + Quaternion rotation + Scale, with interpolation
-- ✅ 40+ unit tests covering all edge cases
+### What You See
+
+- 🎮 **Real-time 3D window** (1280×720, OpenGL 3.3 core)
+- 🔄 **Quaternion-based FPS camera** — no gimbal lock, SLERP-smoothed rotation
+- 🧊 **Blinn-Phong lit cube** spinning with quaternion rotation
+- 📊 **SLERP vs NLERP comparison** — two side-by-side cubes showing the difference
+- 🌫️ **Distance fog** fading to dark background
+- 📐 **Ground grid** for spatial reference
+- 📈 **FPS counter** in title bar
+
+### Controls
+
+| Key            | Action                    |
+| -------------- | ------------------------- |
+| WASD           | Move                      |
+| Mouse          | Look around (quaternion!) |
+| Space / LShift | Move up / down            |
+| 1 / 2          | SLERP smoothing OFF / ON  |
+| F              | Toggle wireframe          |
+| Escape         | Quit                      |
 
 ## Building
 
@@ -31,44 +46,52 @@ QuatEngine/
 
 - Visual Studio 2026 Community (with "Desktop development with C++" workload)
 - CMake 4.2+ (ships with Visual Studio)
+- Internet connection for first build (CMake downloads SDL2 automatically)
 
 ### Command Line (Developer PowerShell)
 
 ```powershell
-# From the QuatEngine directory:
+cd C:\Users\diete\Repositories\QuatEngine
 cmake -B build -G "Visual Studio 18 2026"
 cmake --build build --config Release
-ctest --test-dir build -C Release --output-on-failure
+.\build\Release\qe_demo.exe
 ```
 
 ### Visual Studio IDE
 
 1. Open Visual Studio → "Open a local folder" → select `QuatEngine/`
 2. Visual Studio auto-detects `CMakeLists.txt`
-3. Select `test_math.exe` as startup project
+3. Select `qe_demo.exe` as startup project
 4. Build and Run (F5)
 
 ## Roadmap
 
-| Phase | Focus                                          | Status      |
-| ----- | ---------------------------------------------- | ----------- |
-| 1     | Math library (Vec3, Quaternion, SLERP, Mat4)   | ✅ Complete |
-| 2     | SDL2 window + OpenGL context + basic rendering | 🔲 Planned  |
-| 3     | FPS/TPS camera with quaternion rotation        | 🔲 Planned  |
-| 4     | Mesh loading (OBJ/glTF) + lighting             | 🔲 Planned  |
-| 5     | 3D game mechanics (FPS/TPS shooter)            | 🔲 Planned  |
-| 6     | Unreal Engine migration (optional)             | 🔲 Future   |
+| Phase | Focus                                        | Status      |
+| ----- | -------------------------------------------- | ----------- |
+| 1     | Math library (Vec3, Quaternion, SLERP, Mat4) | ✅ Complete |
+| 2     | SDL2 + OpenGL + Quaternion Camera            | ✅ Complete |
+| 3     | FPS/TPS camera modes + input system          | 🔲 Planned  |
+| 4     | Mesh loading (OBJ/glTF) + textures           | 🔲 Planned  |
+| 5     | 3D game mechanics (FPS/TPS shooter)          | 🔲 Planned  |
+| 6     | Unreal Engine migration (optional)           | 🔲 Future   |
 
 ## Key Concepts
 
 ### Quaternions & SLERP
 
-This engine uses quaternions (`qe::math::Quaternion`) for all rotation instead of Euler angles:
+All rotation in QuatEngine uses quaternions (`qe::math::Quaternion`):
 
 - **No gimbal lock** — quaternions represent rotations without singularities
-- **SLERP** (Spherical Linear Interpolation) — smooth, constant-velocity rotation blending
-- **NLERP** — fast approximation for small angular differences
+- **SLERP** — smooth, constant-angular-velocity rotation blending
+- **NLERP** — fast approximation (visible comparison in demo)
 - **Shortest path** — automatically takes the shorter rotation arc
+- **Camera** — mouse input → axis-angle → quaternion composition (never Euler angles)
+
+### Namespace: `qe::`
+
+- `qe::math` — Vec3, Quaternion, Mat4
+- `qe::core` — Transform
+- `qe::renderer` — Camera, Shader, Mesh, GLLoader
 
 ## License
 
