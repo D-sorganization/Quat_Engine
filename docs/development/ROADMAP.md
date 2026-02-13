@@ -40,7 +40,7 @@ With important engineering refinements:
 
 - **SDL2** — Window management, input, OpenGL context
 - **GLAD** or **GLEW** — OpenGL function loading
-- Consider **vcpkg** for dependency management on Windows
+- Consider **vcpkg** for dependency management on Windows (ships with VS 2026)
 
 ### Key Decisions
 

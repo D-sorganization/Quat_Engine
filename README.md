@@ -29,14 +29,14 @@ ForceFieldEngine/
 
 ### Prerequisites
 
-- Visual Studio 2022 Community (with "Desktop development with C++" workload)
-- CMake 3.20+ (ships with Visual Studio)
+- Visual Studio 2026 Community (with "Desktop development with C++" workload)
+- CMake 4.2+ (ships with Visual Studio)
 
 ### Command Line (Developer PowerShell)
 
 ```powershell
 # From the ForceFieldEngine directory:
-cmake -B build -G "Visual Studio 17 2022"
+cmake -B build -G "Visual Studio 18 2026"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
