@@ -1,112 +1,65 @@
 /**
  * @file main.cpp
- * @brief QuatEngine Phase 5 Demo — FPS Shooting, Collision, Entities.
+ * @brief QuatEngine Demo — thin orchestration layer.
  *
- * Phase 5 adds:
- *   - Left-click shooting (projectile + hitscan)
- *   - AABB collision detection
- *   - Destructible entities with health, hit flash, and respawn
- *   - Crosshair overlay
- *   - Projectile rendering (bright cubes)
- *   - Score tracking
- *   - All previous features (textures, FPS/TPS camera, OBJ, etc.)
- *
- * Controls:
- *   Left Click     - Shoot
- *   WASD / Mouse   - Move & Look
- *   Shift          - Sprint
- *   Space / C      - Up / Down
- *   Tab            - FPS / TPS toggle
- *   Scroll         - Zoom (TPS)
- *   R              - Reset all entities
- *   1 / 2          - SLERP off / on
- *   F              - Wireframe
- *   Escape         - Quit
+ * This file ONLY wires modules together. All logic lives in:
+ *   - input/InputManager.h   (keyboard, mouse, gamepad)
+ *   - game/Scene.h           (scene data + factories)
+ *   - game/Combat.h          (shooting, collision, scoring)
+ *   - renderer/Camera.h      (FPS/TPS quaternion camera)
+ *   - renderer/*             (GL, meshes, textures, shaders)
  */
 
-#include "core/AABB.h"
-#include "core/Entity.h"
-#include "core/Projectile.h"
-#include "core/Transform.h"
+#include "game/Combat.h"
+#include "game/Scene.h"
+#include "input/InputManager.h"
 #include "math/Mat4.h"
 #include "math/Quaternion.h"
 #include "math/Vec3.h"
 #include "renderer/Camera.h"
 #include "renderer/GLLoader.h"
 #include "renderer/Mesh.h"
-#include "renderer/OBJLoader.h"
 #include "renderer/Shader.h"
 #include "renderer/Texture.h"
 
 #include <SDL.h>
 
-#include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-constexpr int   WINDOW_WIDTH  = 1280;
-constexpr int   WINDOW_HEIGHT = 720;
-constexpr float PI = 3.14159265358979f;
-
-// ── Scene Object (static decoration) ────────────────────────────────────────
-struct SceneObject {
-    qe::math::Vec3       position;
-    qe::math::Quaternion rotation;
-    qe::math::Vec3       scale;
-    enum class Anim { None, SpinY, SpinTilted };
-    Anim anim = Anim::None;
-    float anim_speed = 1.0f;
-    float anim_phase = 0.0f;
-    enum class MeshType { Cube, Sphere, Floor };
-    MeshType mesh_type = MeshType::Cube;
-    int texture_id = -1;
-
-    qe::math::Mat4 model_matrix(float time) const {
-        qe::math::Quaternion rot = rotation;
-        if (anim == Anim::SpinY)
-            rot = qe::math::Quaternion::from_axis_angle(
-                qe::math::Vec3::up(), time * anim_speed + anim_phase) * rot;
-        else if (anim == Anim::SpinTilted)
-            rot = qe::math::Quaternion::from_axis_angle(
-                qe::math::Vec3(0,1,0.3f).normalized(), time*anim_speed+anim_phase) * rot;
-        return qe::math::Mat4::trs(position, rot, scale);
-    }
-};
-
 // ── Application State ───────────────────────────────────────────────────────
-struct AppState {
-    SDL_Window*   window      = nullptr;
-    SDL_GLContext gl_context  = nullptr;
-    bool running   = true;
-    bool wireframe = false;
-    bool slerp_on  = true;
+struct App {
+    // SDL
+    SDL_Window*   window     = nullptr;
+    SDL_GLContext gl_context = nullptr;
+    bool running = true;
 
-    qe::renderer::Camera camera;
-    qe::renderer::Shader shader;
-    qe::renderer::Shader crosshair_shader;
+    // Subsystems
+    qe::input::InputManager input;
+    qe::renderer::Camera    camera;
+    qe::renderer::Shader    world_shader;
+    qe::renderer::Shader    hud_shader;
 
     // Meshes
-    qe::renderer::Mesh cube, sphere, floor_plane, grid;
-    qe::renderer::Mesh crosshair_mesh;
+    qe::renderer::Mesh cube, sphere, floor_plane, grid, crosshair;
 
     // Textures
-    qe::renderer::Texture tex_checker, tex_bricks, tex_floor, tex_white;
+    qe::renderer::Texture tex_checker, tex_bricks, tex_floor;
     std::vector<qe::renderer::Texture*> textures;
 
-    // Scene
-    std::vector<SceneObject> decorations;
-    std::vector<qe::core::Entity> entities;
-    std::vector<qe::core::Projectile> projectiles;
-
-    // Shooting
+    // Game state
+    std::vector<qe::game::Decoration>  decorations;
+    std::vector<qe::core::Entity>      entities;
+    std::vector<qe::core::Projectile>  projectiles;
+    qe::game::CombatStats  stats;
+    qe::game::CombatConfig combat_cfg;
     float shoot_cooldown = 0.0f;
-    float projectile_speed = 40.0f;
-    int score = 0;
-    int total_shots = 0;
-    int total_hits = 0;
+
+    // Visual state
+    bool wireframe = false;
+    bool slerp_on  = true;
 
     // Timing
     float  time = 0.0f;
@@ -116,88 +69,55 @@ struct AppState {
     float  current_fps = 0.0f;
 };
 
-// Forward declarations
-bool init_sdl(AppState& app);
-bool init_opengl(AppState& app);
-void create_textures(AppState& app);
-void create_crosshair(AppState& app);
-void build_scene(AppState& app);
-void spawn_entities(AppState& app);
-void shoot(AppState& app);
-void update_projectiles(AppState& app, float dt);
-void check_collisions(AppState& app);
-void process_events(AppState& app);
-void update(AppState& app, float dt);
-void render(AppState& app);
-void render_crosshair(AppState& app);
-void cleanup(AppState& app);
-void update_title(AppState& app);
+// ── Forward Declarations (one per responsibility) ───────────────────────────
+bool init_window(App& app);
+bool init_gl(App& app);
+void init_assets(App& app);
+void init_crosshair(App& app);
+void handle_events(App& app);
+void update(App& app, float dt);
+void render_world(App& app);
+void render_hud(App& app);
+void update_title(App& app);
+void cleanup(App& app);
 
 // ── Entry Point ─────────────────────────────────────────────────────────────
 int main(int /*argc*/, char* /*argv*/[]) {
-    AppState app;
+    App app;
 
-    if (!init_sdl(app))    return 1;
-    if (!init_opengl(app)) return 1;
+    if (!init_window(app)) return 1;
+    if (!init_gl(app))     return 1;
+    init_assets(app);
 
     // Camera
-    qe::renderer::Camera::Config cfg;
-    cfg.aspect = static_cast<float>(WINDOW_WIDTH) / WINDOW_HEIGHT;
-    cfg.smoothing = 0.85f;
-    cfg.move_speed = 5.0f;
-    cfg.sprint_mult = 2.5f;
-    app.camera = qe::renderer::Camera(cfg);
-    app.camera.set_position(qe::math::Vec3(0, 1.5f, 15));
+    qe::renderer::Camera::Config cc;
+    cc.aspect = 1280.0f / 720.0f;
+    cc.smoothing = 0.85f;
+    cc.move_speed = 5.0f;
+    cc.sprint_mult = 2.5f;
+    app.camera = qe::renderer::Camera(cc);
+    app.camera.set_position({0, 1.5f, 15});
 
-    // Shaders
-    if (!app.shader.load_from_files("shaders/basic.vert", "shaders/basic.frag")) {
-        std::cerr << "Failed to compile main shader" << std::endl;
-        cleanup(app); return 1;
-    }
+    // Input
+    app.input.init();
+    app.input.set_gamepad_look_speed(5.0f);
 
-    // Crosshair shader (embedded — no file needed)
-    const char* ch_vert = R"(
-        #version 330 core
-        layout(location = 0) in vec3 aPos;
-        layout(location = 2) in vec3 aColor;
-        out vec3 vColor;
-        void main() {
-            gl_Position = vec4(aPos, 1.0);
-            vColor = aColor;
-        }
-    )";
-    const char* ch_frag = R"(
-        #version 330 core
-        in vec3 vColor;
-        out vec4 FragColor;
-        void main() {
-            FragColor = vec4(vColor, 0.8);
-        }
-    )";
-    app.crosshair_shader.compile(ch_vert, ch_frag);
-
-    create_textures(app);
-    create_crosshair(app);
-
-    app.cube = qe::renderer::Mesh::create_cube();
-    app.sphere = qe::renderer::Mesh::create_sphere(3, 0.5f, 0.8f, 0.6f, 0.3f);
-    app.floor_plane = qe::renderer::Mesh::create_floor_plane(30, 10);
-    app.grid = qe::renderer::Mesh::create_grid(30, 1);
-
-    build_scene(app);
-    spawn_entities(app);
+    // Scene
+    app.decorations = qe::game::build_decorations();
+    app.entities = qe::game::spawn_targets();
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     app.last_time = SDL_GetPerformanceCounter();
 
-    std::cout << "\nQuatEngine Phase 5 — FPS Shooter Demo" << std::endl;
-    std::cout << "  Left Click      - SHOOT!" << std::endl;
-    std::cout << "  WASD / Mouse    - Move & Look" << std::endl;
-    std::cout << "  Shift           - Sprint" << std::endl;
-    std::cout << "  Tab             - FPS / TPS" << std::endl;
-    std::cout << "  R               - Reset entities" << std::endl;
-    std::cout << "  F               - Wireframe" << std::endl;
-    std::cout << "  Escape          - Quit" << std::endl;
+    std::cout << "\nQuatEngine Phase 5 — FPS Shooter + Gamepad\n"
+              << "  WASD / Left Stick   - Move\n"
+              << "  Mouse / Right Stick - Aim\n"
+              << "  Click / RT          - Shoot\n"
+              << "  Shift / L3          - Sprint\n"
+              << "  Tab / Y             - Camera mode\n"
+              << "  R / Back            - Reset targets\n"
+              << "  F / X               - Wireframe\n"
+              << "  Esc / Start+Back    - Quit\n";
 
     while (app.running) {
         Uint64 now = SDL_GetPerformanceCounter();
@@ -206,9 +126,10 @@ int main(int /*argc*/, char* /*argv*/[]) {
         app.last_time = now;
         if (dt > 0.1f) dt = 0.1f;
 
-        process_events(app);
+        handle_events(app);
         update(app, dt);
-        render(app);
+        render_world(app);
+        render_hud(app);
         SDL_GL_SwapWindow(app.window);
 
         app.frame_count++;
@@ -225,10 +146,10 @@ int main(int /*argc*/, char* /*argv*/[]) {
     return 0;
 }
 
-// ── SDL / OpenGL ────────────────────────────────────────────────────────────
-bool init_sdl(AppState& app) {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-        std::cerr << "SDL_Init: " << SDL_GetError() << std::endl;
+// ── Init: Window ────────────────────────────────────────────────────────────
+bool init_window(App& app) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
+        std::cerr << "SDL: " << SDL_GetError() << std::endl;
         return false;
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -239,9 +160,8 @@ bool init_sdl(AppState& app) {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
-    app.window = SDL_CreateWindow("QuatEngine — Phase 5",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        WINDOW_WIDTH, WINDOW_HEIGHT,
+    app.window = SDL_CreateWindow("QuatEngine",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (!app.window) return false;
 
@@ -252,11 +172,10 @@ bool init_sdl(AppState& app) {
     return true;
 }
 
-bool init_opengl(AppState& /*app*/) {
-    if (!qe::renderer::gl::load()) {
-        std::cerr << "Failed to load GL" << std::endl;
-        return false;
-    }
+// ── Init: OpenGL ────────────────────────────────────────────────────────────
+bool init_gl(App& app) {
+    if (!qe::renderer::gl::load()) return false;
+
     const char* gpu = reinterpret_cast<const char*>(
         qe::renderer::gl::glGetString(GL_RENDERER));
     std::cout << "GPU: " << (gpu ? gpu : "?") << std::endl;
@@ -268,465 +187,240 @@ bool init_opengl(AppState& /*app*/) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.03f, 0.03f, 0.08f, 1.0f);
-    return true;
+
+    // Compile shaders
+    if (!app.world_shader.load_from_files("shaders/basic.vert", "shaders/basic.frag"))
+        return false;
+
+    const char* hud_v = R"(#version 330 core
+        layout(location=0) in vec3 aPos;
+        layout(location=2) in vec3 aColor;
+        out vec3 vColor;
+        void main() { gl_Position=vec4(aPos,1); vColor=aColor; })";
+    const char* hud_f = R"(#version 330 core
+        in vec3 vColor; out vec4 FragColor;
+        void main() { FragColor=vec4(vColor,0.8); })";
+    return app.hud_shader.compile(hud_v, hud_f);
 }
 
-void create_textures(AppState& app) {
-    app.tex_checker = qe::renderer::Texture::create_checkerboard(256, 8, 220,220,230, 50,50,60);
+// ── Init: Assets ────────────────────────────────────────────────────────────
+void init_assets(App& app) {
+    app.cube        = qe::renderer::Mesh::create_cube();
+    app.sphere      = qe::renderer::Mesh::create_sphere(3, 0.5f, 0.8f, 0.6f, 0.3f);
+    app.floor_plane = qe::renderer::Mesh::create_floor_plane(30, 10);
+    app.grid        = qe::renderer::Mesh::create_grid(30, 1);
+
+    app.tex_checker = qe::renderer::Texture::create_checkerboard(256,8, 220,220,230, 50,50,60);
     app.tex_bricks  = qe::renderer::Texture::create_bricks(256);
     app.tex_floor   = qe::renderer::Texture::create_floor(256);
-    app.tex_white   = qe::renderer::Texture::create_solid(255,255,255);
-    app.textures = {&app.tex_checker, &app.tex_bricks, &app.tex_floor, &app.tex_white};
+    app.textures = {&app.tex_checker, &app.tex_bricks, &app.tex_floor};
+
+    init_crosshair(app);
 }
 
-// ── Crosshair (NDC-space mesh) ──────────────────────────────────────────────
-void create_crosshair(AppState& app) {
+void init_crosshair(App& app) {
     using qe::renderer::Vertex;
-    float s = 0.02f;   // Size in NDC
-    float g = 0.005f;  // Gap in center
-    float r = 0.8f, gc = 1.0f, b = 0.8f;  // Light green
-
-    // 4 short lines forming a + with a gap in the middle
-    std::vector<Vertex> verts = {
-        // Horizontal left
-        {{-s, 0, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        {{-g, 0, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        // Horizontal right
-        {{ g, 0, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        {{ s, 0, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        // Vertical top
-        {{0,  g, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        {{0,  s, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        // Vertical bottom
-        {{0, -s, 0}, {0,0,1}, {r,gc,b}, {0,0}},
-        {{0, -g, 0}, {0,0,1}, {r,gc,b}, {0,0}},
+    float s = 0.02f, g = 0.005f;
+    float c = 0.9f;
+    std::vector<Vertex> v = {
+        {{-s,0,0},{0,0,1},{c,1,c},{0,0}}, {{-g,0,0},{0,0,1},{c,1,c},{0,0}},
+        {{ g,0,0},{0,0,1},{c,1,c},{0,0}}, {{ s,0,0},{0,0,1},{c,1,c},{0,0}},
+        {{0, g,0},{0,0,1},{c,1,c},{0,0}}, {{0, s,0},{0,0,1},{c,1,c},{0,0}},
+        {{0,-s,0},{0,0,1},{c,1,c},{0,0}}, {{0,-g,0},{0,0,1},{c,1,c},{0,0}},
     };
-    std::vector<unsigned int> indices = {0,1, 2,3, 4,5, 6,7};
-
-    app.crosshair_mesh.index_count = 8;
-    using namespace qe::renderer::gl;
-    glGenVertexArrays(1, &app.crosshair_mesh.vao);
-    glGenBuffers(1, &app.crosshair_mesh.vbo);
-    glGenBuffers(1, &app.crosshair_mesh.ebo);
-    glBindVertexArray(app.crosshair_mesh.vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, app.crosshair_mesh.vbo);
-    glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(verts.size()*sizeof(Vertex)),
-                 verts.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app.crosshair_mesh.ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(indices.size()*sizeof(unsigned)),
-                 indices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(Vertex),
-                          reinterpret_cast<void*>(offsetof(Vertex,position)));
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,sizeof(Vertex),
-                          reinterpret_cast<void*>(offsetof(Vertex,color)));
-    glEnableVertexAttribArray(2);
-    glBindVertexArray(0);
-}
-
-// ── Scene & Entity Setup ────────────────────────────────────────────────────
-void build_scene(AppState& app) {
-    using namespace qe::math;
-
-    // Floor
-    app.decorations.push_back({
-        Vec3(0,-0.01f,0), Quaternion::identity(), Vec3::one(),
-        SceneObject::Anim::None, 0, 0, SceneObject::MeshType::Floor, 2
-    });
-
-    // Brick pillars
-    for (int i = 0; i < 8; ++i) {
-        float a = (2*PI*i)/8;
-        float h = 2.0f + (i%3)*1.5f;
-        app.decorations.push_back({
-            Vec3(std::cos(a)*14, h*0.5f, std::sin(a)*14),
-            Quaternion::from_axis_angle(Vec3::up(), a),
-            Vec3(0.8f, h, 0.8f),
-            SceneObject::Anim::None, 0, 0, SceneObject::MeshType::Cube, 1
-        });
-    }
-
-    // Floating platforms
-    for (int i = 0; i < 5; ++i) {
-        float a = (2*PI*i)/5 + 0.3f;
-        float r = 8.0f + i*0.5f;
-        app.decorations.push_back({
-            Vec3(std::cos(a)*r, 0.1f+i*0.8f, std::sin(a)*r),
-            Quaternion::from_axis_angle(Vec3::up(), a),
-            Vec3(2, 0.15f, 2),
-            SceneObject::Anim::None, 0, 0, SceneObject::MeshType::Cube, 2
-        });
-    }
-}
-
-void spawn_entities(AppState& app) {
-    using namespace qe::math;
-    app.entities.clear();
-
-    // Ring of target entities
-    constexpr int TARGET_COUNT = 12;
-    for (int i = 0; i < TARGET_COUNT; ++i) {
-        float a = (2*PI*i) / TARGET_COUNT;
-        float r = 10.0f;
-        float y = 1.0f + (i % 3) * 1.2f;
-
-        qe::core::Entity ent;
-        ent.id = i;
-        ent.position = Vec3(std::cos(a)*r, y, std::sin(a)*r);
-        ent.spawn_position = ent.position;
-        ent.scale = Vec3(0.8f, 0.8f, 0.8f);
-        ent.health = 50.0f;
-        ent.max_health = 50.0f;
-        ent.local_bounds = qe::core::AABB::from_center(Vec3::zero(), 0.5f);
-        ent.respawn_delay = 4.0f;
-        app.entities.push_back(ent);
-    }
-
-    // Bigger targets further out
-    for (int i = 0; i < 6; ++i) {
-        float a = (2*PI*i)/6 + PI/6;
-        qe::core::Entity ent;
-        ent.id = TARGET_COUNT + i;
-        ent.position = Vec3(std::cos(a)*18, 2.0f, std::sin(a)*18);
-        ent.spawn_position = ent.position;
-        ent.scale = Vec3(1.5f, 1.5f, 1.5f);
-        ent.health = 100.0f;
-        ent.max_health = 100.0f;
-        ent.local_bounds = qe::core::AABB::from_center(Vec3::zero(), 0.5f);
-        ent.respawn_delay = 5.0f;
-        app.entities.push_back(ent);
-    }
-
-    std::cout << "Entities: " << app.entities.size() << " targets spawned" << std::endl;
-}
-
-// ── Shooting ────────────────────────────────────────────────────────────────
-void shoot(AppState& app) {
-    if (app.shoot_cooldown > 0.0f) return;
-    app.shoot_cooldown = 0.15f;  // Fire rate
-    app.total_shots++;
-
-    qe::math::Vec3 origin = app.camera.position();
-    qe::math::Vec3 dir = app.camera.forward();
-
-    // Spawn projectile
-    qe::core::Projectile proj;
-    proj.position = origin + dir * 0.5f;  // Slightly ahead of camera
-    proj.velocity = dir * app.projectile_speed;
-    proj.lifetime = 3.0f;
-    proj.radius = 0.08f;
-    proj.damage = 25.0f;
-    app.projectiles.push_back(proj);
-
-    // Also do instant hitscan for immediate feedback
-    float closest_t = 999.0f;
-    int closest_id = -1;
-
-    for (size_t i = 0; i < app.entities.size(); ++i) {
-        auto& ent = app.entities[i];
-        if (!ent.alive) continue;
-
-        qe::core::AABB wb = ent.world_bounds();
-        float t = 0;
-        if (wb.ray_intersect(origin, dir, t)) {
-            if (t < closest_t) {
-                closest_t = t;
-                closest_id = static_cast<int>(i);
-            }
-        }
-    }
-
-    if (closest_id >= 0) {
-        auto& ent = app.entities[closest_id];
-        bool killed = ent.take_damage(proj.damage);
-        app.total_hits++;
-        if (killed) {
-            app.score += 100;
-            std::cout << "KILL! Score: " << app.score << std::endl;
-        }
-    }
-}
-
-// ── Projectile Update & Collision ───────────────────────────────────────────
-void update_projectiles(AppState& app, float dt) {
-    for (auto& p : app.projectiles) {
-        p.update(dt);
-    }
-    // Remove dead projectiles (keep vector compact)
-    app.projectiles.erase(
-        std::remove_if(app.projectiles.begin(), app.projectiles.end(),
-                        [](const qe::core::Projectile& p) { return !p.is_alive(); }),
-        app.projectiles.end());
-}
-
-void check_collisions(AppState& app) {
-    for (auto& proj : app.projectiles) {
-        if (!proj.active) continue;
-        qe::core::AABB pb = proj.bounds();
-
-        for (auto& ent : app.entities) {
-            if (!ent.alive) continue;
-            qe::core::AABB eb = ent.world_bounds();
-
-            if (pb.intersects(eb)) {
-                bool killed = ent.take_damage(proj.damage);
-                proj.active = false;
-                app.total_hits++;
-                if (killed) {
-                    app.score += 100;
-                }
-                break;
-            }
-        }
-    }
+    std::vector<unsigned> idx = {0,1, 2,3, 4,5, 6,7};
+    app.crosshair.upload(v, idx);
+    app.crosshair.index_count = 8;
 }
 
 // ── Events ──────────────────────────────────────────────────────────────────
-void process_events(AppState& app) {
+void handle_events(App& app) {
+    app.input.begin_frame();
+
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
-        switch (ev.type) {
-            case SDL_QUIT: app.running = false; break;
-            case SDL_KEYDOWN:
-                switch (ev.key.keysym.sym) {
-                    case SDLK_ESCAPE: app.running = false; break;
-                    case SDLK_TAB:
-                        app.camera.toggle_mode();
-                        std::cout << "Camera: "
-                            << (app.camera.mode()==qe::renderer::CameraMode::FirstPerson
-                                ? "FPS" : "TPS") << std::endl;
-                        break;
-                    case SDLK_f:
-                        app.wireframe = !app.wireframe;
-                        qe::renderer::gl::glPolygonMode(
-                            GL_FRONT_AND_BACK, app.wireframe ? GL_LINE : GL_FILL);
-                        break;
-                    case SDLK_r:
-                        spawn_entities(app);
-                        app.score = 0;
-                        app.total_shots = 0;
-                        app.total_hits = 0;
-                        std::cout << "Entities reset!" << std::endl;
-                        break;
-                    case SDLK_1:
-                        app.camera.config.smoothing = 0;
-                        app.slerp_on = false;
-                        break;
-                    case SDLK_2:
-                        app.camera.config.smoothing = 0.85f;
-                        app.slerp_on = true;
-                        break;
-                    default: break;
-                }
-                break;
-            case SDL_MOUSEMOTION:
-                app.camera.process_mouse(
-                    static_cast<float>(ev.motion.xrel),
-                    static_cast<float>(ev.motion.yrel));
-                break;
-            case SDL_MOUSEWHEEL:
-                app.camera.process_scroll(static_cast<float>(ev.wheel.y));
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                if (ev.button.button == SDL_BUTTON_LEFT) {
-                    shoot(app);
-                }
-                break;
-            case SDL_WINDOWEVENT:
-                if (ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                    qe::renderer::gl::glViewport(0, 0, ev.window.data1, ev.window.data2);
-                    app.camera.config.aspect =
-                        static_cast<float>(ev.window.data1) /
-                        static_cast<float>(ev.window.data2);
-                }
-                break;
-            default: break;
+        if (ev.type == SDL_QUIT) { app.running = false; return; }
+        if (ev.type == SDL_WINDOWEVENT &&
+            ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+            qe::renderer::gl::glViewport(0, 0, ev.window.data1, ev.window.data2);
+            app.camera.config.aspect =
+                static_cast<float>(ev.window.data1) / ev.window.data2;
         }
+        app.input.handle_event(ev);
     }
+    app.input.poll();
 
-    // Continuous fire if holding left mouse
-    if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-        shoot(app);
+    // Action mapping (thin — just maps input→state)
+    if (app.input.quit())            app.running = false;
+    if (app.input.toggle_camera())   app.camera.toggle_mode();
+    if (app.input.toggle_wireframe()) {
+        app.wireframe = !app.wireframe;
+        qe::renderer::gl::glPolygonMode(
+            GL_FRONT_AND_BACK, app.wireframe ? GL_LINE : GL_FILL);
     }
+    if (app.input.reset()) {
+        app.entities = qe::game::spawn_targets();
+        app.stats.reset();
+    }
+    if (app.input.slerp_off()) { app.camera.config.smoothing = 0; app.slerp_on = false; }
+    if (app.input.slerp_on())  { app.camera.config.smoothing = 0.85f; app.slerp_on = true; }
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
-void update(AppState& app, float dt) {
-    const Uint8* keys = SDL_GetKeyboardState(nullptr);
-    float fw=0, rt=0, up=0;
-    bool sprint = false;
-    if (keys[SDL_SCANCODE_W]) fw += 1;
-    if (keys[SDL_SCANCODE_S]) fw -= 1;
-    if (keys[SDL_SCANCODE_D]) rt += 1;
-    if (keys[SDL_SCANCODE_A]) rt -= 1;
-    if (keys[SDL_SCANCODE_SPACE]) up += 1;
-    if (keys[SDL_SCANCODE_C])     up -= 1;
-    if (keys[SDL_SCANCODE_LSHIFT]) sprint = true;
-
-    app.camera.process_movement(fw, rt, up, sprint, dt);
+void update(App& app, float dt) {
+    // Camera input (unified: keyboard + gamepad)
+    app.camera.process_mouse(app.input.look_x(), app.input.look_y());
+    app.camera.process_scroll(app.input.zoom());
+    app.camera.process_movement(
+        app.input.move_forward(), app.input.move_right(),
+        app.input.move_up(), app.input.sprint(), dt);
     app.camera.update(dt);
 
+    // Shooting
     app.shoot_cooldown -= dt;
     if (app.shoot_cooldown < 0) app.shoot_cooldown = 0;
-
-    update_projectiles(app, dt);
-    check_collisions(app);
-
-    for (auto& ent : app.entities) {
-        ent.update(dt);
+    if (app.input.shoot_held() && app.shoot_cooldown <= 0) {
+        app.shoot_cooldown = app.combat_cfg.fire_rate;
+        qe::game::shoot(app.camera.position(), app.camera.forward(),
+                         app.combat_cfg, app.projectiles,
+                         app.entities, app.stats);
     }
+
+    // Projectiles & collisions
+    qe::game::update_projectiles(app.projectiles, dt);
+    qe::game::check_projectile_collisions(
+        app.projectiles, app.entities, app.stats, app.combat_cfg.kill_score);
+
+    // Entity updates
+    for (auto& ent : app.entities) ent.update(dt);
 
     app.time += dt;
 }
 
-// ── Render ──────────────────────────────────────────────────────────────────
-void render(AppState& app) {
+// ── Render: World ───────────────────────────────────────────────────────────
+void render_world(App& app) {
     using namespace qe::renderer::gl;
     using namespace qe::math;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    app.shader.use();
+    app.world_shader.use();
 
     Mat4 vp = app.camera.vp_matrix();
-    app.shader.set_mat4("uViewProjection", vp);
-    app.shader.set_vec3("uLightDir", Vec3(0.3f, 0.8f, 0.5f).normalized());
-    app.shader.set_vec3("uLightColor", Vec3(1.0f, 0.95f, 0.9f));
-    app.shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
-    app.shader.set_vec3("uCameraPos", app.camera.position());
-    app.shader.set_int("uTexture0", 0);
+    app.world_shader.set_mat4("uViewProjection", vp);
+    app.world_shader.set_vec3("uLightDir", Vec3(0.3f, 0.8f, 0.5f).normalized());
+    app.world_shader.set_vec3("uLightColor", Vec3(1, 0.95f, 0.9f));
+    app.world_shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
+    app.world_shader.set_vec3("uCameraPos", app.camera.position());
+    app.world_shader.set_int("uTexture0", 0);
 
-    // --- Decorations ---
-    for (const auto& obj : app.decorations) {
-        app.shader.set_mat4("uModel", obj.model_matrix(app.time));
-        if (obj.texture_id >= 0 && obj.texture_id < static_cast<int>(app.textures.size())) {
-            app.textures[obj.texture_id]->bind(0);
-            app.shader.set_int("uUseTexture", 1);
+    // Decorations
+    for (const auto& d : app.decorations) {
+        app.world_shader.set_mat4("uModel", d.model_matrix(app.time));
+        bool textured = d.texture_id >= 0 &&
+            d.texture_id < static_cast<int>(app.textures.size());
+        app.world_shader.set_int("uUseTexture", textured ? 1 : 0);
+        if (textured) app.textures[d.texture_id]->bind(0);
+
+        if (d.mesh_type == qe::game::Decoration::MeshType::Floor) {
+            glDisable(GL_CULL_FACE);
+            app.floor_plane.draw();
+            glEnable(GL_CULL_FACE);
+        } else if (d.mesh_type == qe::game::Decoration::MeshType::Sphere) {
+            app.sphere.draw();
         } else {
-            app.shader.set_int("uUseTexture", 0);
-        }
-        switch (obj.mesh_type) {
-            case SceneObject::MeshType::Floor:
-                glDisable(GL_CULL_FACE); app.floor_plane.draw(); glEnable(GL_CULL_FACE); break;
-            case SceneObject::MeshType::Sphere: app.sphere.draw(); break;
-            default: app.cube.draw(); break;
+            app.cube.draw();
         }
     }
 
-    // --- Entities (targets) ---
-    app.shader.set_int("uUseTexture", 0);
+    // Entities
+    app.world_shader.set_int("uUseTexture", 0);
     for (const auto& ent : app.entities) {
         if (!ent.alive) {
-            // Death animation: shrink and spin
             if (ent.death_timer < 1.0f) {
                 float t = ent.death_timer;
-                float shrink = 1.0f - t;
-                Quaternion spin = Quaternion::from_axis_angle(Vec3::up(), t * 10.0f);
-                Mat4 model = Mat4::trs(ent.position + Vec3(0, t*2, 0),
-                                        spin, ent.scale * shrink);
-                app.shader.set_mat4("uModel", model);
-                app.shader.set_vec3("uAmbient", Vec3(0.5f, 0.1f, 0.1f));  // Red glow
+                app.world_shader.set_mat4("uModel",
+                    Mat4::trs(ent.position + Vec3(0, t*2, 0),
+                              Quaternion::from_axis_angle(Vec3::up(), t*10),
+                              ent.scale * (1-t)));
+                app.world_shader.set_vec3("uAmbient", Vec3(0.5f, 0.1f, 0.1f));
                 app.sphere.draw();
-                app.shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
+                app.world_shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
             }
             continue;
         }
 
-        Mat4 model = Mat4::trs(ent.position, ent.rotation, ent.scale);
-        app.shader.set_mat4("uModel", model);
-
-        // Hit flash: override ambient to white briefly
-        if (ent.hit_flash > 0.0f) {
-            float flash = ent.hit_flash / 0.3f;
-            app.shader.set_vec3("uAmbient", Vec3(flash, flash, flash));
+        app.world_shader.set_mat4("uModel", Mat4::trs(ent.position, ent.rotation, ent.scale));
+        if (ent.hit_flash > 0) {
+            float f = ent.hit_flash / 0.3f;
+            app.world_shader.set_vec3("uAmbient", Vec3(f, f, f));
         }
-
-        // Color based on health
-        float hp = ent.health_fraction();
-        Vec3 color(1 - hp, hp, 0.2f);  // Red → Green gradient
-        app.shader.set_vec3("uLightColor", Vec3(1, 0.95f, 0.9f));
-
         app.cube.draw();
-
-        // Reset ambient
-        if (ent.hit_flash > 0.0f) {
-            app.shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
-        }
+        if (ent.hit_flash > 0)
+            app.world_shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
     }
 
-    // --- Projectiles ---
-    app.shader.set_int("uUseTexture", 0);
+    // Projectiles
     for (const auto& p : app.projectiles) {
-        float glow = p.brightness;
-        app.shader.set_vec3("uAmbient", Vec3(glow, glow * 0.8f, glow * 0.3f));
-        Mat4 model = Mat4::trs(p.position, Quaternion::identity(),
-                                Vec3(0.1f, 0.1f, 0.1f));
-        app.shader.set_mat4("uModel", model);
+        app.world_shader.set_vec3("uAmbient", Vec3(p.brightness, p.brightness*0.8f, p.brightness*0.3f));
+        app.world_shader.set_mat4("uModel",
+            Mat4::trs(p.position, Quaternion::identity(), Vec3(0.1f, 0.1f, 0.1f)));
         app.cube.draw();
     }
-    app.shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
+    app.world_shader.set_vec3("uAmbient", Vec3(0.12f, 0.12f, 0.18f));
 
-    // --- Grid ---
+    // Grid
     glDisable(GL_CULL_FACE);
-    app.shader.set_int("uUseTexture", 0);
-    app.shader.set_mat4("uModel", Mat4::identity());
+    app.world_shader.set_int("uUseTexture", 0);
+    app.world_shader.set_mat4("uModel", Mat4::identity());
     glBindVertexArray(app.grid.vao);
     glDrawElements(GL_LINES, app.grid.index_count, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
     glEnable(GL_CULL_FACE);
-
-    // --- Crosshair (2D overlay) ---
-    render_crosshair(app);
 }
 
-void render_crosshair(AppState& app) {
+// ── Render: HUD ─────────────────────────────────────────────────────────────
+void render_hud(App& app) {
     using namespace qe::renderer::gl;
-
     glDisable(GL_DEPTH_TEST);
-    app.crosshair_shader.use();
+    app.hud_shader.use();
     glLineWidth(2.0f);
-    glBindVertexArray(app.crosshair_mesh.vao);
-    glDrawElements(GL_LINES, app.crosshair_mesh.index_count, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(app.crosshair.vao);
+    glDrawElements(GL_LINES, 8, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
     glLineWidth(1.0f);
     glEnable(GL_DEPTH_TEST);
 }
 
 // ── Title ───────────────────────────────────────────────────────────────────
-void update_title(AppState& app) {
+void update_title(App& app) {
     const char* mode =
-        (app.camera.mode()==qe::renderer::CameraMode::FirstPerson) ? "FPS" : "TPS";
-    float accuracy = app.total_shots > 0
-        ? (static_cast<float>(app.total_hits) / app.total_shots * 100.0f) : 0;
-
-    int alive_count = 0;
-    for (const auto& e : app.entities) if (e.alive) alive_count++;
+        (app.camera.mode() == qe::renderer::CameraMode::FirstPerson) ? "FPS" : "TPS";
+    int alive = 0;
+    for (const auto& e : app.entities) if (e.alive) alive++;
 
     std::ostringstream t;
     t << "QuatEngine | " << static_cast<int>(app.current_fps) << " FPS"
       << " | " << mode
-      << " | Score:" << app.score
-      << " | Acc:" << static_cast<int>(accuracy) << "%"
-      << " | Targets:" << alive_count << "/" << app.entities.size();
+      << " | Score:" << app.stats.score
+      << " | Acc:" << static_cast<int>(app.stats.accuracy()) << "%"
+      << " | Targets:" << alive << "/" << app.entities.size();
+    if (app.input.gamepad_connected())
+        t << " | Gamepad: " << app.input.gamepad().name();
     SDL_SetWindowTitle(app.window, t.str().c_str());
 }
 
 // ── Cleanup ─────────────────────────────────────────────────────────────────
-void cleanup(AppState& app) {
+void cleanup(App& app) {
     app.cube.destroy();
     app.sphere.destroy();
     app.floor_plane.destroy();
     app.grid.destroy();
-    app.crosshair_mesh.destroy();
-    app.shader.destroy();
-    app.crosshair_shader.destroy();
+    app.crosshair.destroy();
+    app.world_shader.destroy();
+    app.hud_shader.destroy();
     app.tex_checker.destroy();
     app.tex_bricks.destroy();
     app.tex_floor.destroy();
-    app.tex_white.destroy();
     if (app.gl_context) SDL_GL_DeleteContext(app.gl_context);
     if (app.window) SDL_DestroyWindow(app.window);
     SDL_Quit();

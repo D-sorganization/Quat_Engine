@@ -55,9 +55,19 @@ target_link_libraries(qe_renderer INTERFACE
     OpenGL::GL
 )
 
+# ── Game Library ─────────────────────────────────────────────────────────────
+add_library(qe_game INTERFACE)
+target_include_directories(qe_game INTERFACE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(qe_game INTERFACE qe_core)
+
+# ── Input Library ────────────────────────────────────────────────────────────
+add_library(qe_input INTERFACE)
+target_include_directories(qe_input INTERFACE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(qe_input INTERFACE SDL2::SDL2-static)
+
 # ── Demo Application ────────────────────────────────────────────────────────
 add_executable(qe_demo src/main.cpp)
-target_link_libraries(qe_demo PRIVATE qe_renderer)
+target_link_libraries(qe_demo PRIVATE qe_renderer qe_game qe_input)
 
 # Copy shaders to build directory
 add_custom_command(TARGET qe_demo POST_BUILD
@@ -72,6 +82,10 @@ enable_testing()
 add_executable(test_math tests/test_math.cpp)
 target_link_libraries(test_math PRIVATE qe_core)
 add_test(NAME MathTests COMMAND test_math)
+
+add_executable(test_game tests/test_game.cpp)
+target_link_libraries(test_game PRIVATE qe_game)
+add_test(NAME GameTests COMMAND test_game)
 
 # ── Status ───────────────────────────────────────────────────────────────────
 message(STATUS "")
