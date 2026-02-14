@@ -77,6 +77,18 @@ constexpr GLenum GL_DYNAMIC_DRAW = 0x88E8;
 
 // Texture
 constexpr GLenum GL_TEXTURE_2D = 0x0DE1;
+constexpr GLenum GL_TEXTURE0   = 0x84C0;
+constexpr GLenum GL_TEXTURE_WRAP_S     = 0x2802;
+constexpr GLenum GL_TEXTURE_WRAP_T     = 0x2803;
+constexpr GLenum GL_TEXTURE_MIN_FILTER = 0x2801;
+constexpr GLenum GL_TEXTURE_MAG_FILTER = 0x2800;
+constexpr GLenum GL_REPEAT             = 0x2901;
+constexpr GLenum GL_CLAMP_TO_EDGE      = 0x812F;
+constexpr GLenum GL_LINEAR             = 0x2601;
+constexpr GLenum GL_NEAREST            = 0x2600;
+constexpr GLenum GL_LINEAR_MIPMAP_LINEAR = 0x2703;
+constexpr GLenum GL_RGB  = 0x1907;
+constexpr GLenum GL_RGBA = 0x1908;
 
 // Polygon mode
 constexpr GLenum GL_FILL = 0x1B02;
@@ -150,6 +162,16 @@ using PFNGLDELETEBUFFERSPROC          = void(QE_APIENTRY*)(GLsizei, const GLuint
 using PFNGLENABLEVERTEXATTRIBARRAYPROC = void(QE_APIENTRY*)(GLuint);
 using PFNGLVERTEXATTRIBPOINTERPROC    = void(QE_APIENTRY*)(GLuint, GLint, GLenum, GLboolean, GLsizei, const void*);
 
+// Texture functions
+using PFNGLGENTEXTURESPROC     = void(QE_APIENTRY*)(GLsizei, GLuint*);
+using PFNGLBINDTEXTUREPROC     = void(QE_APIENTRY*)(GLenum, GLuint);
+using PFNGLTEXIMAGE2DPROC      = void(QE_APIENTRY*)(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*);
+using PFNGLTEXPARAMETERIPROC   = void(QE_APIENTRY*)(GLenum, GLenum, GLint);
+using PFNGLACTIVETEXTUREPROC   = void(QE_APIENTRY*)(GLenum);
+using PFNGLGENERATEMIPMAPPROC  = void(QE_APIENTRY*)(GLenum);
+using PFNGLDELETETEXTURESPROC  = void(QE_APIENTRY*)(GLsizei, const GLuint*);
+using PFNGLUNIFORM1IPROC       = void(QE_APIENTRY*)(GLint, GLint);
+
 // ── Global Function Pointers ────────────────────────────────────────────────
 namespace qe {
 namespace renderer {
@@ -205,6 +227,16 @@ inline PFNGLBUFFERDATAPROC              glBufferData              = nullptr;
 inline PFNGLDELETEBUFFERSPROC           glDeleteBuffers           = nullptr;
 inline PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
 inline PFNGLVERTEXATTRIBPOINTERPROC    glVertexAttribPointer     = nullptr;
+
+// Textures
+inline PFNGLGENTEXTURESPROC     glGenTextures     = nullptr;
+inline PFNGLBINDTEXTUREPROC     glBindTexture     = nullptr;
+inline PFNGLTEXIMAGE2DPROC      glTexImage2D      = nullptr;
+inline PFNGLTEXPARAMETERIPROC   glTexParameteri   = nullptr;
+inline PFNGLACTIVETEXTUREPROC   glActiveTexture   = nullptr;
+inline PFNGLGENERATEMIPMAPPROC  glGenerateMipmap  = nullptr;
+inline PFNGLDELETETEXTURESPROC  glDeleteTextures  = nullptr;
+inline PFNGLUNIFORM1IPROC       glUniform1i       = nullptr;
 
 // ── Loader Function ─────────────────────────────────────────────────────────
 
@@ -268,6 +300,16 @@ inline bool load() {
     QE_LOAD_GL(glDeleteBuffers);
     QE_LOAD_GL(glEnableVertexAttribArray);
     QE_LOAD_GL(glVertexAttribPointer);
+
+    // Textures
+    QE_LOAD_GL(glGenTextures);
+    QE_LOAD_GL(glBindTexture);
+    QE_LOAD_GL(glTexImage2D);
+    QE_LOAD_GL(glTexParameteri);
+    QE_LOAD_GL(glActiveTexture);
+    QE_LOAD_GL(glGenerateMipmap);
+    QE_LOAD_GL(glDeleteTextures);
+    QE_LOAD_GL(glUniform1i);
 
     #undef QE_LOAD_GL
     return true;

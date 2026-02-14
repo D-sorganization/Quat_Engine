@@ -87,6 +87,10 @@ public:
                         v.x, v.y, v.z);
     }
 
+    void set_int(const std::string& name, int value) const {
+        gl::glUniform1i(gl::glGetUniformLocation(program_id, name.c_str()), value);
+    }
+
     void set_mat4(const std::string& name, const math::Mat4& m) const {
         gl::glUniformMatrix4fv(
             gl::glGetUniformLocation(program_id, name.c_str()),
