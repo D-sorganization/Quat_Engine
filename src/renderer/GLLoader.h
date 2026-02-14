@@ -12,7 +12,7 @@
  *
  * Usage:
  *   // After creating SDL GL context:
- *   if (!qe::renderer::gl::load()) { /* error */ }
+ *   if (!qe::renderer::gl::load()) { // handle error }
  */
 
 #include <SDL.h>

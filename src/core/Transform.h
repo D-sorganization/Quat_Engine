@@ -104,7 +104,7 @@ public:
      *  @param world_up Reference up vector (default: Y-up).
      */
     void look_at(const math::Vec3& target,
-                 const math::Vec3& world_up = math::Vec3::up()) {
+                 const math::Vec3& /*world_up*/ = math::Vec3::up()) {
         math::Vec3 dir = (target - position_).normalized();
         rotation_ = math::Quaternion::from_two_vectors(math::Vec3::forward(), dir);
         dirty_ = true;
