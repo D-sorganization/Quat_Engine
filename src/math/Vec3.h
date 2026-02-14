@@ -34,6 +34,11 @@ struct Vec3 {
         return {x * scalar, y * scalar, z * scalar};
     }
 
+    /** Component-wise (Hadamard) multiplication. */
+    constexpr Vec3 operator*(const Vec3& rhs) const noexcept {
+        return {x * rhs.x, y * rhs.y, z * rhs.z};
+    }
+
     constexpr Vec3 operator/(float scalar) const {
         if (scalar == 0.0f) {
             throw std::domain_error("Vec3: division by zero");
