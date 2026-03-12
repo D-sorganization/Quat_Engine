@@ -20,7 +20,7 @@
 namespace qe {
 namespace game {
 
-constexpr float PI = 3.14159265358979f;
+inline constexpr float PI = 3.14159265358979f;
 
 // ── Static Decoration ───────────────────────────────────────────────────────
 

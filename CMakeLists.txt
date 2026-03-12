@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.20)
 
 project(QuatEngine
-    VERSION 0.2.0
+    VERSION 1.0.0
     DESCRIPTION "3D game engine with quaternion-based rotation and SLERP interpolation"
     LANGUAGES C CXX
 )
@@ -86,6 +86,26 @@ add_test(NAME MathTests COMMAND test_math)
 add_executable(test_game tests/test_game.cpp)
 target_link_libraries(test_game PRIVATE qe_game)
 add_test(NAME GameTests COMMAND test_game)
+
+add_executable(test_wave tests/test_wave.cpp)
+target_link_libraries(test_wave PRIVATE qe_game)
+add_test(NAME WaveTests COMMAND test_wave)
+
+add_executable(test_behavior tests/test_behavior.cpp)
+target_link_libraries(test_behavior PRIVATE qe_game)
+add_test(NAME BehaviorTests COMMAND test_behavior)
+
+add_executable(test_particles tests/test_particles.cpp)
+target_link_libraries(test_particles PRIVATE qe_core)
+add_test(NAME ParticleTests COMMAND test_particles)
+
+add_executable(test_powerup tests/test_powerup.cpp)
+target_link_libraries(test_powerup PRIVATE qe_game)
+add_test(NAME PowerUpTests COMMAND test_powerup)
+
+add_executable(test_weapons tests/test_weapons.cpp)
+target_link_libraries(test_weapons PRIVATE qe_game)
+add_test(NAME WeaponTests COMMAND test_weapons)
 
 # ── Status ───────────────────────────────────────────────────────────────────
 message(STATUS "")
