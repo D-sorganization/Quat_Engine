@@ -26,5 +26,15 @@ cmake-build-*/
 Thumbs.db
 .DS_Store
 
+# Compiled test binaries (Linux, no extension)
+test_particles
+test_powerup
+test_wave
+test_math
+test_game
+test_behavior
+test_weapons
+tests/test_weapons
+
 # Package managers
 vcpkg_installed/
