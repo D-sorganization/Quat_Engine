@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, 'claude/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DQE_BUILD_DEMO=OFF
+
+      - name: Build test targets
+        run: |
+          cmake --build build --target test_math test_game test_wave test_behavior test_particles test_powerup test_weapons
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure -R "MathTests|GameTests|WaveTests|BehaviorTests|ParticleTests|PowerUpTests|WeaponTests"
