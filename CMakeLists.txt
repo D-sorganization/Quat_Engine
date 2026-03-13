@@ -18,23 +18,28 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# ── Dependencies (auto-downloaded) ───────────────────────────────────────────
-include(FetchContent)
+# ── Build Options ────────────────────────────────────────────────────────────
+option(QE_BUILD_DEMO "Build the demo application (requires SDL2 and OpenGL)" ON)
 
-# SDL2 — Window management, input, OpenGL context
-FetchContent_Declare(
-    SDL2
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-2.30.10
-    GIT_SHALLOW    TRUE
-)
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON  CACHE BOOL "" FORCE)
-set(SDL_TEST   OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(SDL2)
+# ── Dependencies ─────────────────────────────────────────────────────────────
+if(QE_BUILD_DEMO)
+    include(FetchContent)
 
-# OpenGL — provided by the operating system
-find_package(OpenGL REQUIRED)
+    # SDL2 — Window management, input, OpenGL context
+    FetchContent_Declare(
+        SDL2
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG        release-2.30.10
+        GIT_SHALLOW    TRUE
+    )
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC ON  CACHE BOOL "" FORCE)
+    set(SDL_TEST   OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(SDL2)
+
+    # OpenGL — provided by the operating system
+    find_package(OpenGL REQUIRED)
+endif()
 
 # ── Math Library (Header-Only) ───────────────────────────────────────────────
 add_library(qe_math INTERFACE)
@@ -45,36 +50,38 @@ add_library(qe_core INTERFACE)
 target_include_directories(qe_core INTERFACE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(qe_core INTERFACE qe_math)
 
-# ── Renderer Library ─────────────────────────────────────────────────────────
-add_library(qe_renderer INTERFACE)
-target_include_directories(qe_renderer INTERFACE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(qe_renderer INTERFACE
-    qe_core
-    SDL2::SDL2-static
-    SDL2::SDL2main
-    OpenGL::GL
-)
-
 # ── Game Library ─────────────────────────────────────────────────────────────
 add_library(qe_game INTERFACE)
 target_include_directories(qe_game INTERFACE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(qe_game INTERFACE qe_core)
 
-# ── Input Library ────────────────────────────────────────────────────────────
-add_library(qe_input INTERFACE)
-target_include_directories(qe_input INTERFACE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(qe_input INTERFACE SDL2::SDL2-static)
+if(QE_BUILD_DEMO)
+    # ── Renderer Library ─────────────────────────────────────────────────────
+    add_library(qe_renderer INTERFACE)
+    target_include_directories(qe_renderer INTERFACE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(qe_renderer INTERFACE
+        qe_core
+        SDL2::SDL2-static
+        SDL2::SDL2main
+        OpenGL::GL
+    )
 
-# ── Demo Application ────────────────────────────────────────────────────────
-add_executable(qe_demo src/main.cpp)
-target_link_libraries(qe_demo PRIVATE qe_renderer qe_game qe_input)
+    # ── Input Library ────────────────────────────────────────────────────────
+    add_library(qe_input INTERFACE)
+    target_include_directories(qe_input INTERFACE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(qe_input INTERFACE SDL2::SDL2-static)
 
-# Copy shaders to build directory
-add_custom_command(TARGET qe_demo POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/shaders
-    $<TARGET_FILE_DIR:qe_demo>/shaders
-)
+    # ── Demo Application ──────────────────────────────────────────────────────
+    add_executable(qe_demo src/main.cpp)
+    target_link_libraries(qe_demo PRIVATE qe_renderer qe_game qe_input)
+
+    # Copy shaders to build directory
+    add_custom_command(TARGET qe_demo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/shaders
+        $<TARGET_FILE_DIR:qe_demo>/shaders
+    )
+endif()
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 enable_testing()
