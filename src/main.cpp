@@ -29,6 +29,7 @@
 #include "renderer/HUD.h"
 #include "renderer/Mesh.h"
 #include "renderer/ParticleSystem.h"
+#include "renderer/PostProcess.h"
 #include "renderer/Shader.h"
 #include "renderer/Texture.h"
 
@@ -37,6 +38,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -69,6 +71,7 @@ struct App {
     qe::game::ScoreTracker     score;
     qe::game::PowerUpManager   powerups;
     qe::renderer::ParticleSystem particles;
+    std::unique_ptr<qe::renderer::PostProcess> postProcess;
 
     // Scene
     std::vector<qe::game::Decoration>       decorations;
@@ -161,8 +164,13 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
         handle_events(app);
         update(app, dt);
+
+        if (app.postProcess) app.postProcess->bind();
         render_world(app);
         render_particles(app);
+        if (app.postProcess) app.postProcess->unbind();
+        if (app.postProcess) app.postProcess->render(app.time);
+
         render_hud(app);
         SDL_GL_SwapWindow(app.window);
 
@@ -233,6 +241,14 @@ bool init_gl(App& app) {
     // HUD shader
     if (!app.hud_shader.load_from_files("shaders/hud.vert", "shaders/hud.frag"))
         return false;
+
+    // Post-processing
+    app.postProcess = std::make_unique<qe::renderer::PostProcess>(1280, 720);
+    app.postProcess->init("shaders/post.vert", "shaders/post.frag");
+    app.postProcess->crtEnabled = 1;
+    app.postProcess->aberrationEnabled = 1;
+    app.postProcess->vignetteEnabled = 1;
+    app.postProcess->grainEnabled = 1;
 
     return true;
 }
@@ -325,6 +341,9 @@ void handle_events(App& app) {
             qe::renderer::gl::glViewport(0, 0, ev.window.data1, ev.window.data2);
             app.camera.config.aspect =
                 static_cast<float>(ev.window.data1) / ev.window.data2;
+            if (app.postProcess) {
+                app.postProcess->updateResolution(ev.window.data1, ev.window.data2);
+            }
         }
         app.input.handle_event(ev);
     }

@@ -114,6 +114,12 @@ add_executable(test_weapons tests/test_weapons.cpp)
 target_link_libraries(test_weapons PRIVATE qe_game)
 add_test(NAME WeaponTests COMMAND test_weapons)
 
+if(QE_BUILD_DEMO)
+    add_executable(test_postprocess tests/test_postprocess.cpp)
+    target_link_libraries(test_postprocess PRIVATE qe_renderer)
+    add_test(NAME PostProcessTests COMMAND test_postprocess)
+endif()
+
 # ── Status ───────────────────────────────────────────────────────────────────
 message(STATUS "")
 message(STATUS "QuatEngine v${PROJECT_VERSION}")
