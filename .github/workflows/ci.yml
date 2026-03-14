@@ -28,3 +28,79 @@ jobs:
         run: |
           cd build
           ctest --output-on-failure -R "MathTests|GameTests|WaveTests|BehaviorTests|ParticleTests|PowerUpTests|WeaponTests"
+
+  # =============================================================================
+  # RUST QUALITY GATE (Conditional)
+  # =============================================================================
+  # No-op until Rust code is added. Activates when Cargo.toml is present.
+  # QuatEngine's math could be backed by the math-primitives Rust crate.
+  # =============================================================================
+  rust-quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for Rust changes
+        id: rust-changes
+        run: |
+          if [ ! -f "Cargo.toml" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No Cargo.toml found — Rust quality gate skipped (no Rust code yet)."
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}"
+            BASE_SHA=$(git merge-base "origin/${{ github.base_ref }}" HEAD || true)
+            RUST_FILES=$(git diff --name-only "$BASE_SHA" HEAD -- '*.rs' 'Cargo.toml' '*/Cargo.toml' 'rust-toolchain.toml' || true)
+          else
+            RUST_FILES=$(git diff --name-only HEAD~1 HEAD -- '*.rs' 'Cargo.toml' '*/Cargo.toml' 'rust-toolchain.toml' || echo "")
+          fi
+
+          if [ -n "$RUST_FILES" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changed Rust files:"
+            echo "$RUST_FILES"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No Rust changes detected — skipping Rust quality gate."
+          fi
+
+      - name: Install Rust toolchain
+        if: steps.rust-changes.outputs.has_changes == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry and build
+        if: steps.rust-changes.outputs.has_changes == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Format Check (rustfmt)
+        if: steps.rust-changes.outputs.has_changes == 'true'
+        run: cargo fmt --all -- --check
+
+      - name: Lint (Clippy)
+        if: steps.rust-changes.outputs.has_changes == 'true'
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run Rust Tests
+        if: steps.rust-changes.outputs.has_changes == 'true'
+        run: cargo test
+
+      - name: Security Audit (cargo-audit)
+        if: steps.rust-changes.outputs.has_changes == 'true'
+        run: |
+          cargo install cargo-audit --locked || true
+          cargo audit
