@@ -22,12 +22,12 @@ jobs:
 
       - name: Build test targets
         run: |
-          cmake --build build --target test_math test_game test_wave test_behavior test_particles test_powerup test_weapons
+          cmake --build build --target test_math test_game test_wave test_behavior test_particles test_powerup test_weapons test_math_extended test_game_extended
 
       - name: Run tests
         run: |
           cd build
-          ctest --output-on-failure -R "MathTests|GameTests|WaveTests|BehaviorTests|ParticleTests|PowerUpTests|WeaponTests"
+          ctest --output-on-failure -R "MathTests|GameTests|WaveTests|BehaviorTests|ParticleTests|PowerUpTests|WeaponTests|MathExtendedTests|GameExtendedTests"
 
   # =============================================================================
   # RUST QUALITY GATE (Conditional)

@@ -114,6 +114,14 @@ add_executable(test_weapons tests/test_weapons.cpp)
 target_link_libraries(test_weapons PRIVATE qe_game)
 add_test(NAME WeaponTests COMMAND test_weapons)
 
+add_executable(test_math_extended tests/test_math_extended.cpp)
+target_link_libraries(test_math_extended PRIVATE qe_core)
+add_test(NAME MathExtendedTests COMMAND test_math_extended)
+
+add_executable(test_game_extended tests/test_game_extended.cpp)
+target_link_libraries(test_game_extended PRIVATE qe_game)
+add_test(NAME GameExtendedTests COMMAND test_game_extended)
+
 if(QE_BUILD_DEMO)
     add_executable(test_postprocess tests/test_postprocess.cpp)
     target_link_libraries(test_postprocess PRIVATE qe_renderer)
