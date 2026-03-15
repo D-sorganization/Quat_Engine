@@ -1,0 +1,71 @@
+# Dockerfile.heavy_test
+# This Dockerfile provides a local testing environment that mirrors the
+# custom d-sorg-fleet-4core GitHub runner. It includes heavy dependencies
+# to allow for live testing of physics engines locally in your IDE.
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies (mirrors the fleet runner capabilities)
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-venv \
+    python3.11-dev \
+    python3-pip \
+    curl \
+    git \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libegl1 libgl1 xvfb \
+    libxkbcommon-x11-0 \
+    libxcb-cursor0 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-xinerama0 \
+    libxcb-xkb1 \
+    libxcb-xinput0 \
+    libxcb-xfixes0 \
+    libdbus-1-3 \
+    libxrandr2 libxss1 libxcursor1 libxcomposite1 \
+    libasound2-dev libxi6 libxtst6 \
+    libsdl2-dev libsdl2-mixer-dev libsdl2-image-dev libsdl2-ttf-dev \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up a virtual environment and update pip
+RUN python3.11 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip
+
+# Install testing and CI utilities
+RUN pip install pytest pytest-cov pytest-timeout pytest-xdist ruff black mypy
+
+# Install heavy physics, robotics, and ML dependencies
+# - Pinocchio (pin)
+# - Pink (pink)
+# - Croccodyl (croccodyl)
+# - OpenSim (opensim)
+# - MyoSuite (myosuite)
+# - MuJoCo (mujoco)
+# - Drake (drake)
+# - MediaPipe (mediapipe)
+RUN pip install pin pink croccodyl opensim myosuite mujoco drake mediapipe
+
+WORKDIR /app
+
+# Copy the local codebase into the container
+COPY . /app/
+
+# Install the project locally as editable
+RUN if [ -f "pyproject.toml" ]; then pip install -e .; elif [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+# Default command runs the heavy test suite using xvfb-run if headless display is needed
+CMD ["xvfb-run", "-a", "pytest", "-v", "-m", "live_simulation"]
