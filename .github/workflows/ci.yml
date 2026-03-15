@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: d-sorg-fleet-4core
     steps:
       - uses: actions/checkout@v6
 
@@ -36,7 +36,7 @@ jobs:
   # QuatEngine's math could be backed by the math-primitives Rust crate.
   # =============================================================================
   rust-quality-gate:
-    runs-on: ubuntu-latest
+    runs-on: d-sorg-fleet-4core
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
