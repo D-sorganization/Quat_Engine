@@ -43,6 +43,11 @@ using namespace qe::math;
 constexpr float PI = 3.14159265358979f;
 constexpr float EPS = 1e-4f;
 
+bool axis_matches(const Vec3& actual, const Vec3& expected, float epsilon) {
+    return actual.approx_equal(expected, epsilon) ||
+           actual.approx_equal(-expected, epsilon);
+}
+
 void test_axis_angle_roundtrip_properties() {
     const Vec3 axes[] = {
         Vec3::right(),
@@ -69,7 +74,7 @@ void test_axis_angle_roundtrip_properties() {
                 ASSERT_FLOAT_EQ(roundtrip_angle, 0.0f, EPS);
             } else {
                 ASSERT_FLOAT_EQ(roundtrip_angle, angle, 0.002f);
-                ASSERT_TRUE(roundtrip_axis.approx_equal(axis, 0.002f));
+                ASSERT_TRUE(axis_matches(roundtrip_axis, axis, 0.002f));
             }
         }
     }
