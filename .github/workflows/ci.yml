@@ -15,19 +15,36 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DQE_BUILD_DEMO=OFF
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
 
-      - name: Build test targets
-        run: |
-          cmake --build build --target test_math test_game test_wave test_behavior test_particles test_powerup test_weapons test_math_extended test_game_extended
+      - name: Build native test suite
+        run: cmake --build build --parallel
 
-      - name: Run tests
+      - name: Run unit tests
+        run: ctest --test-dir build --output-on-failure -L unit
+
+      - name: Run integration tests
+        run: ctest --test-dir build --output-on-failure -L integration
+
+      - name: Generate coverage report
         run: |
-          cd build
-          ctest --output-on-failure -R "MathTests|GameTests|WaveTests|BehaviorTests|ParticleTests|PowerUpTests|WeaponTests|MathExtendedTests|GameExtendedTests"
+          gcovr --root . \
+            --filter src \
+            --exclude tests \
+            --xml-pretty --output build/coverage.xml \
+            --html-details build/coverage.html \
+            --print-summary
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-coverage
+          path: |
+            build/coverage.xml
+            build/coverage.html
 
   # =============================================================================
   # RUST QUALITY GATE (Conditional)
