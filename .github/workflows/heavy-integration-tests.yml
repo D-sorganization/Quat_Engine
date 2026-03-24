@@ -12,18 +12,37 @@ on:
 
 jobs:
   heavy-tests:
-    runs-on: d-sorg-fleet-4core
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      # Dependencies are assumed to be pre-installed on the custom runner.
-      # But we can install any project-specific python requirements if needed.
-      - name: Install local requirements
+      - uses: actions/checkout@v6
+
+      - name: Install native toolchain
         run: |
-          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
-          if [ -f "pyproject.toml" ]; then pip install -e .; fi
-          
-      - name: Run heavy live simulations
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Configure heavy integration build
+        run: cmake -S . -B build-heavy -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
+
+      - name: Build integration targets
+        run: cmake --build build-heavy --parallel
+
+      - name: Run integration suite
+        run: ctest --test-dir build-heavy --output-on-failure -L integration
+
+      - name: Generate integration coverage report
         run: |
-          # Example of running only tests marked for live simulation
-          pytest -v -m "live_simulation" --cov
+          gcovr --root . \
+            --filter src \
+            --exclude tests \
+            --xml-pretty --output build-heavy/coverage.xml \
+            --html-details build-heavy/coverage.html \
+            --print-summary
+
+      - name: Upload integration coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavy-integration-coverage
+          path: |
+            build-heavy/coverage.xml
+            build-heavy/coverage.html

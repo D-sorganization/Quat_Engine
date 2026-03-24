@@ -64,6 +64,31 @@ cmake --build build --config Release
 3. Select `qe_demo.exe` as startup project
 4. Build and Run (F5)
 
+## Testing
+
+QuatEngine uses native C++ tests registered with `ctest`.
+
+```powershell
+cmake -S . -B build -DQE_BUILD_DEMO=OFF
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+To generate gcov-compatible coverage on GCC/Clang toolchains:
+
+```powershell
+cmake -S . -B build -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+ctest --test-dir build --output-on-failure
+gcovr --root . --filter src --exclude tests --print-summary
+```
+
+Test labels are available for more targeted runs:
+
+- `unit` for math/core/gameplay invariants
+- `integration` for higher-level gameplay flows
+- `render` for renderer-adjacent checks that need the renderer target available
+
 ## Roadmap
 
 | Phase | Focus                                        | Status      |
