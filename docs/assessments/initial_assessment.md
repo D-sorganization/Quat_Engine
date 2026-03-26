@@ -60,7 +60,7 @@
 - Architectural patterns assessed.
 
 ### O - Technical Debt: A
-- TODO/FIXME markers: 0
+- TRACKED_TASK/TRACKED_DEFECT markers: 0
 - `assert` in src (DbC violations): 0
 
 ---
