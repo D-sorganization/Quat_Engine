@@ -69,6 +69,11 @@ add_library(qe_game INTERFACE)
 target_include_directories(qe_game INTERFACE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(qe_game INTERFACE qe_core)
 
+# ── TPS Game Library (Header-Only) ──────────────────────────────────────────
+add_library(qe_tps INTERFACE)
+target_include_directories(qe_tps INTERFACE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(qe_tps INTERFACE qe_game)
+
 if(QE_BUILD_DEMO)
     # ── Renderer Library ─────────────────────────────────────────────────────
     add_library(qe_renderer INTERFACE)
@@ -186,6 +191,56 @@ if(QE_BUILD_DEMO)
         LABELS integration render
     )
 endif()
+
+# ── TPS Game Tests ───────────────────────────────────────────────────────────
+
+qe_add_test(test_tps_character
+    SOURCE tests/test_tps_character.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+
+qe_add_test(test_tps_melee
+    SOURCE tests/test_tps_melee.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+
+qe_add_test(test_tps_weapons
+    SOURCE tests/test_tps_weapons.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+
+qe_add_test(test_tps_lockon
+    SOURCE tests/test_tps_lockon.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+
+qe_add_test(test_tps_jump
+    SOURCE tests/test_tps_jump.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+
+qe_add_test(test_tps_animation
+    SOURCE tests/test_tps_animation.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+
+qe_add_test(test_tps_levels
+    SOURCE tests/test_tps_levels.cpp
+    LIBS qe_tps
+    LABELS integration gameplay tps
+)
+
+qe_add_test(test_tps_combat
+    SOURCE tests/test_tps_combat.cpp
+    LIBS qe_tps
+    LABELS integration gameplay tps
+)
 
 # ── Status ───────────────────────────────────────────────────────────────────
 message(STATUS "")
