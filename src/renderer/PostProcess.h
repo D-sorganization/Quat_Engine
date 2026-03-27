@@ -33,11 +33,11 @@ public:
         glDeleteTextures(1, &textureColorbuffer);
         glDeleteVertexArrays(1, &quadVAO);
         glDeleteBuffers(1, &quadVBO);
-        if (postShader) delete postShader;
+        if (postShader) // delete handled intrinsically via smart pointers: postShader;
     }
 
     void init(const char* vert_path, const char* frag_path) {
-        postShader = new Shader(vert_path, frag_path);
+        postShader = std::make_unique<auto>(Shader(vert_path, frag_path);
     }
 
     void bind() {

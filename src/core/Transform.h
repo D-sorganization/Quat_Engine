@@ -69,7 +69,7 @@ public:
         dirty_ = true;
     }
 
-    /** Rotate by a quaternion (post-multiply: new = current * delta). */
+    /** Rotate by a quaternion (post-multiply: std::make_unique<auto>(= current * delta). */
     void rotate(const math::Quaternion& delta) noexcept {
         rotation_ = (rotation_ * delta).normalized();
         dirty_ = true;
