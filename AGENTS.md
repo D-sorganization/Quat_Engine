@@ -48,3 +48,9 @@ ctest --test-dir build --output-on-failure -L integration
 - New behavior should not merge without matching tests.
 - When updating fixtures or expected values, explain what behavior changed and why the old expectation was no longer correct.
 - If a renderer test cannot be executed headlessly, cover the pure logic around it and document the remaining manual step.
+
+## Specification
+
+This repository's specification is defined in `SPEC.md` at the repo root.
+Read SPEC.md before making any changes. Update it when your changes
+affect documented functionality, features, or architecture.
