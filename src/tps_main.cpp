@@ -54,6 +54,11 @@ struct TPSApp {
     qe::renderer::Mesh sphere;
     qe::renderer::Mesh floor_mesh;
     qe::renderer::Mesh grid;
+    qe::renderer::Mesh cylinder;
+    qe::renderer::Mesh cone;
+    qe::renderer::Mesh capsule;
+    qe::renderer::Mesh wedge;
+    qe::renderer::Mesh pyramid;
 
     // Game
     qe::game::tps::TPSGame game;
@@ -75,6 +80,20 @@ static void render_world(TPSApp& app);
 static void render_particles(TPSApp& app);
 static void render_hud(TPSApp& app);
 static void shutdown(TPSApp& app);
+
+/** Draw the mesh corresponding to a SceneObjectType. */
+static void draw_mesh(TPSApp& app, qe::game::tps::SceneObjectType type) {
+    switch (type) {
+        case qe::game::tps::SceneObjectType::Cube:     app.cube.draw(); break;
+        case qe::game::tps::SceneObjectType::Sphere:   app.sphere.draw(); break;
+        case qe::game::tps::SceneObjectType::Floor:    app.floor_mesh.draw(); break;
+        case qe::game::tps::SceneObjectType::Cylinder: app.cylinder.draw(); break;
+        case qe::game::tps::SceneObjectType::Cone:     app.cone.draw(); break;
+        case qe::game::tps::SceneObjectType::Capsule:  app.capsule.draw(); break;
+        case qe::game::tps::SceneObjectType::Wedge:    app.wedge.draw(); break;
+        case qe::game::tps::SceneObjectType::Pyramid:  app.pyramid.draw(); break;
+    }
+}
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
@@ -188,6 +207,11 @@ static void init_assets(TPSApp& app) {
     app.sphere = qe::renderer::Mesh::create_sphere(2, 0.5f);
     app.floor_mesh = qe::renderer::Mesh::create_floor_plane(50.0f, 8.0f);
     app.grid = qe::renderer::Mesh::create_grid(25, 2.0f);
+    app.cylinder = qe::renderer::Mesh::create_cylinder();
+    app.cone = qe::renderer::Mesh::create_cone();
+    app.capsule = qe::renderer::Mesh::create_capsule();
+    app.wedge = qe::renderer::Mesh::create_wedge();
+    app.pyramid = qe::renderer::Mesh::create_pyramid();
 
     app.hud.init_crosshair();
     app.input.init();
@@ -364,11 +388,7 @@ static void render_world(TPSApp& app) {
             obj.position, obj.rotation, obj.scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", obj.color);
-        if (obj.mesh_type == qe::game::tps::SceneObjectType::Sphere) {
-            app.sphere.draw();
-        } else {
-            app.cube.draw();
-        }
+        draw_mesh(app, obj.mesh_type);
     }
 
     // Draw decorations
@@ -377,7 +397,7 @@ static void render_world(TPSApp& app) {
             deco.position, deco.rotation, deco.scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", deco.color);
-        app.cube.draw();
+        draw_mesh(app, deco.mesh_type);
     }
 
     // Draw player character
@@ -402,7 +422,7 @@ static void render_world(TPSApp& app) {
                 player_color = {0.5f, 0.2f, 0.7f}; break;
         }
         app.world_shader.set_vec3("u_Tint", player_color);
-        app.cube.draw();
+        app.capsule.draw();
     }
 
     // Draw enemies
@@ -423,13 +443,7 @@ static void render_world(TPSApp& app) {
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", color);
 
-        // Bosses use sphere, others use cube
-        if (enemy.config.type == qe::game::tps::MutantType::Behemoth ||
-            enemy.config.type == qe::game::tps::MutantType::Apex) {
-            app.sphere.draw();
-        } else {
-            app.cube.draw();
-        }
+        draw_mesh(app, qe::game::tps::mutant_mesh_type(enemy.config.type));
     }
 
     // Draw projectiles
@@ -440,7 +454,7 @@ static void render_world(TPSApp& app) {
             qe::math::Vec3(0.1f, 0.1f, 0.1f));
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", proj.color);
-        app.cube.draw();
+        app.sphere.draw();
     }
 
     // Draw grid
@@ -572,6 +586,11 @@ static void shutdown(TPSApp& app) {
     app.sphere.destroy();
     app.floor_mesh.destroy();
     app.grid.destroy();
+    app.cylinder.destroy();
+    app.cone.destroy();
+    app.capsule.destroy();
+    app.wedge.destroy();
+    app.pyramid.destroy();
     app.hud.destroy();
     app.world_shader.destroy();
     app.particle_shader.destroy();
