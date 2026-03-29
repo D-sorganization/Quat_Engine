@@ -13,6 +13,7 @@
  *   - FPS/TPS dual-mode quaternion camera
  */
 
+#include "core/EngineConfig.h"
 #include "game/Combat.h"
 #include "game/PowerUp.h"
 #include "game/Scene.h"
@@ -120,16 +121,17 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
     // Camera
     qe::renderer::Camera::Config cc;
-    cc.aspect = 1280.0f / 720.0f;
-    cc.smoothing = 0.85f;
-    cc.move_speed = 5.0f;
-    cc.sprint_mult = 2.5f;
+    cc.aspect = static_cast<float>(qe::config::DEFAULT_WINDOW_WIDTH) /
+                static_cast<float>(qe::config::DEFAULT_WINDOW_HEIGHT);
+    cc.smoothing = qe::config::DEFAULT_CAMERA_SMOOTHING;
+    cc.move_speed = qe::config::DEFAULT_CAMERA_MOVE_SPEED;
+    cc.sprint_mult = qe::config::DEFAULT_CAMERA_SPRINT_MULT;
     app.camera = qe::renderer::Camera(cc);
     app.camera.set_position({0, 1.5f, 15});
 
     // Input
     app.input.init();
-    app.input.set_gamepad_look_speed(5.0f);
+    app.input.set_gamepad_look_speed(qe::config::GAMEPAD_LOOK_SPEED);
 
     // Scene decorations (static, always present)
     app.decorations = qe::game::build_decorations();
@@ -160,7 +162,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
         float dt = static_cast<float>(now - app.last_time) /
                    static_cast<float>(SDL_GetPerformanceFrequency());
         app.last_time = now;
-        if (dt > 0.1f) dt = 0.1f;
+        if (dt > qe::config::MAX_DELTA_TIME) dt = qe::config::MAX_DELTA_TIME;
 
         handle_events(app);
         update(app, dt);
@@ -176,7 +178,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
         app.frame_count++;
         app.fps_timer += dt;
-        if (app.fps_timer >= 0.5f) {
+        if (app.fps_timer >= qe::config::FPS_UPDATE_INTERVAL) {
             app.current_fps = static_cast<float>(app.frame_count) / app.fps_timer;
             update_title(app);
             app.frame_count = 0;
@@ -194,16 +196,17 @@ bool init_window(App& app) {
         std::cerr << "SDL: " << SDL_GetError() << std::endl;
         return false;
     }
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, qe::config::GL_MAJOR_VERSION);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, qe::config::GL_MINOR_VERSION);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, qe::config::MSAA_SAMPLES);
 
-    app.window = SDL_CreateWindow("QuatEngine",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720,
+    app.window = SDL_CreateWindow(qe::config::WINDOW_TITLE,
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        qe::config::DEFAULT_WINDOW_WIDTH, qe::config::DEFAULT_WINDOW_HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (!app.window) return false;
 
@@ -218,8 +221,8 @@ bool init_window(App& app) {
 bool init_gl(App& app) {
     if (!qe::renderer::gl::load()) return false;
 
-    const char* gpu = reinterpret_cast<const char*>(
-        qe::renderer::gl::glGetString(GL_RENDERER));
+    // glGetString returns const GLchar* (const char*) — no cast needed
+    const char* gpu = qe::renderer::gl::glGetString(GL_RENDERER);
     std::cout << "GPU: " << (gpu ? gpu : "?") << std::endl;
 
     using namespace qe::renderer::gl;
@@ -228,7 +231,8 @@ bool init_gl(App& app) {
     glCullFace(GL_BACK);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0.02f, 0.02f, 0.06f, 1.0f);
+    glClearColor(qe::config::CLEAR_R, qe::config::CLEAR_G,
+                 qe::config::CLEAR_B, qe::config::CLEAR_A);
 
     // World shader (enhanced with point lights, emission, fog)
     if (!app.world_shader.load_from_files("shaders/world.vert", "shaders/world.frag"))
@@ -243,7 +247,8 @@ bool init_gl(App& app) {
         return false;
 
     // Post-processing
-    app.postProcess = std::make_unique<qe::renderer::PostProcess>(1280, 720);
+    app.postProcess = std::make_unique<qe::renderer::PostProcess>(
+        qe::config::DEFAULT_WINDOW_WIDTH, qe::config::DEFAULT_WINDOW_HEIGHT);
     app.postProcess->init("shaders/post.vert", "shaders/post.frag");
     app.postProcess->crtEnabled = 1;
     app.postProcess->aberrationEnabled = 1;
@@ -386,7 +391,7 @@ void handle_events(App& app) {
 
     // SLERP toggle
     if (app.input.slerp_off()) { app.camera.config.smoothing = 0; app.slerp_on = false; }
-    if (app.input.slerp_on())  { app.camera.config.smoothing = 0.85f; app.slerp_on = true; }
+    if (app.input.slerp_on())  { app.camera.config.smoothing = qe::config::DEFAULT_CAMERA_SMOOTHING; app.slerp_on = true; }
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────
@@ -428,9 +433,9 @@ void update(App& app, float dt) {
     app.combat_cfg.fire_rate = wpn.fire_rate * fire_rate_mult;
     app.combat_cfg.projectile_damage = wpn.damage * damage_mult;
     app.combat_cfg.projectile_speed = wpn.projectile_speed;
-    app.combat_cfg.projectile_lifetime = 3.0f;
-    app.combat_cfg.projectile_radius = 0.08f;
-    app.combat_cfg.kill_score = 100;
+    app.combat_cfg.projectile_lifetime = qe::config::PROJECTILE_LIFETIME;
+    app.combat_cfg.projectile_radius = qe::config::PROJECTILE_RADIUS;
+    app.combat_cfg.kill_score = qe::config::KILL_SCORE;
 
     // Shooting
     if (app.input.shoot_held() && app.weapons.can_fire() &&
@@ -573,22 +578,24 @@ void render_world(App& app) {
     app.world_shader.set_float("uTime", app.time);
 
     // Default fog
-    app.world_shader.set_float("uFogNear", 30.0f);
-    app.world_shader.set_float("uFogFar", 80.0f);
-    app.world_shader.set_vec3("uFogColor", Vec3(0.02f, 0.02f, 0.06f));
+    app.world_shader.set_float("uFogNear", qe::config::FOG_NEAR);
+    app.world_shader.set_float("uFogFar", qe::config::FOG_FAR);
+    app.world_shader.set_vec3("uFogColor", Vec3(qe::config::CLEAR_R,
+                                                 qe::config::CLEAR_G,
+                                                 qe::config::CLEAR_B));
 
     // Default no emission
     app.world_shader.set_vec3("uEmission", Vec3::zero());
     app.world_shader.set_float("uEmissionStrength", 0.0f);
 
     // Rim light for sci-fi feel
-    app.world_shader.set_float("uRimPower", 3.0f);
+    app.world_shader.set_float("uRimPower", qe::config::RIM_POWER);
     app.world_shader.set_vec3("uRimColor", Vec3(0.1f, 0.2f, 0.4f));
 
     // Point lights from active power-ups and projectiles
     int point_light_count = 0;
     auto set_point_light = [&](const Vec3& pos, const Vec3& color, float radius) {
-        if (point_light_count >= 8) return;
+        if (point_light_count >= qe::config::MAX_POINT_LIGHTS) return;
         std::string prefix = "uPointLightPos[" + std::to_string(point_light_count) + "]";
         app.world_shader.set_vec3(prefix, pos);
         prefix = "uPointLightColor[" + std::to_string(point_light_count) + "]";
