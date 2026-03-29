@@ -193,6 +193,12 @@ qe_add_test(test_game_extended
     LABELS integration gameplay
 )
 
+qe_add_test(test_math_core
+    SOURCE tests/test_math_core.cpp
+    LIBS qe_core
+    LABELS unit math
+)
+
 if(QE_BUILD_DEMO)
     qe_add_test(test_postprocess
         SOURCE tests/test_postprocess.cpp

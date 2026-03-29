@@ -8,6 +8,7 @@
  * Game loop: input → game update → render world → render particles → render HUD
  */
 
+#include "core/EngineConfig.h"
 #include "game/tps/TPSGameState.h"
 #include "game/tps/TPSScene.h"
 #include "game/tps/TPSHUD.h"
@@ -37,7 +38,8 @@ struct TPSApp {
     SDL_Window* window = nullptr;
     SDL_GLContext gl_context = nullptr;
     bool running = true;
-    int window_w = 1280, window_h = 720;
+    int window_w = qe::config::DEFAULT_WINDOW_WIDTH;
+    int window_h = qe::config::DEFAULT_WINDOW_HEIGHT;
 
     // Engine systems
     qe::input::InputManager input;
@@ -110,10 +112,10 @@ int main(int /*argc*/, char** /*argv*/) {
 
     // Set camera to TPS mode
     app.camera.set_mode(qe::renderer::CameraMode::ThirdPerson);
-    app.camera.config.orbit_distance = 5.0f;
-    app.camera.config.orbit_height = 2.0f;
-    app.camera.config.orbit_smoothing = 0.9f;
-    app.camera.config.sensitivity = 0.003f;
+    app.camera.config.orbit_distance = qe::config::DEFAULT_ORBIT_DISTANCE;
+    app.camera.config.orbit_height = qe::config::DEFAULT_ORBIT_HEIGHT;
+    app.camera.config.orbit_smoothing = qe::config::DEFAULT_ORBIT_SMOOTHING;
+    app.camera.config.sensitivity = qe::config::DEFAULT_CAMERA_SENSITIVITY;
 
     Uint64 prev_time = SDL_GetPerformanceCounter();
     Uint64 freq = SDL_GetPerformanceFrequency();
@@ -122,7 +124,7 @@ int main(int /*argc*/, char** /*argv*/) {
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = static_cast<float>(now - prev_time) / static_cast<float>(freq);
         prev_time = now;
-        if (dt > 0.1f) dt = 0.1f;
+        if (dt > qe::config::MAX_DELTA_TIME) dt = qe::config::MAX_DELTA_TIME;
 
         app.time += dt;
 
@@ -146,7 +148,7 @@ int main(int /*argc*/, char** /*argv*/) {
         // FPS counter
         app.fps_frames++;
         app.fps_timer += dt;
-        if (app.fps_timer >= 0.5f) {
+        if (app.fps_timer >= qe::config::FPS_UPDATE_INTERVAL) {
             app.current_fps = static_cast<float>(app.fps_frames) / app.fps_timer;
             app.fps_frames = 0;
             app.fps_timer = 0.0f;
@@ -165,10 +167,10 @@ static bool init_window(TPSApp& app) {
         return false;
     }
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, qe::config::GL_MAJOR_VERSION);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, qe::config::GL_MINOR_VERSION);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, qe::config::MSAA_SAMPLES);
 
     app.window = SDL_CreateWindow(
         "QuatEngine TPS — Wasteland Protocol",
@@ -221,8 +223,8 @@ static void init_assets(TPSApp& app) {
 
     app.camera.config.fov_y = 1.0472f;
     app.camera.config.aspect = static_cast<float>(app.window_w) / app.window_h;
-    app.camera.config.move_speed = 5.0f;
-    app.camera.config.smoothing = 0.85f;
+    app.camera.config.move_speed = qe::config::DEFAULT_CAMERA_MOVE_SPEED;
+    app.camera.config.smoothing = qe::config::DEFAULT_CAMERA_SMOOTHING;
 }
 
 // ── Input ────────────────────────────────────────────────────────────────────
