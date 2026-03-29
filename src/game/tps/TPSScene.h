@@ -35,7 +35,12 @@ inline constexpr float SCENE_PI = 3.14159265358979f;
 enum class SceneObjectType {
     Cube,
     Sphere,
-    Floor
+    Floor,
+    Cylinder,
+    Cone,
+    Capsule,
+    Wedge,
+    Pyramid
 };
 
 struct SceneObject {
@@ -103,34 +108,60 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
         obj.rotation = math::Quaternion::from_axis_angle(
             math::Vec3::up(), rand_float(0.0f, SCENE_PI * 2.0f));
 
+        // Pick shape variation within environment
+        int shape_variant = static_cast<int>(rng & 0x3); // 0-3
+        rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5;
+
         switch (level_data.environment.type) {
             case EnvironmentType::Military:
+                // Barricades (cubes), sandbag walls (wedges), watchtower legs (cylinders)
+                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Wedge;
+                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Cylinder;
                 obj.scale = math::Vec3(rand_float(1.0f, 3.0f), rand_float(1.5f, 3.0f),
                                        rand_float(0.5f, 1.5f));
                 obj.color = math::Vec3(0.35f, 0.3f, 0.25f);
                 break;
             case EnvironmentType::Underground:
+                // Stalagmites (cones), pillars (cylinders), rubble (cubes)
+                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cone;
+                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Cylinder;
                 obj.scale = math::Vec3(rand_float(0.8f, 2.0f), rand_float(2.0f, 4.0f),
                                        rand_float(0.8f, 2.0f));
                 obj.color = math::Vec3(0.25f, 0.25f, 0.3f);
                 break;
             case EnvironmentType::Urban:
+                // Buildings (cubes), bollards (cylinders), ramps (wedges), rubble (pyramids)
+                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Wedge;
+                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Pyramid;
                 obj.scale = math::Vec3(rand_float(1.0f, 4.0f), rand_float(0.5f, 2.5f),
                                        rand_float(1.0f, 3.0f));
                 obj.color = math::Vec3(0.4f, 0.35f, 0.3f);
                 break;
             case EnvironmentType::Forest:
-                obj.mesh_type = SceneObjectType::Sphere;
+                // Tree trunks (cylinders), canopies (spheres), boulders (spheres), stumps (cones)
+                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Sphere;
+                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Cone;
+                else obj.mesh_type = SceneObjectType::Sphere;
                 obj.scale = math::Vec3(rand_float(0.3f, 0.8f), rand_float(2.0f, 5.0f),
                                        rand_float(0.3f, 0.8f));
                 obj.color = math::Vec3(0.2f, 0.35f, 0.15f);
                 break;
             case EnvironmentType::Industrial:
+                // Pipes (cylinders), tanks (capsules), crates (cubes), hoppers (cones)
+                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Capsule;
+                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Cone;
                 obj.scale = math::Vec3(rand_float(2.0f, 5.0f), rand_float(1.0f, 3.0f),
                                        rand_float(0.5f, 1.0f));
                 obj.color = math::Vec3(0.4f, 0.3f, 0.2f);
                 break;
             case EnvironmentType::Cathedral:
+                // Columns (cylinders), arches (capsules), altars (pyramids), pews (cubes)
+                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Capsule;
+                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Pyramid;
                 obj.scale = math::Vec3(rand_float(1.0f, 2.0f), rand_float(3.0f, 8.0f),
                                        rand_float(1.0f, 2.0f));
                 obj.color = math::Vec3(0.45f, 0.4f, 0.35f);
@@ -145,8 +176,12 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
         scene.cover_objects.push_back(obj);
     }
 
-    // Generate decorative props
+    // Generate decorative props with varied shapes
     int deco_count = 5 + level_data.level_number;
+    const SceneObjectType deco_shapes[] = {
+        SceneObjectType::Cube, SceneObjectType::Cone, SceneObjectType::Pyramid,
+        SceneObjectType::Wedge, SceneObjectType::Cylinder, SceneObjectType::Sphere
+    };
     for (int i = 0; i < deco_count; ++i) {
         SceneObject deco;
         float angle = rand_float(0.0f, SCENE_PI * 2.0f);
@@ -156,6 +191,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
         deco.scale = math::Vec3(rand_float(0.3f, 1.0f), rand_float(0.1f, 0.5f),
                                 rand_float(0.3f, 1.0f));
         deco.color = scene.environment.ambient_color * 2.0f;
+        deco.mesh_type = deco_shapes[i % 6];
         deco.position.y = deco.scale.y * 0.5f;
         scene.decorations.push_back(deco);
     }
@@ -194,6 +230,23 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
 
     assert(static_cast<int>(scene.enemies.size()) == level_data.total_enemy_count);
     return scene;
+}
+
+/** Get mesh shape for a mutant type (for rendering). */
+inline SceneObjectType mutant_mesh_type(MutantType type) {
+    switch (type) {
+        case MutantType::Grunt:    return SceneObjectType::Cube;      // basic humanoid
+        case MutantType::Crawler:  return SceneObjectType::Wedge;     // low crouching form
+        case MutantType::Brute:    return SceneObjectType::Cube;      // bulky box
+        case MutantType::Stalker:  return SceneObjectType::Capsule;   // sleek elongated
+        case MutantType::Spitter:  return SceneObjectType::Cone;      // hunched posture
+        case MutantType::Screamer: return SceneObjectType::Pyramid;   // angular menacing
+        case MutantType::Hound:    return SceneObjectType::Wedge;     // low fast profile
+        case MutantType::Amalgam:  return SceneObjectType::Sphere;    // floating mass
+        case MutantType::Behemoth: return SceneObjectType::Cylinder;  // massive pillar
+        case MutantType::Apex:     return SceneObjectType::Capsule;   // towering boss
+    }
+    return SceneObjectType::Cube;
 }
 
 /** Get color for a mutant type (for rendering). */
