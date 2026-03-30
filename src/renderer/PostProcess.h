@@ -194,7 +194,7 @@ private:
                                   GL_RENDERBUFFER, rbo_);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cerr << "[PostProcess] Framebuffer is not complete!" << std::endl;
+            QE_LOG_ERROR("PostProcess") << "Framebuffer is not complete!" << std::endl;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

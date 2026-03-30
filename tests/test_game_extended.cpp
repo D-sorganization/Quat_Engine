@@ -14,6 +14,8 @@
  *              dead powerup update is no-op
  */
 
+#include "test_framework.h"
+
 #include "../src/core/AABB.h"
 #include "../src/game/PowerUp.h"
 #include "../src/game/Scoring.h"
@@ -22,19 +24,6 @@
 #include <cmath>
 #include <iostream>
 
-static int total_assertions = 0;
-static int passed = 0;
-static int failed = 0;
-
-#define ASSERT_TRUE(expr) do { \
-    total_assertions++; \
-    if (expr) { passed++; } \
-    else { failed++; std::cerr << "  FAIL: " << #expr \
-           << " (" << __FILE__ << ":" << __LINE__ << ")" << std::endl; } \
-} while(0)
-
-#define ASSERT_NEAR(a, b, eps) ASSERT_TRUE(std::abs((a)-(b)) < (eps))
-#define RUN_TEST(fn) do { std::cout << "  " << #fn << "... "; fn(); std::cout << "OK" << std::endl; } while(0)
 
 // ============================================================================
 //  AABB Extended Tests
@@ -471,10 +460,5 @@ int main() {
     RUN_TEST(test_active_effect_progress_bounds);
     RUN_TEST(test_active_effect_progress_zero_duration);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total: " << total_assertions << std::endl;
-    std::cout << "  Passed: " << passed << std::endl;
-    std::cout << "  Failed: " << failed << std::endl;
-
-    return failed > 0 ? 1 : 0;
+    return TEST_REPORT();
 }

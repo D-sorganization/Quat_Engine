@@ -17,6 +17,7 @@
  */
 
 #include "Mesh.h"
+#include "../core/Logger.h"
 
 #include <cmath>
 #include <fstream>
@@ -48,7 +49,7 @@ public:
                      float r = 0.7f, float g = 0.7f, float b = 0.7f) {
         RawMesh raw;
         if (!parse_file(path, raw)) {
-            std::cerr << "[OBJ] Failed to load: " << path << std::endl;
+            QE_LOG_ERROR("OBJ") << "Failed to load: " << path << std::endl;
             return Mesh();
         }
 
@@ -130,7 +131,7 @@ private:
             }
         }
 
-        std::cout << "[OBJ] Loaded " << path << ": "
+        QE_LOG_INFO("OBJ") << "Loaded " << path << ": "
                   << raw.positions.size() / 3 << " verts, "
                   << raw.face_verts.size() / 3 << " tris" << std::endl;
         return true;

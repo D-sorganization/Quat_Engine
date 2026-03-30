@@ -13,6 +13,7 @@
  *   - FPS/TPS dual-mode quaternion camera
  */
 
+#include "core/Logger.h"
 #include "core/EngineConfig.h"
 #include "game/Combat.h"
 #include "game/PowerUp.h"
@@ -193,7 +194,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 // ── Init: Window ────────────────────────────────────────────────────────────
 bool init_window(App& app) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
-        std::cerr << "SDL: " << SDL_GetError() << std::endl;
+        QE_LOG_ERROR("SDL") << SDL_GetError() << std::endl;
         return false;
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, qe::config::GL_MAJOR_VERSION);
@@ -223,7 +224,7 @@ bool init_gl(App& app) {
 
     // glGetString returns const GLchar* (const char*) — no cast needed
     const char* gpu = qe::renderer::gl::glGetString(GL_RENDERER);
-    std::cout << "GPU: " << (gpu ? gpu : "?") << std::endl;
+    QE_LOG_INFO("Engine") << "GPU: " << (gpu ? gpu : "?") << std::endl;
 
     using namespace qe::renderer::gl;
     glEnable(GL_DEPTH_TEST);

@@ -18,6 +18,7 @@
  * driven by encounter composition, not class restrictions.
  */
 
+#include "../../core/Rng.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 
@@ -153,7 +154,7 @@ public:
 
     /** Generate fire directions using quaternion spread. */
     std::vector<math::Vec3> compute_directions(
-            const math::Vec3& forward, const math::Vec3& up, uint32_t& rng) const {
+            const math::Vec3& forward, const math::Vec3& up, core::Rng& rng) const {
         std::vector<math::Vec3> dirs;
         float spread = effective_spread();
 
@@ -187,12 +188,8 @@ public:
     }
 
 private:
-    static float random_range(uint32_t& rng, float lo, float hi) {
-        rng ^= rng << 13;
-        rng ^= rng >> 17;
-        rng ^= rng << 5;
-        float t = static_cast<float>(rng & 0xFFFF) / 65535.0f;
-        return lo + t * (hi - lo);
+    static float random_range(core::Rng& rng, float lo, float hi) {
+        return rng.random_float(lo, hi);
     }
 
     // ── Weapon Factories ─────────────────────────────────────────────────

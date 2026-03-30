@@ -11,6 +11,7 @@
  * Shield, and ScoreMultiplier.
  */
 
+#include "../core/Rng.h"
 #include "../math/Quaternion.h"
 #include "../math/Vec3.h"
 
@@ -123,7 +124,7 @@ struct ActiveEffect {
 class PowerUpManager {
     std::vector<PowerUp> pickups_;
     std::vector<ActiveEffect> effects_;
-    uint32_t rng_ = 54321;
+    qe::core::Rng rng_{54321};
 
 public:
     // --- Config per type ---
@@ -312,13 +313,9 @@ public:
     void clear() { pickups_.clear(); effects_.clear(); }
 
 private:
-    /** Simple xorshift-based random float in [min, max). */
+    /** Random float in [min, max]. */
     float random_float(float min, float max) {
-        rng_ ^= rng_ << 13;
-        rng_ ^= rng_ >> 17;
-        rng_ ^= rng_ << 5;
-        float t = static_cast<float>(rng_ & 0xFFFFFF) / 16777216.0f;
-        return min + t * (max - min);
+        return rng_.random_float(min, max);
     }
 
     /** Activate a power-up effect on the player. */

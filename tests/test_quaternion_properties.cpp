@@ -1,42 +1,7 @@
+#include "test_framework.h"
+
 #include "../src/math/Quaternion.h"
 #include "../src/math/Vec3.h"
-
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-
-static int g_assertions = 0;
-static int g_failures = 0;
-
-#define ASSERT_TRUE(expr)                                                     \
-    do {                                                                      \
-        ++g_assertions;                                                       \
-        if (!(expr)) {                                                        \
-            std::cerr << "  FAIL: " << #expr << " (" << __FILE__ << ":"      \
-                      << __LINE__ << ")" << std::endl;                        \
-            ++g_failures;                                                     \
-        }                                                                     \
-    } while (0)
-
-#define ASSERT_FLOAT_EQ(a, b, eps)                                            \
-    do {                                                                      \
-        ++g_assertions;                                                       \
-        if (std::abs((a) - (b)) > (eps)) {                                    \
-            std::cerr << "  FAIL: " << #a << " ~= " << #b                     \
-                      << " (got " << (a) << " vs " << (b)                     \
-                      << ", eps=" << (eps) << ") at " << __FILE__             \
-                      << ":" << __LINE__ << std::endl;                        \
-            ++g_failures;                                                     \
-        }                                                                     \
-    } while (0)
-
-#define RUN_TEST(fn)                                                          \
-    do {                                                                      \
-        std::cout << "  " << #fn << "... ";                                   \
-        int before = g_failures;                                              \
-        fn();                                                                 \
-        std::cout << (g_failures == before ? "OK" : "FAILED") << std::endl;   \
-    } while (0)
 
 using namespace qe::math;
 
@@ -150,7 +115,5 @@ int main() {
     RUN_TEST(test_from_two_vectors_alignment_property);
     RUN_TEST(test_interpolation_stays_on_unit_sphere);
 
-    std::cout << "\nAssertions: " << g_assertions << std::endl;
-    std::cout << "Failures: " << g_failures << std::endl;
-    return g_failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+    return TEST_REPORT();
 }

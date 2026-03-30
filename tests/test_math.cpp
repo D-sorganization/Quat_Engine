@@ -12,63 +12,12 @@
  *   - Transform: movement, interpolation, direction vectors
  */
 
+#include "test_framework.h"
+
 #include "../src/core/Transform.h"
 #include "../src/math/Mat4.h"
 #include "../src/math/Quaternion.h"
 #include "../src/math/Vec3.h"
-
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-#include <string>
-
-// --- Minimal Test Framework ---
-
-static int g_tests_run = 0;
-static int g_tests_passed = 0;
-static int g_tests_failed = 0;
-
-#define ASSERT_TRUE(expr)                                                    \
-    do {                                                                     \
-        ++g_tests_run;                                                       \
-        if (!(expr)) {                                                       \
-            std::cerr << "  FAIL: " << #expr << " (" << __FILE__ << ":"      \
-                      << __LINE__ << ")" << std::endl;                       \
-            ++g_tests_failed;                                                \
-        } else {                                                             \
-            ++g_tests_passed;                                                \
-        }                                                                    \
-    } while (0)
-
-#define ASSERT_FLOAT_EQ(a, b, eps)                                           \
-    do {                                                                     \
-        ++g_tests_run;                                                       \
-        if (std::abs((a) - (b)) > (eps)) {                                   \
-            std::cerr << "  FAIL: " << #a << " == " << #b                    \
-                      << " (got " << (a) << " vs " << (b)                    \
-                      << ", eps=" << (eps) << ") at " << __FILE__             \
-                      << ":" << __LINE__ << std::endl;                       \
-            ++g_tests_failed;                                                \
-        } else {                                                             \
-            ++g_tests_passed;                                                \
-        }                                                                    \
-    } while (0)
-
-#define ASSERT_VEC3_EQ(v, ex, ey, ez, eps)                                   \
-    do {                                                                     \
-        ASSERT_FLOAT_EQ((v).x, (ex), (eps));                                 \
-        ASSERT_FLOAT_EQ((v).y, (ey), (eps));                                 \
-        ASSERT_FLOAT_EQ((v).z, (ez), (eps));                                 \
-    } while (0)
-
-#define RUN_TEST(test_fn)                                                    \
-    do {                                                                     \
-        std::cout << "  " << #test_fn << "... ";                             \
-        int before_fail = g_tests_failed;                                    \
-        test_fn();                                                           \
-        std::cout << (g_tests_failed == before_fail ? "OK" : "FAILED")       \
-                  << std::endl;                                              \
-    } while (0)
 
 using namespace qe::math;
 using namespace qe::core;
@@ -537,10 +486,5 @@ int main() {
     RUN_TEST(test_transform_interpolation);
     RUN_TEST(test_transform_matrix);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total assertions: " << g_tests_run << std::endl;
-    std::cout << "  Passed: " << g_tests_passed << std::endl;
-    std::cout << "  Failed: " << g_tests_failed << std::endl;
-
-    return g_tests_failed > 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+    return TEST_REPORT();
 }

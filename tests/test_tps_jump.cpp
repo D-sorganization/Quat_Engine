@@ -12,24 +12,13 @@
  *   - Air control factor
  */
 
+#include "test_framework.h"
+
 #include "../src/game/tps/JumpSystem.h"
 
 #include <cmath>
 #include <iostream>
 
-static int total_assertions = 0;
-static int passed = 0;
-static int failed = 0;
-
-#define ASSERT_TRUE(expr) do { \
-    total_assertions++; \
-    if (expr) { passed++; } \
-    else { failed++; std::cerr << "  FAIL: " << #expr \
-           << " (" << __FILE__ << ":" << __LINE__ << ")" << std::endl; } \
-} while(0)
-
-#define ASSERT_NEAR(a, b, eps) ASSERT_TRUE(std::abs((a)-(b)) < (eps))
-#define RUN_TEST(fn) do { std::cout << "  " << #fn << "... "; fn(); std::cout << "OK" << std::endl; } while(0)
 
 using namespace qe::game::tps;
 
@@ -242,10 +231,5 @@ int main() {
     std::cout << "\n--- Config ---" << std::endl;
     RUN_TEST(test_make_jump_config);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total: " << total_assertions << std::endl;
-    std::cout << "  Passed: " << passed << std::endl;
-    std::cout << "  Failed: " << failed << std::endl;
-
-    return failed > 0 ? 1 : 0;
+    return TEST_REPORT();
 }

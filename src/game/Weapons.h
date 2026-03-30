@@ -16,6 +16,7 @@
  *   - MiniGun:        Extreme fire rate, slight inaccuracy, huge magazine
  */
 
+#include "../core/Rng.h"
 #include "../math/Quaternion.h"
 #include "../math/Vec3.h"
 
@@ -261,15 +262,10 @@ private:
         };
     }
 
-    mutable uint32_t rng_ = 99999;
+    mutable qe::core::Rng rng_{99999};
 
     float random_float(float min, float max) {
-        // Simple xorshift32 PRNG
-        rng_ ^= rng_ << 13;
-        rng_ ^= rng_ >> 17;
-        rng_ ^= rng_ << 5;
-        float t = static_cast<float>(rng_ & 0xFFFF) / 65535.0f;
-        return min + t * (max - min);
+        return rng_.random_float(min, max);
     }
 };
 

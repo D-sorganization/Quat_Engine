@@ -11,6 +11,8 @@
  *   - Staggered mutants don't act
  */
 
+#include "test_framework.h"
+
 #include "../src/game/tps/MutantAI.h"
 #include "../src/game/tps/MutantTypes.h"
 
@@ -18,19 +20,6 @@
 #include <iostream>
 #include <vector>
 
-static int total_assertions = 0;
-static int passed = 0;
-static int failed = 0;
-
-#define ASSERT_TRUE(expr) do { \
-    total_assertions++; \
-    if (expr) { passed++; } \
-    else { failed++; std::cerr << "  FAIL: " << #expr \
-           << " (" << __FILE__ << ":" << __LINE__ << ")" << std::endl; } \
-} while(0)
-
-#define ASSERT_NEAR(a, b, eps) ASSERT_TRUE(std::abs((a)-(b)) < (eps))
-#define RUN_TEST(fn) do { std::cout << "  " << #fn << "... "; fn(); std::cout << "OK" << std::endl; } while(0)
 
 using namespace qe::game::tps;
 using namespace qe::math;
@@ -38,7 +27,7 @@ using namespace qe::math;
 void test_idle_patrol() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(10, 0, 10), 1);
     m.ai_state = MutantAIState::Idle;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     // Player far away -> should stay idle or patrol
     auto decision = update_mutant_ai(m, Vec3(100, 0, 100), true, 0.016f, rng);
@@ -49,7 +38,7 @@ void test_idle_patrol() {
 void test_detection_triggers_alert() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Idle;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     // Player within detection range
     Vec3 player_pos(5, 0, 0);  // Within 20 unit detection range
@@ -61,7 +50,7 @@ void test_alert_transitions_to_chase() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Alerted;
     m.state_timer = 0.0f;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     Vec3 player_pos(5, 0, 0);
     // Update past alert duration (0.5s)
@@ -74,7 +63,7 @@ void test_alert_transitions_to_chase() {
 void test_chasing_moves_toward_player() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Chasing;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     Vec3 player_pos(10, 0, 0);
     auto decision = update_mutant_ai(m, player_pos, true, 0.016f, rng);
@@ -91,7 +80,7 @@ void test_attack_triggers_in_range() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Chasing;
     m.attack_cooldown = 0.0f;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     Vec3 player_pos(1.5f, 0, 0);  // Within 2.0 attack range
     update_mutant_ai(m, player_pos, true, 0.016f, rng);
@@ -126,7 +115,7 @@ void test_staggered_no_action() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Staggered;
     m.stagger_timer = 0.5f;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     auto decision = update_mutant_ai(m, Vec3(1, 0, 0), true, 0.016f, rng);
     ASSERT_TRUE(!decision.wants_to_attack);
@@ -137,7 +126,7 @@ void test_spitter_maintains_distance() {
     auto m = spawn_mutant(MutantType::Spitter, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Chasing;
     m.attack_cooldown = 10.0f;  // Prevent attack transition
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     // Player within spitter ideal range * 0.5 -> should move away
     // Spitter attack_range is 25, ideal = 25*0.7=17.5, half-ideal = 8.75
@@ -149,7 +138,7 @@ void test_spitter_maintains_distance() {
 void test_dead_player_makes_idle() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Chasing;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     update_mutant_ai(m, Vec3(5, 0, 0), false, 0.016f, rng);
     ASSERT_TRUE(m.ai_state == MutantAIState::Idle);
@@ -158,7 +147,7 @@ void test_dead_player_makes_idle() {
 void test_out_of_range_returns_idle() {
     auto m = spawn_mutant(MutantType::Grunt, Vec3(0, 0, 0), 1);
     m.ai_state = MutantAIState::Chasing;
-    uint32_t rng = 42;
+    qe::core::Rng rng(42);
 
     // Player very far
     update_mutant_ai(m, Vec3(100, 0, 100), true, 0.016f, rng);
@@ -187,10 +176,5 @@ int main() {
     RUN_TEST(test_spitter_maintains_distance);
     RUN_TEST(test_dead_player_makes_idle);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total: " << total_assertions << std::endl;
-    std::cout << "  Passed: " << passed << std::endl;
-    std::cout << "  Failed: " << failed << std::endl;
-
-    return failed > 0 ? 1 : 0;
+    return TEST_REPORT();
 }

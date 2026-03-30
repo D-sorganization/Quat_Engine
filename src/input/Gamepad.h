@@ -14,6 +14,8 @@
 
 #include <SDL.h>
 
+#include "../core/Logger.h"
+
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -66,7 +68,7 @@ public:
                 controller_ = SDL_GameControllerOpen(i);
                 if (controller_) {
                     name_ = SDL_GameControllerName(controller_);
-                    std::cout << "[Gamepad] Connected: " << name_ << std::endl;
+                    QE_LOG_INFO("Gamepad") << "Connected: " << name_ << std::endl;
                     connected_ = true;
                     return true;
                 }
@@ -94,7 +96,7 @@ public:
             }
         } else if (event.type == SDL_CONTROLLERDEVICEREMOVED) {
             if (connected_) {
-                std::cout << "[Gamepad] Disconnected: " << name_ << std::endl;
+                QE_LOG_INFO("Gamepad") << "Disconnected: " << name_ << std::endl;
                 close();
                 return true;
             }
