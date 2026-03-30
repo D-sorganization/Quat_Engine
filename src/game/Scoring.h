@@ -12,6 +12,7 @@
  *     accumulation, high score tracking, and recent event display for the HUD.
  */
 
+#include <cassert>
 #include <vector>
 
 namespace qe {
@@ -92,8 +93,15 @@ class ScoreTracker {
     float event_display_timer_ = 0.0f;
 
 public:
-    /** Record a kill and compute score. */
+    /** Record a kill and compute score.
+     *  @pre base_score >= 0
+     *  @pre powerup_multiplier >= 1.0
+     *  @pre wave_bonus >= 0
+     */
     ScoreEvent record_kill(int base_score, float powerup_multiplier = 1.0f, int wave_bonus = 0) {
+        assert(base_score >= 0          && "record_kill: base_score must be non-negative");
+        assert(powerup_multiplier >= 1.0f && "record_kill: powerup_multiplier must be >= 1");
+        assert(wave_bonus >= 0          && "record_kill: wave_bonus must be non-negative");
         combo_.register_hit();
         combo_.register_kill();
 
@@ -123,12 +131,18 @@ public:
         combo_.register_miss();
     }
 
+    /** Add a bonus directly to the score.
+     *  @pre points >= 0
+     */
     void add_bonus(int points) {
+        assert(points >= 0 && "add_bonus: points must be non-negative");
         score_ += points;
         if (score_ > high_score_) high_score_ = score_;
     }
 
+    /** @pre dt >= 0 */
     void update(float dt) {
+        assert(dt >= 0.0f && "ScoreTracker::update: dt must be non-negative");
         combo_.update(dt);
         if (event_display_timer_ > 0) {
             event_display_timer_ -= dt;

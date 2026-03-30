@@ -380,6 +380,7 @@ gcovr --print-summary --html coverage/
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-03-28 | 1.0.0 | Initial specification |
+| 2026-03-30 | 1.0.1 | A-N Assessment remediation: add .env to .gitignore, add MIT LICENSE, add DbC assertions to Combat.h/Scoring.h, add Camera::set_aspect/set_smoothing interface methods (LoD), update main.cpp to use new Camera interface |
 
 ---
 

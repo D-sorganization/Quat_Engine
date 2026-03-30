@@ -13,6 +13,7 @@
 #include "../math/Vec3.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -42,12 +43,19 @@ struct CombatConfig {
     int   kill_score         = 100;
 };
 
-/** Fire a projectile and do instant hitscan. */
+/** Fire a projectile and do instant hitscan.
+ *  @pre config.projectile_speed > 0
+ *  @pre config.projectile_damage > 0
+ *  @pre config.projectile_lifetime > 0
+ */
 inline void shoot(const math::Vec3& origin, const math::Vec3& direction,
                   const CombatConfig& config,
                   std::vector<core::Projectile>& projectiles,
                   std::vector<core::Entity>& entities,
                   CombatStats& stats) {
+    assert(config.projectile_speed > 0.0f   && "shoot: projectile_speed must be positive");
+    assert(config.projectile_damage > 0.0f  && "shoot: projectile_damage must be positive");
+    assert(config.projectile_lifetime > 0.0f && "shoot: projectile_lifetime must be positive");
     stats.total_shots++;
 
     // Spawn projectile
@@ -82,8 +90,11 @@ inline void shoot(const math::Vec3& origin, const math::Vec3& direction,
     }
 }
 
-/** Update all projectiles and remove dead ones. */
+/** Update all projectiles and remove dead ones.
+ *  @pre dt >= 0
+ */
 inline void update_projectiles(std::vector<core::Projectile>& projectiles, float dt) {
+    assert(dt >= 0.0f && "update_projectiles: dt must be non-negative");
     for (auto& p : projectiles) p.update(dt);
     projectiles.erase(
         std::remove_if(projectiles.begin(), projectiles.end(),
@@ -91,11 +102,14 @@ inline void update_projectiles(std::vector<core::Projectile>& projectiles, float
         projectiles.end());
 }
 
-/** Check projectile-entity AABB collisions. */
+/** Check projectile-entity AABB collisions.
+ *  @pre kill_score >= 0
+ */
 inline void check_projectile_collisions(
         std::vector<core::Projectile>& projectiles,
         std::vector<core::Entity>& entities,
         CombatStats& stats, int kill_score = 100) {
+    assert(kill_score >= 0 && "check_projectile_collisions: kill_score must be non-negative");
     for (auto& proj : projectiles) {
         if (!proj.active) continue;
         core::AABB pb = proj.bounds();

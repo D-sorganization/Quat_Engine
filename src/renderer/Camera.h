@@ -17,6 +17,7 @@
 #include "../math/Vec3.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 namespace qe {
@@ -58,6 +59,24 @@ public:
 
     Camera() = default;
     explicit Camera(const Config& cfg) : config(cfg) {}
+
+    // --- Config Mutators (LoD: callers should not reach into config directly) ---
+
+    /** Update the viewport aspect ratio (width / height).
+     *  @pre aspect > 0
+     */
+    void set_aspect(float aspect) noexcept {
+        assert(aspect > 0.0f && "Camera::set_aspect: aspect must be positive");
+        config.aspect = aspect;
+    }
+
+    /** Set the SLERP smoothing factor.
+     *  @pre smoothing >= 0
+     */
+    void set_smoothing(float smoothing) noexcept {
+        assert(smoothing >= 0.0f && "Camera::set_smoothing: smoothing must be non-negative");
+        config.smoothing = smoothing;
+    }
 
     // --- Mode Switching ---
 
