@@ -126,7 +126,7 @@ void test_vec3_distance() {
 
 void test_vec3_approx_equal() {
     Vec3 a(1.0f, 2.0f, 3.0f);
-    Vec3 b(1.00001f, 2.00001f, 3.00001f);
+    Vec3 b(1.000005f, 2.000005f, 3.000005f);  // Within default 1e-5 tolerance
     ASSERT_TRUE(a.approx_equal(b));
     ASSERT_TRUE(!a.approx_equal(Vec3(2, 2, 3)));
 }
