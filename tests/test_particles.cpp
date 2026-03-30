@@ -10,6 +10,8 @@
  *   - alive_count tracking
  */
 
+#include "test_framework.h"
+
 #include "../src/renderer/ParticleSystem.h"
 #include "../src/math/Quaternion.h"
 #include "../src/math/Vec3.h"
@@ -19,27 +21,6 @@
 #include <iostream>
 #include <string>
 
-// --- Minimal Test Framework (matches project convention) ---
-
-static int total_assertions = 0;
-static int passed = 0;
-static int failed = 0;
-
-#define ASSERT_TRUE(expr) do { \
-    total_assertions++; \
-    if (expr) { passed++; } \
-    else { failed++; std::cerr << "  FAIL: " << #expr \
-           << " (" << __FILE__ << ":" << __LINE__ << ")" << std::endl; } \
-} while(0)
-
-#define ASSERT_NEAR(a, b, eps) ASSERT_TRUE(std::abs((a)-(b)) < (eps))
-
-#define RUN_TEST(fn) do { \
-    std::cout << "  " << #fn << "... "; \
-    int before_fail = failed; \
-    fn(); \
-    std::cout << (failed == before_fail ? "OK" : "FAILED") << std::endl; \
-} while(0)
 
 using namespace qe::math;
 using namespace qe::renderer;
@@ -458,10 +439,5 @@ int main() {
     std::cout << "\n--- Edge Cases ---" << std::endl;
     RUN_TEST(test_particle_progress_zero_lifetime);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total assertions: " << total_assertions << std::endl;
-    std::cout << "  Passed: " << passed << std::endl;
-    std::cout << "  Failed: " << failed << std::endl;
-
-    return failed > 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+    return TEST_REPORT();
 }

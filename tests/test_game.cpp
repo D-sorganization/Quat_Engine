@@ -9,6 +9,8 @@
  *   - Combat: shoot + hitscan, collision resolution
  */
 
+#include "test_framework.h"
+
 #include "../src/core/AABB.h"
 #include "../src/core/Entity.h"
 #include "../src/core/Projectile.h"
@@ -20,19 +22,6 @@
 #include <string>
 #include <vector>
 
-static int total_assertions = 0;
-static int passed = 0;
-static int failed = 0;
-
-#define ASSERT_TRUE(expr) do { \
-    total_assertions++; \
-    if (expr) { passed++; } \
-    else { failed++; std::cerr << "  FAIL: " << #expr \
-           << " (" << __FILE__ << ":" << __LINE__ << ")" << std::endl; } \
-} while(0)
-
-#define ASSERT_NEAR(a, b, eps) ASSERT_TRUE(std::abs((a)-(b)) < (eps))
-#define RUN_TEST(fn) do { std::cout << "  " << #fn << "... "; fn(); std::cout << "OK" << std::endl; } while(0)
 
 // ── AABB Tests ──────────────────────────────────────────────────────────────
 
@@ -258,10 +247,5 @@ int main() {
     RUN_TEST(test_combat_shoot_miss);
     RUN_TEST(test_combat_accuracy);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total: " << total_assertions << std::endl;
-    std::cout << "  Passed: " << passed << std::endl;
-    std::cout << "  Failed: " << failed << std::endl;
-
-    return failed > 0 ? 1 : 0;
+    return TEST_REPORT();
 }

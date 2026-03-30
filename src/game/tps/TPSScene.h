@@ -14,6 +14,7 @@
  * Rendering layer reads this data to create actual meshes.
  */
 
+#include "../../core/Rng.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 #include "LevelSystem.h"
@@ -86,11 +87,9 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
     scene.ground_scale = math::Vec3(radius, 0.1f, radius);
 
     // RNG
-    uint32_t rng = seed + static_cast<uint32_t>(level_data.level_number * 7919);
+    core::Rng rng(seed + static_cast<uint32_t>(level_data.level_number * 7919));
     auto rand_float = [&rng](float lo, float hi) -> float {
-        rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5;
-        float t = static_cast<float>(rng & 0xFFFF) / 65535.0f;
-        return lo + t * (hi - lo);
+        return rng.random_float(lo, hi);
     };
 
     // Generate cover objects based on environment type
@@ -109,8 +108,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
             math::Vec3::up(), rand_float(0.0f, SCENE_PI * 2.0f));
 
         // Pick shape variation within environment
-        int shape_variant = static_cast<int>(rng & 0x3); // 0-3
-        rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5;
+        int shape_variant = static_cast<int>(rng.next() & 0x3); // 0-3
 
         switch (level_data.environment.type) {
             case EnvironmentType::Military:

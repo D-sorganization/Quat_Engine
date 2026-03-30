@@ -16,6 +16,7 @@
 
 #include "../../core/AABB.h"
 #include "../../core/Projectile.h"
+#include "../../core/Rng.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 #include "CharacterClass.h"
@@ -76,7 +77,7 @@ struct HitResult {
 
 class TPSCombatSystem {
     TPSCombatStats stats_;
-    uint32_t rng_ = 12345;
+    qe::core::Rng rng_{12345};
 
 public:
     const TPSCombatStats& stats() const { return stats_; }
@@ -368,11 +369,7 @@ private:
     }
 
     float random_range(float lo, float hi) {
-        rng_ ^= rng_ << 13;
-        rng_ ^= rng_ >> 17;
-        rng_ ^= rng_ << 5;
-        float t = static_cast<float>(rng_ & 0xFFFF) / 65535.0f;
-        return lo + t * (hi - lo);
+        return rng_.random_float(lo, hi);
     }
 };
 

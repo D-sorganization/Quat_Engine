@@ -71,7 +71,7 @@ class TPSGame {
     GamePhase phase_ = GamePhase::ClassSelect;
     float phase_timer_ = 0.0f;
     float game_time_ = 0.0f;
-    uint32_t ai_rng_ = 54321;
+    core::Rng ai_rng_{54321};
 
     // Delayed spawn tracking
     float spawn_timer_ = 0.0f;

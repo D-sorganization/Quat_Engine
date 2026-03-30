@@ -21,6 +21,7 @@
  * Design by Contract: all state transitions validated.
  */
 
+#include "../../core/Rng.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 #include "MutantTypes.h"
@@ -63,7 +64,7 @@ inline AIDecision update_mutant_ai(
         const math::Vec3& player_pos,
         bool player_alive,
         float dt,
-        uint32_t& rng) {
+        core::Rng& rng) {
 
     assert(mutant.alive && "pre: mutant must be alive");
 
@@ -262,13 +263,12 @@ inline math::Vec3 compute_approach_direction(
         const math::Vec3& dir_to_player,
         float dist,
         float /*dt*/,
-        uint32_t& rng) {
+        core::Rng& rng) {
     switch (mutant.config.type) {
         case MutantType::Crawler:
         case MutantType::Hound: {
             // Flanking: approach at an angle
-            rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5;
-            float angle = (static_cast<float>(rng & 0xFF) / 255.0f - 0.5f) * 0.8f;
+            float angle = (rng.random_float(0.0f, 1.0f) - 0.5f) * 0.8f;
             math::Quaternion flank = math::Quaternion::from_axis_angle(
                 math::Vec3::up(), angle);
             return flank.rotate(dir_to_player).normalized();
@@ -281,8 +281,7 @@ inline math::Vec3 compute_approach_direction(
             if (dist > ideal) return dir_to_player;
             // Strafe
             math::Vec3 strafe = dir_to_player.cross(math::Vec3::up()).normalized();
-            rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5;
-            return (rng & 1) ? strafe : strafe * -1.0f;
+            return (rng.next() & 1) ? strafe : strafe * -1.0f;
         }
 
         case MutantType::Screamer: {

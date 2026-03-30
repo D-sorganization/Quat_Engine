@@ -15,6 +15,7 @@
  * combat dynamic and preventing trivial target acquisition.
  */
 
+#include "../../core/Rng.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 
@@ -80,7 +81,7 @@ class LockOnState {
     math::Vec3 locked_target_pos_;
     float wobble_time_ = 0.0f;
     float switch_cooldown_ = 0.0f;
-    uint32_t rng_ = 77777;
+    qe::core::Rng rng_{77777};
 
     // Wobble state — two independent oscillators for organic motion
     float wobble_phase_x_ = 0.0f;

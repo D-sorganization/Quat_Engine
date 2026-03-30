@@ -13,6 +13,7 @@
  * Header-only. Depends only on Vec3.h and Quaternion.h from qe::math.
  */
 
+#include "../core/Rng.h"
 #include "../math/Quaternion.h"
 #include "../math/Vec3.h"
 
@@ -321,23 +322,12 @@ private:
 
     std::vector<Particle> particles_;
 
-    // Deterministic xorshift32 RNG for reproducible effects.
-    uint32_t rng_state_ = 12345;
-
-    uint32_t xorshift32() {
-        uint32_t x = rng_state_;
-        x ^= x << 13;
-        x ^= x >> 17;
-        x ^= x << 5;
-        rng_state_ = x;
-        return x;
-    }
+    // Deterministic RNG for reproducible effects.
+    qe::core::Rng rng_{12345};
 
     /** Uniform float in [min, max]. */
     float random_float(float min, float max) {
-        uint32_t r = xorshift32();
-        float t = static_cast<float>(r) / static_cast<float>(0xFFFFFFFFu);
-        return min + t * (max - min);
+        return rng_.random_float(min, max);
     }
 
     /** Generate a random direction within a cone defined by orientation and half-angle.

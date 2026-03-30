@@ -5,6 +5,7 @@
  */
 
 #include "GLLoader.h"
+#include "../core/Logger.h"
 #include "../math/Mat4.h"
 #include "../math/Vec3.h"
 
@@ -43,7 +44,7 @@ public:
         if (!success) {
             char log[512];
             gl::glGetProgramInfoLog(program_id, 512, nullptr, log);
-            std::cerr << "[Shader] Link error: " << log << std::endl;
+            QE_LOG_ERROR("Shader") << "Link error: " << log << std::endl;
             gl::glDeleteProgram(program_id);
             program_id = 0;
         }
@@ -59,7 +60,7 @@ public:
         std::string frag_src = read_file(frag_path);
 
         if (vert_src.empty() || frag_src.empty()) {
-            std::cerr << "[Shader] Failed to read shader files" << std::endl;
+            QE_LOG_ERROR("Shader") << "Failed to read shader files" << std::endl;
             return false;
         }
         return compile(vert_src, frag_src);
@@ -111,7 +112,7 @@ private:
             char log[512];
             gl::glGetShaderInfoLog(shader, 512, nullptr, log);
             const char* type_name = (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
-            std::cerr << "[Shader] " << type_name << " compile error: " << log << std::endl;
+            QE_LOG_ERROR("Shader") << type_name << " compile error: " << log << std::endl;
             gl::glDeleteShader(shader);
             return 0;
         }
@@ -121,7 +122,7 @@ private:
     static std::string read_file(const std::string& path) {
         std::ifstream file(path);
         if (!file.is_open()) {
-            std::cerr << "[Shader] Cannot open: " << path << std::endl;
+            QE_LOG_ERROR("Shader") << "Cannot open: " << path << std::endl;
             return "";
         }
         std::stringstream ss;

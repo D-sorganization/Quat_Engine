@@ -12,68 +12,14 @@
  * Uses the same lightweight test macros as the rest of the test suite.
  */
 
+#include "test_framework.h"
+
 #include "../src/math/Vec3.h"
 #include "../src/math/Quaternion.h"
 #include "../src/math/Mat4.h"
 #include "../src/core/Transform.h"
 
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
 #include <stdexcept>
-#include <string>
-
-// ── Minimal Test Framework ──────────────────────────────────────────────────
-static int g_tests_run    = 0;
-static int g_tests_passed = 0;
-static int g_tests_failed = 0;
-
-#define ASSERT_TRUE(expr)                                                     \
-    do {                                                                      \
-        ++g_tests_run;                                                        \
-        if (!(expr)) {                                                        \
-            std::cerr << "  FAIL: " << #expr << " (" << __FILE__ << ":"       \
-                      << __LINE__ << ")" << std::endl;                        \
-            ++g_tests_failed;                                                 \
-        } else { ++g_tests_passed; }                                          \
-    } while (0)
-
-#define ASSERT_FLOAT_EQ(a, b, eps)                                            \
-    do {                                                                      \
-        ++g_tests_run;                                                        \
-        if (std::abs((a) - (b)) > (eps)) {                                    \
-            std::cerr << "  FAIL: " << #a << " == " << #b                     \
-                      << " (got " << (a) << " vs " << (b) << ") at "          \
-                      << __FILE__ << ":" << __LINE__ << std::endl;            \
-            ++g_tests_failed;                                                 \
-        } else { ++g_tests_passed; }                                          \
-    } while (0)
-
-#define ASSERT_VEC3_EQ(v, ex, ey, ez, eps)                                    \
-    do {                                                                      \
-        ASSERT_FLOAT_EQ((v).x, (ex), (eps));                                  \
-        ASSERT_FLOAT_EQ((v).y, (ey), (eps));                                  \
-        ASSERT_FLOAT_EQ((v).z, (ez), (eps));                                  \
-    } while (0)
-
-#define ASSERT_THROWS(expr)                                                   \
-    do {                                                                      \
-        ++g_tests_run;                                                        \
-        bool threw = false;                                                   \
-        try { (void)(expr); } catch (...) { threw = true; }                   \
-        if (!threw) {                                                         \
-            std::cerr << "  FAIL: expected throw from " << #expr              \
-                      << " at " << __FILE__ << ":" << __LINE__ << std::endl;  \
-            ++g_tests_failed;                                                 \
-        } else { ++g_tests_passed; }                                          \
-    } while (0)
-
-#define RUN_TEST(fn)                                                          \
-    do {                                                                      \
-        std::cout << "  " << #fn << "... ";                                   \
-        int bf = g_tests_failed; fn();                                        \
-        std::cout << (g_tests_failed == bf ? "OK" : "FAILED") << std::endl;   \
-    } while (0)
 
 using namespace qe::math;
 using namespace qe::core;
@@ -664,12 +610,5 @@ int main() {
     RUN_TEST(test_transform_matrix);
     RUN_TEST(test_transform_rotate_axis);
 
-    std::cout << "\n=== Results: " << g_tests_passed << "/" << g_tests_run
-              << " passed";
-    if (g_tests_failed > 0) {
-        std::cout << " (" << g_tests_failed << " FAILED)";
-    }
-    std::cout << " ===" << std::endl;
-
-    return g_tests_failed > 0 ? 1 : 0;
+    return TEST_REPORT();
 }
