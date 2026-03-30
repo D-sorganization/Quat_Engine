@@ -39,7 +39,7 @@ inline constexpr float AI_PI = 3.14159265358979f;
 
 // Forward declarations
 inline math::Vec3 compute_approach_direction(
-    const MutantInstance&, const math::Vec3&, const math::Vec3&, float, float, uint32_t&);
+    const MutantInstance&, const math::Vec3&, const math::Vec3&, float, float, core::Rng&);
 inline float compute_speed_multiplier(MutantType);
 inline const MutantAttack& select_attack(const MutantInstance&, float);
 

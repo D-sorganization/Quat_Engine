@@ -71,8 +71,10 @@ QuatEngine/
 │   │   ├── Vec3.h
 │   │   ├── Quaternion.h
 │   │   └── Mat4.h
-│   ├── core/                    # Component system and transforms
-│   │   └── Transform.h
+│   ├── core/                    # Component system, transforms, utilities
+│   │   ├── Transform.h
+│   │   ├── Rng.h               # Shared xorshift32 PRNG
+│   │   └── Logger.h            # Structured logging (DEBUG/INFO/WARN/ERROR)
 │   ├── renderer/                # Graphics pipeline
 │   │   ├── GLLoader.h
 │   │   ├── Shader.h
@@ -95,7 +97,8 @@ QuatEngine/
 │   ├── blinn_phong.frag
 │   ├── post_process.frag
 │   └── ...
-├── tests/                        # 22 C++ test files
+├── tests/                        # 22 C++ test files + shared framework
+│   └── test_framework.h          # Shared assertion macros and test runner
 ├── CMakeLists.txt               # CMake build configuration
 ├── conanfile.txt                # (Optional) Conan package manager
 └── .github/workflows/           # CI/CD pipelines
@@ -109,6 +112,8 @@ QuatEngine/
 |-----------|----------|---------|
 | Math Library | `src/math/` | Vec3, Quaternion, Mat4 with SLERP, matrix ops |
 | Transform Component | `src/core/Transform.h` | Game object positioning and rotation |
+| PRNG | `src/core/Rng.h` | Deterministic xorshift32 random number generator |
+| Logger | `src/core/Logger.h` | Structured logging with compile-time and runtime level control |
 | GL Renderer | `src/renderer/GLLoader.h` | OpenGL initialization and context management |
 | Shader System | `src/renderer/Shader.h` | GLSL compilation, linking, and uniform management |
 | Mesh | `src/renderer/Mesh.h` | Geometry data (vertices, indices, normals, UVs) |
