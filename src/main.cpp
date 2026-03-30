@@ -345,8 +345,8 @@ void handle_events(App& app) {
         if (ev.type == SDL_WINDOWEVENT &&
             ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             qe::renderer::gl::glViewport(0, 0, ev.window.data1, ev.window.data2);
-            app.camera.config.aspect =
-                static_cast<float>(ev.window.data1) / ev.window.data2;
+            app.camera.set_aspect(
+                static_cast<float>(ev.window.data1) / ev.window.data2);
             if (app.postProcess) {
                 app.postProcess->updateResolution(ev.window.data1, ev.window.data2);
             }
@@ -391,8 +391,8 @@ void handle_events(App& app) {
     }
 
     // SLERP toggle
-    if (app.input.slerp_off()) { app.camera.config.smoothing = 0; app.slerp_on = false; }
-    if (app.input.slerp_on())  { app.camera.config.smoothing = qe::config::DEFAULT_CAMERA_SMOOTHING; app.slerp_on = true; }
+    if (app.input.slerp_off()) { app.camera.set_smoothing(0.0f); app.slerp_on = false; }
+    if (app.input.slerp_on())  { app.camera.set_smoothing(qe::config::DEFAULT_CAMERA_SMOOTHING); app.slerp_on = true; }
 }
 
 // ── Update ──────────────────────────────────────────────────────────────────

@@ -38,3 +38,8 @@ tests/test_weapons
 
 # Package managers
 vcpkg_installed/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
