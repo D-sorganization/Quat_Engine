@@ -43,7 +43,8 @@ jobs:
             sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
           else
             echo "Skipping apt dependency install on runners without passwordless sudo"
-            python3 -m pip install --user --break-system-packages gcovr
+            python3 -m pip install --user --break-system-packages cmake gcovr
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           fi
 
       - name: Configure CMake
