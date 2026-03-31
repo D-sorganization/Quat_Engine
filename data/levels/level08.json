@@ -1,0 +1,36 @@
+{
+    "level_number": 8,
+    "name": "Cathedral Ruins",
+    "description": "Shattered stained glass, collapsed arches. Amalgams nest in the rafters.",
+    "briefing": "Vertical combat. Amalgams dive-bomb from above — keep moving.",
+    "environment": {
+        "type": "Cathedral",
+        "ambient_color": [0.12, 0.08, 0.15],
+        "fog_color": [0.2, 0.15, 0.25],
+        "fog_density": 0.02,
+        "fog_start": 8.0,
+        "fog_end": 60.0,
+        "light_direction": [0.1, -0.9, 0.2],
+        "light_intensity": 0.45,
+        "sky_color": [0.18, 0.12, 0.22],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, 15],
+    "arena_radius": 55.0,
+    "spawn_table": [
+        {"type": "Amalgam",  "count": 5, "delay": 0.0},
+        {"type": "Stalker",  "count": 4, "delay": 8.0},
+        {"type": "Grunt",    "count": 6, "delay": 5.0},
+        {"type": "Screamer", "count": 2, "delay": 15.0},
+        {"type": "Hound",    "count": 4, "delay": 12.0}
+    ],
+    "total_enemy_count": 21,
+    "primary_objective": {
+        "type": "KillAll"
+    },
+    "par_time": 280.0,
+    "completion_score": 2000,
+    "par_time_bonus": 800,
+    "unlocks_weapon": true,
+    "weapon_unlock": "SubmachineGun"
+}

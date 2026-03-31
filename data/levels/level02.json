@@ -1,0 +1,35 @@
+{
+    "level_number": 2,
+    "name": "Ashen Subway",
+    "description": "The old metro tunnels, choked with ash and crawling horrors.",
+    "briefing": "Navigate the tunnels. Crawlers hunt in packs — stay alert.",
+    "environment": {
+        "type": "Underground",
+        "ambient_color": [0.05, 0.05, 0.08],
+        "fog_color": [0.1, 0.08, 0.12],
+        "fog_density": 0.06,
+        "fog_start": 5.0,
+        "fog_end": 40.0,
+        "light_direction": [0.0, -1.0, 0.0],
+        "light_intensity": 0.3,
+        "sky_color": [0.05, 0.05, 0.08],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, 5],
+    "arena_radius": 50.0,
+    "spawn_table": [
+        {"type": "Crawler", "count": 10, "delay": 0.0},
+        {"type": "Grunt",   "count": 5,  "delay": 5.0},
+        {"type": "Stalker", "count": 2,  "delay": 15.0}
+    ],
+    "total_enemy_count": 17,
+    "primary_objective": {
+        "type": "ReachExit",
+        "target": [80, 0, 0]
+    },
+    "par_time": 180.0,
+    "completion_score": 800,
+    "par_time_bonus": 350,
+    "unlocks_weapon": true,
+    "weapon_unlock": "CombatShotgun"
+}

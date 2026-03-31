@@ -250,6 +250,9 @@ qe_add_test(test_tps_levels
     LIBS qe_tps
     LABELS integration gameplay tps
 )
+set_tests_properties(test_tps_levels PROPERTIES
+    ENVIRONMENT "QE_LEVELS_DIR=${CMAKE_SOURCE_DIR}/data/levels"
+)
 
 qe_add_test(test_tps_combat
     SOURCE tests/test_tps_combat.cpp
@@ -273,6 +276,9 @@ qe_add_test(test_tps_gamestate
     SOURCE tests/test_tps_gamestate.cpp
     LIBS qe_tps
     LABELS integration gameplay tps
+)
+set_tests_properties(test_tps_gamestate PROPERTIES
+    ENVIRONMENT "QE_LEVELS_DIR=${CMAKE_SOURCE_DIR}/data/levels"
 )
 
 # ── Status ───────────────────────────────────────────────────────────────────

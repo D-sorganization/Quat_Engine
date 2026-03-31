@@ -1,0 +1,37 @@
+{
+    "level_number": 7,
+    "name": "Rail Yards",
+    "description": "Rusted trains and twisted tracks. Perfect cover — for both sides.",
+    "briefing": "Cover-based engagement. Screamers buff nearby mutants.",
+    "environment": {
+        "type": "Industrial",
+        "ambient_color": [0.12, 0.1, 0.08],
+        "fog_color": [0.25, 0.2, 0.15],
+        "fog_density": 0.025,
+        "fog_start": 12.0,
+        "fog_end": 70.0,
+        "light_direction": [0.4, -0.7, 0.2],
+        "light_intensity": 0.75,
+        "sky_color": [0.35, 0.28, 0.22],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [-20, 0, 0],
+    "arena_radius": 75.0,
+    "spawn_table": [
+        {"type": "Grunt",    "count": 8, "delay": 0.0},
+        {"type": "Screamer", "count": 3, "delay": 5.0},
+        {"type": "Brute",    "count": 2, "delay": 15.0},
+        {"type": "Spitter",  "count": 4, "delay": 10.0},
+        {"type": "Stalker",  "count": 3, "delay": 20.0}
+    ],
+    "total_enemy_count": 20,
+    "primary_objective": {
+        "type": "DefendPoint",
+        "target": [0, 0, 0],
+        "duration": 120.0
+    },
+    "par_time": 300.0,
+    "completion_score": 1800,
+    "par_time_bonus": 700,
+    "unlocks_weapon": false
+}
