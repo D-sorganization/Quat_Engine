@@ -1,0 +1,35 @@
+{
+    "level_number": 6,
+    "name": "Flooded District",
+    "description": "Half-submerged city blocks. Water slows movement but hides threats.",
+    "briefing": "Platforming required. Hounds leap between rooftops.",
+    "environment": {
+        "type": "Flooded",
+        "ambient_color": [0.1, 0.12, 0.18],
+        "fog_color": [0.2, 0.25, 0.35],
+        "fog_density": 0.03,
+        "fog_start": 10.0,
+        "fog_end": 60.0,
+        "light_direction": [0.3, -0.5, 0.6],
+        "light_intensity": 0.6,
+        "sky_color": [0.25, 0.3, 0.4],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 5, 0],
+    "arena_radius": 65.0,
+    "spawn_table": [
+        {"type": "Hound",   "count": 8, "delay": 0.0},
+        {"type": "Spitter", "count": 5, "delay": 5.0},
+        {"type": "Crawler", "count": 4, "delay": 10.0},
+        {"type": "Amalgam", "count": 2, "delay": 20.0}
+    ],
+    "total_enemy_count": 19,
+    "primary_objective": {
+        "type": "KillAll"
+    },
+    "par_time": 260.0,
+    "completion_score": 1600,
+    "par_time_bonus": 650,
+    "unlocks_weapon": true,
+    "weapon_unlock": "PlasmaCaster"
+}

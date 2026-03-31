@@ -1,0 +1,35 @@
+{
+    "level_number": 4,
+    "name": "Irradiated Forest",
+    "description": "Twisted trees glow with residual radiation. Stalkers lurk in the canopy.",
+    "briefing": "Ambush territory. Watch for Stalkers — they shimmer before they strike.",
+    "environment": {
+        "type": "Forest",
+        "ambient_color": [0.08, 0.15, 0.05],
+        "fog_color": [0.15, 0.25, 0.1],
+        "fog_density": 0.04,
+        "fog_start": 8.0,
+        "fog_end": 50.0,
+        "light_direction": [0.2, -0.6, 0.4],
+        "light_intensity": 0.5,
+        "sky_color": [0.12, 0.2, 0.08],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, 0],
+    "arena_radius": 70.0,
+    "spawn_table": [
+        {"type": "Stalker", "count": 6, "delay": 0.0},
+        {"type": "Crawler", "count": 5, "delay": 8.0},
+        {"type": "Hound",   "count": 6, "delay": 12.0},
+        {"type": "Spitter", "count": 3, "delay": 20.0}
+    ],
+    "total_enemy_count": 20,
+    "primary_objective": {
+        "type": "KillAll"
+    },
+    "par_time": 240.0,
+    "completion_score": 1200,
+    "par_time_bonus": 500,
+    "unlocks_weapon": true,
+    "weapon_unlock": "MarksmanRifle"
+}

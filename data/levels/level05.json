@@ -1,0 +1,35 @@
+{
+    "level_number": 5,
+    "name": "Bunker Descent",
+    "description": "A vertical descent into a reinforced bunker. Brutes guard every floor.",
+    "briefing": "Tight quarters. Brutes can't be staggered — dodge or die.",
+    "environment": {
+        "type": "Bunker",
+        "ambient_color": [0.08, 0.08, 0.1],
+        "fog_color": [0.12, 0.1, 0.15],
+        "fog_density": 0.05,
+        "fog_start": 4.0,
+        "fog_end": 35.0,
+        "light_direction": [0.0, -1.0, 0.1],
+        "light_intensity": 0.35,
+        "sky_color": [0.08, 0.08, 0.12],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 10, 0],
+    "arena_radius": 35.0,
+    "spawn_table": [
+        {"type": "Brute",    "count": 3,  "delay": 0.0},
+        {"type": "Grunt",    "count": 10, "delay": 3.0},
+        {"type": "Crawler",  "count": 6,  "delay": 10.0},
+        {"type": "Screamer", "count": 1,  "delay": 25.0}
+    ],
+    "total_enemy_count": 20,
+    "primary_objective": {
+        "type": "ReachExit",
+        "target": [0, -20, 0]
+    },
+    "par_time": 300.0,
+    "completion_score": 1500,
+    "par_time_bonus": 600,
+    "unlocks_weapon": false
+}

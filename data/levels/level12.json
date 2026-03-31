@@ -1,0 +1,39 @@
+{
+    "level_number": 12,
+    "name": "Ground Zero",
+    "description": "The original detonation crater. The Apex awaits at its heart.",
+    "briefing": "Final mission. Destroy The Apex. End the mutant plague.",
+    "environment": {
+        "type": "Crater",
+        "ambient_color": [0.2, 0.1, 0.05],
+        "fog_color": [0.4, 0.2, 0.1],
+        "fog_density": 0.015,
+        "fog_start": 20.0,
+        "fog_end": 120.0,
+        "light_direction": [0.0, -0.5, 0.5],
+        "light_intensity": 1.0,
+        "sky_color": [0.5, 0.25, 0.1],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, 30],
+    "arena_radius": 60.0,
+    "spawn_table": [
+        {"type": "Apex",     "count": 1, "delay": 0.0},
+        {"type": "Grunt",    "count": 6, "delay": 10.0},
+        {"type": "Hound",    "count": 4, "delay": 15.0},
+        {"type": "Brute",    "count": 2, "delay": 25.0},
+        {"type": "Amalgam",  "count": 3, "delay": 20.0},
+        {"type": "Screamer", "count": 2, "delay": 30.0}
+    ],
+    "total_enemy_count": 18,
+    "primary_objective": {
+        "type": "BossKill"
+    },
+    "par_time": 480.0,
+    "completion_score": 5000,
+    "par_time_bonus": 2000,
+    "unlocks_weapon": false,
+    "enemy_health_mult": 2.0,
+    "enemy_damage_mult": 1.8,
+    "enemy_speed_mult": 1.4
+}

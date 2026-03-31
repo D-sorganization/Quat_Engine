@@ -1,0 +1,40 @@
+{
+    "level_number": 11,
+    "name": "The Spire",
+    "description": "A towering mutant hive. Every enemy type nests here.",
+    "briefing": "Full escalation. Every mutant type is present. Fight to the top.",
+    "environment": {
+        "type": "Hive",
+        "ambient_color": [0.1, 0.05, 0.08],
+        "fog_color": [0.18, 0.08, 0.12],
+        "fog_density": 0.04,
+        "fog_start": 6.0,
+        "fog_end": 40.0,
+        "light_direction": [0.1, -0.8, 0.3],
+        "light_intensity": 0.4,
+        "sky_color": [0.12, 0.06, 0.1],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, 0],
+    "arena_radius": 45.0,
+    "spawn_table": [
+        {"type": "Grunt",    "count": 8, "delay": 0.0},
+        {"type": "Crawler",  "count": 6, "delay": 3.0},
+        {"type": "Hound",    "count": 5, "delay": 6.0},
+        {"type": "Stalker",  "count": 4, "delay": 10.0},
+        {"type": "Spitter",  "count": 4, "delay": 15.0},
+        {"type": "Screamer", "count": 3, "delay": 20.0},
+        {"type": "Brute",    "count": 3, "delay": 25.0},
+        {"type": "Amalgam",  "count": 3, "delay": 30.0},
+        {"type": "Behemoth", "count": 1, "delay": 40.0}
+    ],
+    "total_enemy_count": 37,
+    "primary_objective": {
+        "type": "KillAll"
+    },
+    "par_time": 420.0,
+    "completion_score": 4000,
+    "par_time_bonus": 1500,
+    "unlocks_weapon": true,
+    "weapon_unlock": "TeslaCoil"
+}
