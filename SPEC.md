@@ -27,8 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-| **Spec Version** | 1.0.0 |
-| **Last Spec Update** | 2026-03-28 |
+| **Spec Version** | 1.0.2 |
+| **Last Spec Update** | 2026-03-31 |
 
 ## 2. Purpose & Mission
 
@@ -271,6 +271,10 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 | `heavy-integration-tests.yml` | Push/PR | Full render tests, game loop validation | Yes |
 | All tests on C++17 | Push/PR | Validate C++17 standard compliance | Yes |
 
+PR workflows prefer the local self-hosted runner fleet when available and fall
+back to GitHub-hosted Linux when it is not. Self-hosted Linux jobs no longer
+assume passwordless `sudo` for dependency setup.
+
 ## 9. Dependencies
 
 ### Runtime Dependencies
@@ -379,6 +383,7 @@ gcovr --print-summary --html coverage/
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-03-31 | 1.0.2 | Added self-hosted runner fallback documentation and made CI dependency setup tolerant of runners without passwordless sudo |
 | 2026-03-28 | 1.0.0 | Initial specification |
 | 2026-03-30 | 1.0.1 | A-N Assessment remediation: add .env to .gitignore, add MIT LICENSE, add DbC assertions to Combat.h/Scoring.h, add Camera::set_aspect/set_smoothing interface methods (LoD), update main.cpp to use new Camera interface |
 
