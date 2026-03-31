@@ -277,6 +277,9 @@ qe_add_test(test_tps_gamestate
     LIBS qe_tps
     LABELS integration gameplay tps
 )
+set_tests_properties(test_tps_gamestate PROPERTIES
+    ENVIRONMENT "QE_LEVELS_DIR=${CMAKE_SOURCE_DIR}/data/levels"
+)
 
 # ── Status ───────────────────────────────────────────────────────────────────
 message(STATUS "")
