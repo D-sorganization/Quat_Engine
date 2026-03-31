@@ -31,6 +31,7 @@ jobs:
             echo "No self-hosted runner — using GitHub-hosted"
           fi
   build-and-test:
+    name: quality-gate
     needs: pick-runner
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     steps:
