@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runner Dashboard v4</title>
+
+  <!-- PWA meta tags -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1a1a2e" />
+
+  <style>
+    /* ----- Reset & Base ----- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    a { color: #6ec6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ----- Header ----- */
+    .header {
+      background: #1a1a2e;
+      border-bottom: 1px solid #2a2a4a;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header .logo { font-size: 1.4rem; font-weight: 700; color: #6ec6ff; }
+    .header .version { font-size: 0.75rem; color: #888; margin-left: -8px; }
+
+    /* ----- Tab Bar ----- */
+    .tab-bar {
+      display: flex;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: #16162b;
+      border-bottom: 2px solid #2a2a4a;
+      scrollbar-width: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex: 0 0 auto;
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.active { color: #6ec6ff; border-bottom-color: #6ec6ff; }
+
+    /* ----- Content ----- */
+    .content { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ----- Stat Cards ----- */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .stat-card .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #fff; margin-top: 4px; }
+    .stat-card .sub { font-size: 0.75rem; color: #666; margin-top: 2px; }
+
+    /* ----- Tables ----- */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    th { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { font-size: 0.9rem; }
+
+    /* ----- Sections ----- */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #ccc;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .arrow { transition: transform 0.2s; font-size: 0.7rem; }
+    .section-title.collapsed .arrow { transform: rotate(-90deg); }
+    .section-body.hidden { display: none; }
+
+    /* ----- Badges ----- */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-online { background: #1b4332; color: #52b788; }
+    .badge-offline { background: #3d0814; color: #ff6b6b; }
+    .badge-busy { background: #3d2e00; color: #ffd166; }
+    .badge-success { background: #1b4332; color: #52b788; }
+    .badge-failure { background: #3d0814; color: #ff6b6b; }
+    .badge-pending { background: #3d2e00; color: #ffd166; }
+
+    /* ----- Buttons ----- */
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      background: #1a1a2e;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn:hover { background: #24244a; border-color: #6ec6ff; }
+    .btn-primary { background: #1a3a5c; border-color: #6ec6ff; color: #6ec6ff; }
+    .btn-primary:hover { background: #264d73; }
+
+    /* ----- Forms ----- */
+    select, input[type="text"] {
+      padding: 8px 12px;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      font-size: 0.85rem;
+    }
+    .form-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .form-row label { font-size: 0.85rem; color: #999; }
+
+    /* ----- Reports Sidebar ----- */
+    .reports-layout { display: flex; gap: 20px; }
+    .reports-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .reports-sidebar .item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #2a2a4a;
+      font-size: 0.85rem;
+      color: #999;
+      transition: background 0.15s;
+    }
+    .reports-sidebar .item:hover { background: #24244a; color: #ccc; }
+    .reports-sidebar .item.active { background: #1a3a5c; color: #6ec6ff; }
+    .reports-content {
+      flex: 1;
+      min-width: 0;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .reports-content .markdown { line-height: 1.6; }
+    .reports-content .markdown h1, .reports-content .markdown h2, .reports-content .markdown h3 { color: #fff; margin: 16px 0 8px; }
+    .reports-content .markdown h1 { font-size: 1.4rem; }
+    .reports-content .markdown h2 { font-size: 1.2rem; }
+    .reports-content .markdown h3 { font-size: 1.05rem; }
+    .reports-content .markdown p { margin-bottom: 10px; }
+    .reports-content .markdown code {
+      background: #0f0f1a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .reports-content .markdown pre {
+      background: #0f0f1a;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 12px;
+    }
+    .reports-content .markdown pre code { padding: 0; }
+    .reports-content .markdown table { margin-bottom: 12px; }
+    .reports-content .markdown img { max-width: 100%; border-radius: 8px; }
+
+    /* ----- Docker Output ----- */
+    .output-box {
+      background: #0a0a14;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: "Cascadia Code", "Fira Code", monospace;
+      font-size: 0.8rem;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #aaa;
+    }
+
+    /* ----- Loading ----- */
+    .loading { color: #666; font-style: italic; padding: 20px; }
+
+    /* ----- Mobile Responsive ----- */
+    @media (max-width: 768px) {
+      .header { padding: 8px 12px; }
+      .header .logo { font-size: 1.1rem; }
+      .header .version { display: none; }
+      .content { padding: 12px; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card .value { font-size: 1.4rem; }
+      .reports-layout { flex-direction: column; }
+      .reports-sidebar { width: 100%; max-height: 200px; }
+      .tab-btn { padding: 10px 16px; font-size: 0.8rem; }
+      .form-row { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 480px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stat-card { padding: 10px; }
+      .stat-card .value { font-size: 1.2rem; }
+      .header .logo-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <span class="logo">&#x1F3C3; <span class="logo-text">Runner Dashboard</span></span>
+  <span class="version">v4.0</span>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="fleet">Fleet</button>
+  <button class="tab-btn" data-tab="org">Organization</button>
+  <button class="tab-btn" data-tab="heavy-tests">Heavy Tests</button>
+  <button class="tab-btn" data-tab="reports">Reports</button>
+</div>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- Fleet Tab -->
+  <div id="tab-fleet" class="tab-panel active">
+    <div class="stat-grid" id="fleet-stats"></div>
+    <div class="section">
+      <div class="section-title" onclick="toggleSection(this)">
+        <span class="arrow">&#x25BC;</span> Runners
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>OS</th><th>Status</th><th>Labels</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="runners-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization Tab -->
+  <div id="tab-org" class="tab-panel">
+    <div class="stat-grid" id="org-stats"></div>
+    <div class="section">
+      <div class="section-title" onclick="toggleSection(this)">
+        <span class="arrow">&#x25BC;</span> Repositories
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr><th>Repository</th><th>Language</th><th>Open Issues</th><th>Updated</th></tr>
+          </thead>
+          <tbody id="repos-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heavy Tests Tab -->
+  <div id="tab-heavy-tests" class="tab-panel">
+    <div id="heavy-tests-content">
+      <p class="loading">Loading heavy test repos...</p>
+    </div>
+  </div>
+
+  <!-- Reports Tab -->
+  <div id="tab-reports" class="tab-panel">
+    <div class="reports-layout">
+      <div class="reports-sidebar" id="reports-sidebar">
+        <p class="loading" style="padding:12px;">Loading reports...</p>
+      </div>
+      <div class="reports-content">
+        <div class="stat-grid" id="report-metrics" style="display:none;"></div>
+        <div class="markdown" id="report-body">
+          <p style="color:#666;">Select a report from the sidebar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Tab Switching
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+
+    // Lazy-load tab data
+    if (btn.dataset.tab === 'fleet') loadFleet();
+    if (btn.dataset.tab === 'org') loadOrg();
+    if (btn.dataset.tab === 'heavy-tests') loadHeavyTests();
+    if (btn.dataset.tab === 'reports') loadReportsList();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Collapsible Sections
+// ---------------------------------------------------------------------------
+function toggleSection(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
+}
+
+// ---------------------------------------------------------------------------
+// API Helpers
+// ---------------------------------------------------------------------------
+const API = '';
+
+async function api(path, opts) {
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Fleet Tab
+// ---------------------------------------------------------------------------
+let fleetLoaded = false;
+async function loadFleet() {
+  if (fleetLoaded) return;
+  fleetLoaded = true;
+  try {
+    const runners = await api('/api/runners');
+    const online = runners.filter(r => r.status === 'online').length;
+    const busy = runners.filter(r => r.busy).length;
+
+    document.getElementById('fleet-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="label">Total Runners</div>
+        <div class="value">${runners.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Online</div>
+        <div class="value" style="color:#52b788">${online}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Busy</div>
+        <div class="value" style="color:#ffd166">${busy}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Offline</div>
+        <div class="value" style="color:#ff6b6b">${runners.length - online}</div>
+      </div>
+    `;
+
+    const tbody = document.getElementById('runners-table');
+    if (runners.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading">No runners found. Check GITHUB_TOKEN.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = runners.map(r => `
+      <tr>
+        <td><strong>${r.name}</strong></td>
+        <td>${r.os || '—'}</td>
+        <td><span class="badge badge-${r.status === 'online' ? 'online' : 'offline'}">${r.status}</span></td>
+        <td>${(r.labels || []).map(l => l.name || l).join(', ')}</td>
+        <td>—</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    document.getElementById('fleet-stats').innerHTML = '<p class="loading">Failed to load runners.</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Organization Tab
+// ---------------------------------------------------------------------------
+let orgLoaded = false;
+async function loadOrg() {
+  if (orgLoaded) return;
+  orgLoaded = true;
+  try {
+    const repos = await api('/api/repos');
+    document.getElementById('org-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="label">Repositories</div>
+        <div class="value">${repos.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Open Issues</div>
+        <div class="value">${repos.reduce((s, r) => s + r.open_issues_count, 0)}</div>
+      </div>
+    `;
+
+    const tbody = document.getElementById('repos-table');
+    tbody.innerHTML = repos.map(r => `
+      <tr>
+        <td><a href="${r.html_url}" target="_blank">${r.name}</a></td>
+        <td>${r.language || '—'}</td>
+        <td>${r.open_issues_count}</td>
+        <td>${new Date(r.updated_at).toLocaleDateString()}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    document.getElementById('org-stats').innerHTML = '<p class="loading">Failed to load repos.</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Heavy Tests Tab
+// ---------------------------------------------------------------------------
+let heavyLoaded = false;
+async function loadHeavyTests() {
+  if (heavyLoaded) return;
+  heavyLoaded = true;
+  try {
+    const repos = await api('/api/heavy-tests/repos');
+    const container = document.getElementById('heavy-tests-content');
+    container.innerHTML = repos.map((r, i) => `
+      <div class="section" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:20px;margin-bottom:16px;">
+        <h3 style="color:#fff;margin-bottom:16px;">${r.display_name}
+          <span style="font-size:0.75rem;color:#666;font-weight:400;">${r.owner}/${r.repo}</span>
+        </h3>
+        <div class="form-row">
+          <label>Python</label>
+          <select id="pyver-${i}">
+            <option value="3.12">3.12</option>
+            <option value="3.11">3.11</option>
+            <option value="3.10">3.10</option>
+          </select>
+          <label>Branch</label>
+          <input type="text" id="branch-${i}" value="main" style="width:120px;" />
+          <button class="btn btn-primary" onclick="dispatchHeavy(${i}, '${r.owner}', '${r.repo}', '${r.workflow}')">
+            Run via GitHub Actions
+          </button>
+          <button class="btn" onclick="dockerHeavy(${i}, '${r.owner}', '${r.repo}')">
+            Run via Docker
+          </button>
+        </div>
+        <div id="heavy-status-${i}" style="margin-bottom:12px;"></div>
+        <div class="section-title" onclick="toggleSection(this);loadRuns(${i}, '${r.owner}', '${r.repo}', '${r.workflow}')">
+          <span class="arrow">&#x25BC;</span> Recent Heavy Test Runs
+        </div>
+        <div class="section-body hidden">
+          <table>
+            <thead><tr><th>Branch</th><th>Status</th><th>Started</th><th>Link</th></tr></thead>
+            <tbody id="runs-${i}"><tr><td colspan="4" class="loading">Click to load...</td></tr></tbody>
+          </table>
+        </div>
+        <div id="docker-output-${i}" style="display:none;margin-top:12px;">
+          <h4 style="color:#ccc;margin-bottom:8px;">Docker Output</h4>
+          <div class="output-box" id="docker-box-${i}"></div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('heavy-tests-content').innerHTML = '<p class="loading">Failed to load heavy test repos.</p>';
+  }
+}
+
+async function dispatchHeavy(idx, owner, repo, workflow) {
+  const pyver = document.getElementById('pyver-' + idx).value;
+  const branch = document.getElementById('branch-' + idx).value || 'main';
+  const statusEl = document.getElementById('heavy-status-' + idx);
+  statusEl.innerHTML = '<span style="color:#ffd166;">Dispatching...</span>';
+  try {
+    const res = await api('/api/heavy-tests/dispatch', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({owner, repo, workflow, ref: branch, python_version: pyver})
+    });
+    statusEl.innerHTML = `<span class="badge badge-success">Dispatched</span> Python ${pyver} on ${branch}`;
+  } catch (e) {
+    statusEl.innerHTML = '<span class="badge badge-failure">Dispatch failed</span>';
+  }
+}
+
+async function dockerHeavy(idx, owner, repo) {
+  const pyver = document.getElementById('pyver-' + idx).value;
+  const branch = document.getElementById('branch-' + idx).value || 'main';
+  const statusEl = document.getElementById('heavy-status-' + idx);
+  const outputDiv = document.getElementById('docker-output-' + idx);
+  const box = document.getElementById('docker-box-' + idx);
+  statusEl.innerHTML = '<span style="color:#ffd166;">Running Docker (this may take a while)...</span>';
+  outputDiv.style.display = 'block';
+  box.textContent = 'Starting...\n';
+  try {
+    const res = await api('/api/heavy-tests/docker', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({owner, repo, python_version: pyver, branch})
+    });
+    if (res.error) {
+      statusEl.innerHTML = '<span class="badge badge-failure">Docker error</span>';
+      box.textContent = res.error;
+    } else {
+      const ok = res.returncode === 0;
+      statusEl.innerHTML = `<span class="badge badge-${ok ? 'success' : 'failure'}">${ok ? 'Passed' : 'Failed'}</span> exit code ${res.returncode}`;
+      box.textContent = (res.stdout || '') + '\n' + (res.stderr || '');
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<span class="badge badge-failure">Docker request failed</span>';
+    box.textContent = e.message;
+  }
+}
+
+async function loadRuns(idx, owner, repo, workflow) {
+  const tbody = document.getElementById('runs-' + idx);
+  try {
+    const runs = await api(`/api/heavy-tests/runs?owner=${owner}&repo=${repo}&workflow=${workflow}`);
+    if (runs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="loading">No runs found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = runs.map(r => `
+      <tr>
+        <td>${r.head_branch || '—'}</td>
+        <td><span class="badge badge-${r.conclusion === 'success' ? 'success' : r.conclusion === 'failure' ? 'failure' : 'pending'}">${r.conclusion || r.status}</span></td>
+        <td>${new Date(r.created_at).toLocaleString()}</td>
+        <td><a href="${r.html_url}" target="_blank">View</a></td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="4" class="loading">Failed to load runs.</td></tr>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reports Tab
+// ---------------------------------------------------------------------------
+let reportsListLoaded = false;
+let reportsList = [];
+
+async function loadReportsList() {
+  if (reportsListLoaded) return;
+  reportsListLoaded = true;
+  try {
+    reportsList = await api('/api/reports');
+    const sidebar = document.getElementById('reports-sidebar');
+    if (reportsList.length === 0) {
+      sidebar.innerHTML = '<p style="padding:12px;color:#666;">No reports found.</p>';
+      return;
+    }
+    sidebar.innerHTML = reportsList.map(r =>
+      `<div class="item" data-date="${r.date}" onclick="loadReport('${r.date}', this)">${r.date}</div>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('reports-sidebar').innerHTML = '<p style="padding:12px;color:#666;">Failed to load reports.</p>';
+  }
+}
+
+async function loadReport(date, el) {
+  // Highlight selected
+  document.querySelectorAll('.reports-sidebar .item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const body = document.getElementById('report-body');
+  const metricsGrid = document.getElementById('report-metrics');
+  body.innerHTML = '<p class="loading">Loading report...</p>';
+  metricsGrid.style.display = 'none';
+
+  try {
+    const data = await api('/api/reports?date=' + date);
+    // Render metrics
+    if (data.metrics && Object.keys(data.metrics).length > 0) {
+      metricsGrid.style.display = 'grid';
+      metricsGrid.innerHTML = Object.entries(data.metrics).map(([k, v]) => `
+        <div class="stat-card">
+          <div class="label">${k.replace(/_/g, ' ')}</div>
+          <div class="value">${v}</div>
+        </div>
+      `).join('');
+    }
+
+    // Simple markdown → HTML rendering
+    let html = renderMarkdown(data.content || '');
+
+    // Insert chart image if available
+    html += `<img src="/api/reports/${date}/chart" onerror="this.style.display='none'" style="margin-top:16px;" />`;
+
+    body.innerHTML = html;
+  } catch (e) {
+    body.innerHTML = '<p class="loading">Failed to load report.</p>';
+  }
+}
+
+function renderMarkdown(md) {
+  let html = md
+    // Code blocks
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    // Headers
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // Bold / italic
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    // Horizontal rules
+    .replace(/^---$/gm, '<hr/>')
+    // Line breaks → paragraphs (simple)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br/>');
+
+  // Simple table rendering
+  html = html.replace(/(<br\/>)?\|(.+)\|(<br\/>)\|[-| :]+\|(<br\/>)([\s\S]*?)(?=<\/p>|<h|$)/g, (match, _1, header, _2, _3, body) => {
+    const headers = header.split('|').map(h => `<th>${h.trim()}</th>`).join('');
+    const rows = body.split('<br/>').filter(r => r.trim() && r.includes('|')).map(row => {
+      const cells = row.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+    return `<table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+  });
+
+  return '<p>' + html + '</p>';
+}
+
+// ---------------------------------------------------------------------------
+// Initial Load
+// ---------------------------------------------------------------------------
+loadFleet();
+</script>
+</body>
+</html>
