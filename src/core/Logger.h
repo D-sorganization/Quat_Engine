@@ -21,6 +21,7 @@
 #define QE_CORE_LOGGER_H
 
 #include <iostream>
+#include <streambuf>
 
 namespace qe {
 namespace core {
@@ -44,12 +45,18 @@ enum class LogLevel : int {
 #define QE_LOG_LEVEL_MIN QE_LOG_DEBUG_LEVEL
 #endif
 
+class NullBuffer : public std::streambuf {
+protected:
+    int overflow(int ch) override { return ch; }
+};
+
 /** A no-op stream that discards everything written to it. */
-class NullStream {
+class NullStream : public std::ostream {
 public:
-    template <typename T>
-    NullStream& operator<<(const T&) { return *this; }
-    NullStream& operator<<(std::ostream& (*)(std::ostream&)) { return *this; }
+    NullStream() : std::ostream(&buffer_) {}
+
+private:
+    NullBuffer buffer_;
 };
 
 class Logger {
@@ -78,16 +85,18 @@ private:
 // ── Logging Macros ──────────────────────────────────────────────────────────
 
 // Internal: returns the correct stream with a prefix, or a null stream.
-#define QE_LOG_IMPL(level_enum, level_int, level_tag, category)              \
-    (QE_LOG_LEVEL_MIN <= (level_int) &&                                      \
-     qe::core::Logger::enabled(qe::core::LogLevel::level_enum))             \
-        ? (((qe::core::LogLevel::level_enum >= qe::core::LogLevel::Warn)     \
-            ? std::cerr : std::cout)                                         \
-           << "[" level_tag "] [" category "] ")                             \
-        : qe::core::detail::null_stream()
+#define QE_LOG_IMPL(level_enum, level_int, level_tag, category)                \
+    ((QE_LOG_LEVEL_MIN <= (level_int) &&                                        \
+      qe::core::Logger::enabled(qe::core::LogLevel::level_enum))               \
+         ? static_cast<std::ostream&>(                                          \
+               ((qe::core::LogLevel::level_enum >= qe::core::LogLevel::Warn)    \
+                    ? std::cerr                                                 \
+                    : std::cout)                                                \
+               << "[" level_tag "] [" category "] ")                           \
+         : qe::core::detail::null_stream())
 
 namespace detail {
-    inline NullStream& null_stream() {
+    inline std::ostream& null_stream() {
         static NullStream ns;
         return ns;
     }

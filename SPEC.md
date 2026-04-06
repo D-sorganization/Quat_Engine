@@ -27,8 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-| **Spec Version** | 1.0.2 |
-| **Last Spec Update** | 2026-03-31 |
+| **Spec Version** | 1.0.3 |
+| **Last Spec Update** | 2026-04-06 |
 
 ## 2. Purpose & Mission
 
@@ -90,7 +90,13 @@ QuatEngine/
 │   │   │   └── Levels.h
 │   │   └── fps/                 # First-person shooter subsystem
 │   │       └── FPSController.h
-│   └── main.cpp
+│   ├── demo/                    # FPS demo composition/runtime modules
+│   │   ├── App.h
+│   │   ├── Bootstrap.cpp
+│   │   ├── RuntimeSession.h
+│   │   ├── RuntimeSystems.cpp
+│   │   └── Rendering.cpp
+│   └── main.cpp                 # Thin composition root for qe_demo
 ├── shaders/                      # GLSL 3.30 shader collection (10 files)
 │   ├── basic.vert
 │   ├── basic.frag
@@ -119,6 +125,10 @@ QuatEngine/
 | Mesh | `src/renderer/Mesh.h` | Geometry data (vertices, indices, normals, UVs) |
 | Camera | `src/renderer/Camera.h` | View matrix, projection, SLERP interpolation |
 | Input Manager | `src/input/InputManager.h` | SDL2 keyboard/mouse event handling |
+| Demo Bootstrap | `src/demo/Bootstrap.cpp` | Window, GL, asset setup, runtime boot, cleanup |
+| Demo Runtime | `src/demo/RuntimeSystems.cpp` | Input orchestration, wave/session updates, title updates |
+| Demo Rendering | `src/demo/Rendering.cpp` | World, particle, and HUD rendering passes |
+| Demo Session Helpers | `src/demo/RuntimeSession.h` | Pure runtime helpers used by demo systems and tests |
 | TPS Subsystem | `src/game/tps/` | Third-person controller, combat, AI, level management |
 | FPS Subsystem | `src/game/fps/FPSController.h` | First-person shooter mechanics |
 | Particle System | `src/renderer/` | Particle emission, physics, rendering |
@@ -214,7 +224,7 @@ Configuration is managed via:
 
 ### Testing Strategy
 
-Three-tier testing with unit tests for math (vectors, quaternions), integration tests for renderer systems, and heavy integration tests for full game loops. Labels distinguish quick unit tests (run in every CI) from slow integration/render tests (run selectively). Coverage tracked via gcov/gcovr.
+Three-tier testing with unit tests for math (vectors, quaternions), integration tests for renderer systems, and heavy integration tests for full game loops. Labels distinguish quick unit tests (run in every CI) from slow integration/render tests (run selectively). Coverage tracked via gcov/gcovr. Demo runtime helpers are kept in native ctest coverage so `main.cpp` can stay a thin composition root.
 
 ### Test Organization
 
@@ -243,7 +253,7 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 - [ ] TPS controller responds to input and updates position correctly
 - [ ] FPS controller implements proper mouse look with no gimbal lock
 - [ ] Post-processing effects apply without framebuffer corruption
-- [ ] 22 test files execute via ctest with 100% pass rate on C++17 compiler
+- [ ] 23 test files execute via ctest with 100% pass rate on C++17 compiler
 
 ## 8. Quality Standards
 
@@ -262,6 +272,7 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 - **Design by Contract (DbC)**: Yes — preconditions on vector/quat operations (e.g., unit quaternions)
 - **DRY**: Yes — shader utilities and math operations centralized
 - **Orthogonality**: Yes — math, rendering, and game logic are decoupled and independently testable
+- **Demo boundary**: `src/main.cpp` stays a composition root; bootstrap, runtime, and render behavior live under `src/demo/`
 
 ### CI/CD Pipeline
 

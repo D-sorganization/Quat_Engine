@@ -91,7 +91,12 @@ if(QE_BUILD_DEMO)
     target_link_libraries(qe_input INTERFACE SDL2::SDL2-static)
 
     # ── Demo Application ──────────────────────────────────────────────────────
-    add_executable(qe_demo src/main.cpp)
+    add_executable(qe_demo
+        src/main.cpp
+        src/demo/Bootstrap.cpp
+        src/demo/RuntimeSystems.cpp
+        src/demo/Rendering.cpp
+    )
     target_link_libraries(qe_demo PRIVATE qe_renderer qe_game qe_input)
 
     # ── TPS Game Application ─────────────────────────────────────────────────
@@ -149,6 +154,12 @@ qe_add_test(test_wave
     SOURCE tests/test_wave.cpp
     LIBS qe_game
     LABELS integration gameplay
+)
+
+qe_add_test(test_runtime_session
+    SOURCE tests/test_runtime_session.cpp
+    LIBS qe_game
+    LABELS unit gameplay
 )
 
 qe_add_test(test_behavior
