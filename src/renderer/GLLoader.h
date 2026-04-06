@@ -48,6 +48,7 @@ constexpr GLenum GL_BACK          = 0x0405;
 constexpr GLenum GL_FRONT         = 0x0404;
 
 // Blend funcs
+constexpr GLenum GL_ONE                 = 0x0001;
 constexpr GLenum GL_SRC_ALPHA           = 0x0302;
 constexpr GLenum GL_ONE_MINUS_SRC_ALPHA = 0x0303;
 
