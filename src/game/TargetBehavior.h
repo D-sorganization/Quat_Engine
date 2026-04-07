@@ -41,6 +41,12 @@ enum class BehaviorType {
 };
 
 struct TargetBehavior {
+    struct PatrolProgress {
+        math::Quaternion rotation_from;
+        math::Quaternion rotation_to;
+        float fraction = 0.0f;
+    };
+
     BehaviorType type = BehaviorType::Static;
     float speed = 1.0f;
     float phase = 0.0f;
@@ -55,85 +61,107 @@ struct TargetBehavior {
     // Internal state for dodge
     math::Vec3 dodge_offset;
 
-    // --- Factory Methods ---
-
-    static TargetBehavior create_orbit(math::Vec3 center, float radius,
-                                       float speed, float phase) {
+private:
+    static TargetBehavior make_behavior(
+        BehaviorType type,
+        math::Vec3 center,
+        float speed,
+        float phase,
+        float radius = 5.0f,
+        float amplitude = 3.0f
+    ) {
         TargetBehavior b;
-        b.type = BehaviorType::Orbit;
+        b.type = type;
         b.center = center;
-        b.radius = radius;
         b.speed = speed;
         b.phase = phase;
-        b.base_orientation = math::Quaternion::identity();
-        b.facing = math::Quaternion::identity();
-        return b;
-    }
-
-    static TargetBehavior create_figure8(math::Vec3 center, float radius,
-                                         float speed, float phase) {
-        TargetBehavior b;
-        b.type = BehaviorType::Figure8;
-        b.center = center;
         b.radius = radius;
-        b.speed = speed;
-        b.phase = phase;
-        b.base_orientation = math::Quaternion::identity();
-        b.facing = math::Quaternion::identity();
-        return b;
-    }
-
-    static TargetBehavior create_zigzag(math::Vec3 center, float amplitude,
-                                        float speed, float phase) {
-        TargetBehavior b;
-        b.type = BehaviorType::Zigzag;
-        b.center = center;
         b.amplitude = amplitude;
-        b.speed = speed;
-        b.phase = phase;
-        b.base_orientation = math::Quaternion::identity();
-        b.facing = math::Quaternion::identity();
-        return b;
-    }
-
-    static TargetBehavior create_spiral(math::Vec3 center, float radius,
-                                        float speed, float phase) {
-        TargetBehavior b;
-        b.type = BehaviorType::Spiral;
-        b.center = center;
-        b.radius = radius;
-        b.speed = speed;
-        b.phase = phase;
-        b.base_orientation = math::Quaternion::identity();
-        b.facing = math::Quaternion::identity();
-        return b;
-    }
-
-    static TargetBehavior create_patrol(math::Vec3 center, float radius,
-                                        float speed, float phase) {
-        TargetBehavior b;
-        b.type = BehaviorType::Patrol;
-        b.center = center;
-        b.radius = radius;
-        b.speed = speed;
-        b.phase = phase;
-        b.base_orientation = math::Quaternion::identity();
-        b.facing = math::Quaternion::identity();
-        return b;
-    }
-
-    static TargetBehavior create_dodge(math::Vec3 center, float speed) {
-        TargetBehavior b;
-        b.type = BehaviorType::Dodge;
-        b.center = center;
-        b.speed = speed;
-        b.phase = 0.0f;
-        b.radius = 3.0f;
         b.base_orientation = math::Quaternion::identity();
         b.facing = math::Quaternion::identity();
         b.is_alerted = false;
         b.alert_timer = 0.0f;
         b.dodge_offset = math::Vec3::zero();
+        return b;
+    }
+
+    static PatrolProgress compute_patrol_progress(
+        float time,
+        float speed,
+        float phase
+    ) {
+        constexpr int waypoint_count = 5;
+        float total = std::fmod(time * speed + phase, static_cast<float>(waypoint_count));
+        if (total < 0.0f) {
+            total += static_cast<float>(waypoint_count);
+        }
+
+        int current = static_cast<int>(total);
+        if (current >= waypoint_count) {
+            current = waypoint_count - 1;
+        }
+
+        int next = (current + 1) % waypoint_count;
+        float fraction = total - static_cast<float>(current);
+        float step = 2.0f * TB_PI / static_cast<float>(waypoint_count);
+
+        PatrolProgress progress;
+        progress.rotation_from = math::Quaternion::from_axis_angle(
+            math::Vec3::up(),
+            step * static_cast<float>(current)
+        );
+        progress.rotation_to = math::Quaternion::from_axis_angle(
+            math::Vec3::up(),
+            step * static_cast<float>(next)
+        );
+        progress.fraction = fraction;
+        return progress;
+    }
+
+public:
+
+    // --- Factory Methods ---
+
+    static TargetBehavior create_orbit(math::Vec3 center, float radius,
+                                       float speed, float phase) {
+        return make_behavior(BehaviorType::Orbit, center, speed, phase, radius);
+    }
+
+    static TargetBehavior create_figure8(math::Vec3 center, float radius,
+                                         float speed, float phase) {
+        return make_behavior(BehaviorType::Figure8, center, speed, phase, radius);
+    }
+
+    static TargetBehavior create_zigzag(math::Vec3 center, float amplitude,
+                                        float speed, float phase) {
+        return make_behavior(
+            BehaviorType::Zigzag,
+            center,
+            speed,
+            phase,
+            5.0f,
+            amplitude
+        );
+    }
+
+    static TargetBehavior create_spiral(math::Vec3 center, float radius,
+                                        float speed, float phase) {
+        return make_behavior(BehaviorType::Spiral, center, speed, phase, radius);
+    }
+
+    static TargetBehavior create_patrol(math::Vec3 center, float radius,
+                                        float speed, float phase) {
+        return make_behavior(BehaviorType::Patrol, center, speed, phase, radius);
+    }
+
+    static TargetBehavior create_dodge(math::Vec3 center, float speed) {
+        TargetBehavior b = make_behavior(
+            BehaviorType::Dodge,
+            center,
+            speed,
+            0.0f,
+            3.0f
+        );
         return b;
     }
 
@@ -179,29 +207,13 @@ struct TargetBehavior {
         }
 
         case BehaviorType::Patrol: {
-            float t = time * speed + phase;
-            int waypoint_count = 5;
-            float total = std::fmod(t, static_cast<float>(waypoint_count));
-            if (total < 0.0f) total += static_cast<float>(waypoint_count);
-            int current = static_cast<int>(total);
-            if (current >= waypoint_count) current = waypoint_count - 1;
-            float frac = total - static_cast<float>(current);
-
-            math::Quaternion rot_a = math::Quaternion::from_axis_angle(
-                math::Vec3::up(),
-                2.0f * TB_PI * static_cast<float>(current) /
-                    static_cast<float>(waypoint_count));
-            math::Quaternion rot_b = math::Quaternion::from_axis_angle(
-                math::Vec3::up(),
-                2.0f * TB_PI * static_cast<float>(current + 1) /
-                    static_cast<float>(waypoint_count));
-
+            PatrolProgress progress = compute_patrol_progress(time, speed, phase);
             math::Vec3 pos_a = center +
-                rot_a.rotate(math::Vec3(radius, 0.0f, 0.0f));
+                progress.rotation_from.rotate(math::Vec3(radius, 0.0f, 0.0f));
             math::Vec3 pos_b = center +
-                rot_b.rotate(math::Vec3(radius, 0.0f, 0.0f));
+                progress.rotation_to.rotate(math::Vec3(radius, 0.0f, 0.0f));
 
-            return pos_a.lerp(pos_b, frac);
+            return pos_a.lerp(pos_b, progress.fraction);
         }
 
         case BehaviorType::Dodge: {
@@ -272,24 +284,12 @@ struct TargetBehavior {
         }
 
         case BehaviorType::Patrol: {
-            float t = time * speed + phase;
-            int waypoint_count = 5;
-            float total = std::fmod(t, static_cast<float>(waypoint_count));
-            if (total < 0.0f) total += static_cast<float>(waypoint_count);
-            int current = static_cast<int>(total);
-            if (current >= waypoint_count) current = waypoint_count - 1;
-            float frac = total - static_cast<float>(current);
-
-            math::Quaternion rot_a = math::Quaternion::from_axis_angle(
-                math::Vec3::up(),
-                2.0f * TB_PI * static_cast<float>(current) /
-                    static_cast<float>(waypoint_count));
-            math::Quaternion rot_b = math::Quaternion::from_axis_angle(
-                math::Vec3::up(),
-                2.0f * TB_PI * static_cast<float>(current + 1) /
-                    static_cast<float>(waypoint_count));
-
-            return math::Quaternion::slerp(rot_a, rot_b, frac);
+            PatrolProgress progress = compute_patrol_progress(time, speed, phase);
+            return math::Quaternion::slerp(
+                progress.rotation_from,
+                progress.rotation_to,
+                progress.fraction
+            );
         }
 
         case BehaviorType::Dodge: {
