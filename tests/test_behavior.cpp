@@ -168,6 +168,39 @@ void test_patrol_stays_near_radius() {
     }
 }
 
+void test_patrol_negative_time_wraps_consistently() {
+    Vec3 center(0.0f, 0.0f, 0.0f);
+    auto b = TargetBehavior::create_patrol(center, 8.0f, 1.0f, 0.0f);
+
+    Vec3 pos_negative = b.compute_position(-0.25f);
+    Vec3 pos_wrapped = b.compute_position(4.75f);
+    ASSERT_TRUE(pos_negative.approx_equal(pos_wrapped, 1e-4f));
+
+    Quaternion rot_negative = b.compute_rotation(-0.25f);
+    Quaternion rot_wrapped = b.compute_rotation(4.75f);
+    ASSERT_FLOAT_EQ(rot_negative.w, rot_wrapped.w, 1e-4f);
+    ASSERT_FLOAT_EQ(rot_negative.x, rot_wrapped.x, 1e-4f);
+    ASSERT_FLOAT_EQ(rot_negative.y, rot_wrapped.y, 1e-4f);
+    ASSERT_FLOAT_EQ(rot_negative.z, rot_wrapped.z, 1e-4f);
+}
+
+void test_factory_methods_preserve_shared_defaults() {
+    TargetBehavior orbit = TargetBehavior::create_orbit(Vec3(1.0f, 2.0f, 3.0f), 4.0f, 1.5f, 0.25f);
+    TargetBehavior zigzag = TargetBehavior::create_zigzag(Vec3(-1.0f, 0.5f, 2.0f), 6.0f, 2.0f, -0.5f);
+    TargetBehavior dodge = TargetBehavior::create_dodge(Vec3(0.0f, 0.0f, 0.0f), 3.0f);
+
+    ASSERT_TRUE(orbit.base_orientation.approx_equal(Quaternion::identity(), EPS));
+    ASSERT_TRUE(orbit.facing.approx_equal(Quaternion::identity(), EPS));
+    ASSERT_TRUE(!orbit.is_alerted);
+    ASSERT_FLOAT_EQ(orbit.alert_timer, 0.0f, EPS);
+
+    ASSERT_FLOAT_EQ(zigzag.amplitude, 6.0f, EPS);
+    ASSERT_TRUE(zigzag.dodge_offset.approx_equal(Vec3::zero(), EPS));
+
+    ASSERT_FLOAT_EQ(dodge.radius, 3.0f, EPS);
+    ASSERT_TRUE(dodge.dodge_offset.approx_equal(Vec3::zero(), EPS));
+}
+
 // ── Unit Quaternion Tests (All Behaviors) ───────────────────────────────────
 
 void test_all_behaviors_unit_quaternion() {
@@ -263,6 +296,7 @@ int main() {
 
     std::cout << "\n--- Patrol ---" << std::endl;
     RUN_TEST(test_patrol_stays_near_radius);
+    RUN_TEST(test_patrol_negative_time_wraps_consistently);
 
     std::cout << "\n--- All Behaviors: Unit Quaternion ---" << std::endl;
     RUN_TEST(test_all_behaviors_unit_quaternion);
@@ -273,6 +307,9 @@ int main() {
     std::cout << "\n--- Dodge / Alert ---" << std::endl;
     RUN_TEST(test_alert_triggers_dodge);
     RUN_TEST(test_dodge_alert_expires);
+
+    std::cout << "\n--- Factory Defaults ---" << std::endl;
+    RUN_TEST(test_factory_methods_preserve_shared_defaults);
 
     return TEST_REPORT();
 }
