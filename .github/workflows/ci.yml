@@ -7,27 +7,75 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+
+  # ── Dispatcher: route to self-hosted if available ──────────────────────────
+  pick-runner:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      runner: ${{ steps.check.outputs.runner }}
+    steps:
+      - name: Check for self-hosted runner
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.RUNNER_CHECK_TOKEN }}
+        run: |
+          ONLINE=$(gh api /orgs/${{ github.repository_owner }}/actions/runners \
+            --jq '[.runners[] | select(.status == "online") | select(.labels[].name == "d-sorg-fleet")] | length' \
+            2>/dev/null || echo "0")
+          if [[ "$ONLINE" -gt 0 ]]; then
+            echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
+            echo "Self-hosted runner online — routing locally"
+          else
+            echo "runner=ubuntu-latest" >> $GITHUB_OUTPUT
+            echo "No self-hosted runner — using GitHub-hosted"
+          fi
+  build-and-test:
+    name: quality-gate
+    needs: pick-runner
+    runs-on: ${{ needs.pick-runner.outputs.runner }}
     steps:
       - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential libgl1-mesa-dev libglu1-mesa-dev
+          if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
+          else
+            echo "Skipping apt dependency install on runners without passwordless sudo"
+            python3 -m pip install --user --break-system-packages cmake gcovr
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
 
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DQE_BUILD_DEMO=OFF
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
 
-      - name: Build test targets
-        run: |
-          cmake --build build --target test_math test_game test_wave test_behavior test_particles test_powerup test_weapons test_math_extended test_game_extended
+      - name: Build native test suite
+        run: cmake --build build --parallel
 
-      - name: Run tests
+      - name: Run unit tests
+        run: ctest --test-dir build --output-on-failure -L unit
+
+      - name: Run integration tests
+        run: ctest --test-dir build --output-on-failure -L integration
+
+      - name: Generate coverage report
         run: |
-          cd build
-          ctest --output-on-failure -R "MathTests|GameTests|WaveTests|BehaviorTests|ParticleTests|PowerUpTests|WeaponTests|MathExtendedTests|GameExtendedTests"
+          gcovr --root . \
+            --filter src \
+            --exclude tests \
+            --xml-pretty --output build/coverage.xml \
+            --html-details build/coverage.html \
+            --print-summary
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-coverage
+          path: |
+            build/coverage.xml
+            build/coverage.html
 
   # =============================================================================
   # RUST QUALITY GATE (Conditional)
@@ -36,7 +84,8 @@ jobs:
   # QuatEngine's math could be backed by the math-primitives Rust crate.
   # =============================================================================
   rust-quality-gate:
-    runs-on: ubuntu-latest
+    needs: pick-runner
+    runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6

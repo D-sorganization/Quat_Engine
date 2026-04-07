@@ -1,29 +1,64 @@
 name: Heavy Integration Suite
 
 on:
-  schedule:
-    # Run every Sunday at midnight
-    - cron: '0 0 * * 0'
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: "Reason for running heavy tests manually"
-        required: false
 
 jobs:
-  heavy-tests:
-    runs-on: d-sorg-fleet-4core
+
+  # ── Dispatcher: route to self-hosted if available ──────────────────────────
+  pick-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      runner: ${{ steps.check.outputs.runner }}
     steps:
-      - uses: actions/checkout@v4
-      
-      # Dependencies are assumed to be pre-installed on the custom runner.
-      # But we can install any project-specific python requirements if needed.
-      - name: Install local requirements
+      - name: Check for self-hosted runner
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.RUNNER_CHECK_TOKEN }}
         run: |
-          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
-          if [ -f "pyproject.toml" ]; then pip install -e .; fi
-          
-      - name: Run heavy live simulations
+          ONLINE=$(gh api /orgs/${{ github.repository_owner }}/actions/runners \
+            --jq '[.runners[] | select(.status == "online") | select(.labels[].name == "d-sorg-fleet")] | length' \
+            2>/dev/null || echo "0")
+          if [[ "$ONLINE" -gt 0 ]]; then
+            echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
+            echo "Self-hosted runner online — routing locally"
+          else
+            echo "runner=ubuntu-latest" >> $GITHUB_OUTPUT
+            echo "No self-hosted runner — using GitHub-hosted"
+          fi
+  heavy-tests:
+    needs: pick-runner
+    runs-on: ${{ needs.pick-runner.outputs.runner }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install native toolchain
         run: |
-          # Example of running only tests marked for live simulation
-          pytest -v -m "live_simulation" --cov
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Configure heavy integration build
+        run: cmake -S . -B build-heavy -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
+
+      - name: Build integration targets
+        run: cmake --build build-heavy --parallel
+
+      - name: Run integration suite
+        run: ctest --test-dir build-heavy --output-on-failure -L integration
+
+      - name: Generate integration coverage report
+        run: |
+          gcovr --root . \
+            --filter src \
+            --exclude tests \
+            --xml-pretty --output build-heavy/coverage.xml \
+            --html-details build-heavy/coverage.html \
+            --print-summary
+
+      - name: Upload integration coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavy-integration-coverage
+          path: |
+            build-heavy/coverage.xml
+            build-heavy/coverage.html

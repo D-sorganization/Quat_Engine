@@ -9,6 +9,8 @@
  *   - ScoreTracker: scoring, multipliers, wave bonuses, reset
  */
 
+#include "test_framework.h"
+
 #include "../src/game/Weapons.h"
 #include "../src/game/Scoring.h"
 #include "../src/math/Vec3.h"
@@ -19,19 +21,6 @@
 #include <string>
 #include <vector>
 
-static int total_assertions = 0;
-static int passed = 0;
-static int failed = 0;
-
-#define ASSERT_TRUE(expr) do { \
-    total_assertions++; \
-    if (expr) { passed++; } \
-    else { failed++; std::cerr << "  FAIL: " << #expr \
-           << " (" << __FILE__ << ":" << __LINE__ << ")" << std::endl; } \
-} while(0)
-
-#define ASSERT_NEAR(a, b, eps) ASSERT_TRUE(std::abs((a)-(b)) < (eps))
-#define RUN_TEST(fn) do { std::cout << "  " << #fn << "... "; fn(); std::cout << "OK" << std::endl; } while(0)
 
 // ── Weapon Tests ────────────────────────────────────────────────────────────
 
@@ -346,10 +335,5 @@ int main() {
     RUN_TEST(test_max_streak_tracks_correctly);
     RUN_TEST(test_reset_clears_everything);
 
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "  Total: " << total_assertions << std::endl;
-    std::cout << "  Passed: " << passed << std::endl;
-    std::cout << "  Failed: " << failed << std::endl;
-
-    return failed > 0 ? 1 : 0;
+    return TEST_REPORT();
 }

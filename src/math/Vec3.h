@@ -126,9 +126,9 @@ struct Vec3 {
 
     /** Approximate equality within epsilon. */
     bool approx_equal(const Vec3& other, float epsilon = 1e-5f) const noexcept {
-        return std::abs(x - other.x) < epsilon &&
-               std::abs(y - other.y) < epsilon &&
-               std::abs(z - other.z) < epsilon;
+        return std::abs(x - other.x) <= epsilon &&
+               std::abs(y - other.y) <= epsilon &&
+               std::abs(z - other.z) <= epsilon;
     }
 
     // --- Common Directions ---

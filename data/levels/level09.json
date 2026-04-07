@@ -1,0 +1,37 @@
+{
+    "level_number": 9,
+    "name": "Laboratory Complex",
+    "description": "The source of the mutations. Experimental horrors stalk the corridors.",
+    "briefing": "Behemoth sighted. Experimental mutants are unpredictable.",
+    "environment": {
+        "type": "Laboratory",
+        "ambient_color": [0.15, 0.18, 0.2],
+        "fog_color": [0.1, 0.15, 0.2],
+        "fog_density": 0.03,
+        "fog_start": 6.0,
+        "fog_end": 45.0,
+        "light_direction": [0.0, -1.0, 0.0],
+        "light_intensity": 0.55,
+        "sky_color": [0.12, 0.15, 0.2],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, -5],
+    "arena_radius": 50.0,
+    "spawn_table": [
+        {"type": "Behemoth", "count": 1, "delay": 0.0},
+        {"type": "Stalker",  "count": 4, "delay": 5.0},
+        {"type": "Spitter",  "count": 4, "delay": 8.0},
+        {"type": "Crawler",  "count": 6, "delay": 3.0},
+        {"type": "Brute",    "count": 2, "delay": 20.0},
+        {"type": "Screamer", "count": 2, "delay": 15.0}
+    ],
+    "total_enemy_count": 19,
+    "primary_objective": {
+        "type": "KillAll"
+    },
+    "par_time": 360.0,
+    "completion_score": 2500,
+    "par_time_bonus": 1000,
+    "unlocks_weapon": true,
+    "weapon_unlock": "GrenadeLauncher"
+}

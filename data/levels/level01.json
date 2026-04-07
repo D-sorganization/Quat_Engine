@@ -1,0 +1,32 @@
+{
+    "level_number": 1,
+    "name": "Ruined Outpost",
+    "description": "A bombed-out military checkpoint at the edge of the dead zone.",
+    "briefing": "Clear the outpost of mutant stragglers. Watch your corners.",
+    "environment": {
+        "type": "Military",
+        "ambient_color": [0.15, 0.12, 0.1],
+        "fog_color": [0.3, 0.25, 0.2],
+        "fog_density": 0.02,
+        "fog_start": 10.0,
+        "fog_end": 80.0,
+        "light_direction": [0.3, -0.8, 0.5],
+        "light_intensity": 0.7,
+        "sky_color": [0.35, 0.3, 0.25],
+        "gravity_modifier": 1.0
+    },
+    "player_start": [0, 0, 0],
+    "arena_radius": 40.0,
+    "spawn_table": [
+        {"type": "Grunt",  "count": 8, "delay": 0.0},
+        {"type": "Hound",  "count": 3, "delay": 10.0}
+    ],
+    "total_enemy_count": 11,
+    "primary_objective": {
+        "type": "KillAll"
+    },
+    "par_time": 120.0,
+    "completion_score": 500,
+    "par_time_bonus": 200,
+    "unlocks_weapon": false
+}
