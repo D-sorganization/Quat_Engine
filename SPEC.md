@@ -27,8 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-| **Spec Version** | 1.0.4 |
-| **Last Spec Update** | 2026-04-06 |
+| **Spec Version** | 1.0.5 |
+| **Last Spec Update** | 2026-04-10 |
 
 ## 2. Purpose & Mission
 
@@ -271,7 +271,7 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 
 - **TDD**: Enforced for math library; render tests use integration testing
 - **Design by Contract (DbC)**: Yes — preconditions on vector/quat operations (e.g., unit quaternions)
-- **DRY**: Yes — shader utilities, math operations, and TargetBehavior patrol progression helpers are centralized
+- **DRY**: Yes — shader utilities, math operations, TargetBehavior patrol progression helpers, `math::PI` constant, and `PowerUpManager::get_effect_value` helper are centralized
 - **Orthogonality**: Yes — math, rendering, and game logic are decoupled and independently testable
 - **Demo boundary**: `src/main.cpp` stays a composition root; bootstrap, runtime, and render behavior live under `src/demo/`
 
@@ -397,6 +397,7 @@ gcovr --print-summary --html coverage/
 |------|---------|---------|
 | 2026-03-31 | 1.0.2 | Added self-hosted runner fallback documentation and made CI dependency setup tolerant of runners without passwordless sudo |
 | 2026-04-06 | 1.0.4 | Refactored `TargetBehavior` to share common factory initialization and patrol progression helpers across both position and rotation paths, and added regression coverage for negative-time patrol wrapping plus shared factory defaults |
+| 2026-04-10 | 1.0.5 | DRY: extracted `math::Constants.h` (PI, TWO_PI) shared by Scene.h, TPSScene.h, ParticleSystem.h, removing inline duplicates; added `PowerUpManager::get_effect_value` helper eliminating repeated iteration pattern across four multiplier getters (closes #93) |
 | 2026-03-28 | 1.0.0 | Initial specification |
 | 2026-03-30 | 1.0.1 | A-N Assessment remediation: add .env to .gitignore, add MIT LICENSE, add DbC assertions to Combat.h/Scoring.h, add Camera::set_aspect/set_smoothing interface methods (LoD), update main.cpp to use new Camera interface |
 
