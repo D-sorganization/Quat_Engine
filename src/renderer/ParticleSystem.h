@@ -14,6 +14,7 @@
  */
 
 #include "../core/Rng.h"
+#include "../math/Constants.h"
 #include "../math/Quaternion.h"
 #include "../math/Vec3.h"
 
@@ -167,7 +168,7 @@ public:
                 case EmitterShape::Ring: {
                     // QUATERNION SHOWCASE: distribute particles around a ring
                     // using axis-angle rotation.
-                    float angle = random_float(0.0f, 2.0f * PI);
+                    float angle = random_float(0.0f, 2.0f * qe::math::PI);
                     math::Quaternion ring_rot =
                         math::Quaternion::from_axis_angle(math::Vec3(0, 1, 0), angle);
                     math::Vec3 offset = ring_rot.rotate(
@@ -318,8 +319,6 @@ public:
     }
 
 private:
-    static constexpr float PI = 3.14159265358979f;
-
     std::vector<Particle> particles_;
 
     // Deterministic RNG for reproducible effects.
@@ -339,7 +338,7 @@ private:
                                         float cone_angle) {
         // Sample uniformly within a spherical cap.
         float z = random_float(std::cos(cone_angle), 1.0f);
-        float phi = random_float(0.0f, 2.0f * PI);
+        float phi = random_float(0.0f, 2.0f * qe::math::PI);
         float r = std::sqrt(1.0f - z * z);
         math::Vec3 local_dir(r * std::cos(phi), r * std::sin(phi), z);
         // Rotate local direction into world space by emitter orientation.
@@ -350,7 +349,7 @@ private:
     math::Vec3 random_unit_vector() {
         // Rejection-free: use spherical coordinates.
         float z = random_float(-1.0f, 1.0f);
-        float phi = random_float(0.0f, 2.0f * PI);
+        float phi = random_float(0.0f, 2.0f * qe::math::PI);
         float r = std::sqrt(1.0f - z * z);
         return math::Vec3(r * std::cos(phi), r * std::sin(phi), z);
     }

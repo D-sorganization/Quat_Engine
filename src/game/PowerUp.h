@@ -236,40 +236,40 @@ public:
         return false;
     }
 
-    /** 1.0 normally, 0.5 with RapidFire (halved fire interval = double rate). */
-    float get_fire_rate_multiplier() const {
+    /**
+     * Return the value of the first active effect matching @p type,
+     * or @p default_val if no such effect is active.
+     *
+     * Eliminates duplicated iteration in get_fire_rate_multiplier(),
+     * get_damage_multiplier(), get_score_multiplier(), and
+     * get_enemy_speed_multiplier(). See D-sorganization/QuatEngine#93.
+     */
+    float get_effect_value(PowerUpType type, float default_val = 1.0f) const {
         for (const auto& e : effects_) {
-            if (e.type == PowerUpType::RapidFire && e.is_active())
+            if (e.type == type && e.is_active())
                 return e.value;
         }
-        return 1.0f;
+        return default_val;
+    }
+
+    /** 1.0 normally, 0.5 with RapidFire (halved fire interval = double rate). */
+    float get_fire_rate_multiplier() const {
+        return get_effect_value(PowerUpType::RapidFire);
     }
 
     /** 1.0 normally, 2.0 with DamageBoost. */
     float get_damage_multiplier() const {
-        for (const auto& e : effects_) {
-            if (e.type == PowerUpType::DamageBoost && e.is_active())
-                return e.value;
-        }
-        return 1.0f;
+        return get_effect_value(PowerUpType::DamageBoost);
     }
 
     /** 1.0 normally, 3.0 with ScoreMultiplier. */
     float get_score_multiplier() const {
-        for (const auto& e : effects_) {
-            if (e.type == PowerUpType::ScoreMultiplier && e.is_active())
-                return e.value;
-        }
-        return 1.0f;
+        return get_effect_value(PowerUpType::ScoreMultiplier);
     }
 
     /** 1.0 normally, 0.5 with SlowMotion. */
     float get_enemy_speed_multiplier() const {
-        for (const auto& e : effects_) {
-            if (e.type == PowerUpType::SlowMotion && e.is_active())
-                return e.value;
-        }
-        return 1.0f;
+        return get_effect_value(PowerUpType::SlowMotion);
     }
 
     /** 1 normally, 3 with TripleShot. */

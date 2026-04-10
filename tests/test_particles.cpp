@@ -25,7 +25,7 @@
 using namespace qe::math;
 using namespace qe::renderer;
 
-constexpr float PI = 3.14159265358979f;
+// qe::math::PI is available via `using namespace qe::math` above
 constexpr float EPS = 1e-4f;
 
 // ============================================================================
