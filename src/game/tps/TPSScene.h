@@ -15,6 +15,7 @@
  */
 
 #include "../../core/Rng.h"
+#include "../../math/Constants.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 #include "LevelSystem.h"
@@ -29,7 +30,7 @@ namespace qe {
 namespace game {
 namespace tps {
 
-inline constexpr float SCENE_PI = 3.14159265358979f;
+using math::PI;
 
 // ── Scene Object ─────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
     int cover_count = 8 + level_data.level_number * 2;
     for (int i = 0; i < cover_count; ++i) {
         SceneObject obj;
-        float angle = (2.0f * SCENE_PI * i) / static_cast<float>(cover_count);
+        float angle = (2.0f * PI * i) / static_cast<float>(cover_count);
         float dist = rand_float(radius * 0.2f, radius * 0.7f);
 
         obj.position = math::Vec3(
@@ -105,7 +106,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
             std::sin(angle) * dist
         );
         obj.rotation = math::Quaternion::from_axis_angle(
-            math::Vec3::up(), rand_float(0.0f, SCENE_PI * 2.0f));
+            math::Vec3::up(), rand_float(0.0f, PI * 2.0f));
 
         // Pick shape variation within environment
         int shape_variant = static_cast<int>(rng.next() & 0x3); // 0-3
@@ -182,7 +183,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
     };
     for (int i = 0; i < deco_count; ++i) {
         SceneObject deco;
-        float angle = rand_float(0.0f, SCENE_PI * 2.0f);
+        float angle = rand_float(0.0f, PI * 2.0f);
         float dist = rand_float(radius * 0.1f, radius * 0.85f);
         deco.position = math::Vec3(
             std::cos(angle) * dist, 0.0f, std::sin(angle) * dist);
@@ -198,7 +199,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
     int enemy_id = 1;
     for (const auto& entry : level_data.spawn_table) {
         for (int i = 0; i < entry.count; ++i) {
-            float angle = rand_float(0.0f, SCENE_PI * 2.0f);
+            float angle = rand_float(0.0f, PI * 2.0f);
             float dist = rand_float(radius * 0.3f, radius * 0.8f);
             math::Vec3 spawn_pos(
                 std::cos(angle) * dist,
@@ -213,7 +214,7 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
 
             auto mutant = spawn_mutant(entry.type, spawn_pos, enemy_id++);
             mutant.patrol_radius = rand_float(4.0f, 10.0f);
-            mutant.patrol_phase = rand_float(0.0f, SCENE_PI * 2.0f);
+            mutant.patrol_phase = rand_float(0.0f, PI * 2.0f);
 
             // Apply level difficulty scaling
             mutant.config.health *= level_data.enemy_health_mult;

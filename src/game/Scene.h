@@ -9,6 +9,7 @@
 
 #include "../core/AABB.h"
 #include "../core/Entity.h"
+#include "../math/Constants.h"
 #include "../math/Quaternion.h"
 #include "../math/Vec3.h"
 #include "../math/Mat4.h"
@@ -20,7 +21,7 @@
 namespace qe {
 namespace game {
 
-inline constexpr float PI = 3.14159265358979f;
+using math::PI;
 
 // ── Static Decoration ───────────────────────────────────────────────────────
 
