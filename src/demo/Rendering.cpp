@@ -15,11 +15,11 @@
 
 namespace qe::demo {
 
-void render_world(App& app) {
-    using namespace qe::math;
-    using namespace qe::renderer::gl;
+// ── render_world helpers ────────────────────────────────────────────────────
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+static void setup_world_shader(App& app) {
+    using namespace qe::math;
+
     app.world_shader.use();
 
     const Mat4 vp = app.camera.vp_matrix();
@@ -39,6 +39,10 @@ void render_world(App& app) {
     app.world_shader.set_float("uEmissionStrength", 0.0f);
     app.world_shader.set_float("uRimPower", qe::config::RIM_POWER);
     app.world_shader.set_vec3("uRimColor", Vec3(0.1f, 0.2f, 0.4f));
+}
+
+static void setup_point_lights(App& app) {
+    using namespace qe::math;
 
     int point_light_count = 0;
     auto set_point_light = [&](const Vec3& pos, const Vec3& color, float radius) {
@@ -74,6 +78,10 @@ void render_world(App& app) {
     app.world_shader.set_int("uPointLightCount", point_light_count);
     app.world_shader.set_vec3("uEmission", Vec3::zero());
     app.world_shader.set_float("uEmissionStrength", 0.0f);
+}
+
+static void render_decorations(App& app) {
+    using namespace qe::renderer::gl;
 
     for (const auto& decoration : app.decorations) {
         app.world_shader.set_mat4("uModel", decoration.model_matrix(app.time));
@@ -94,6 +102,10 @@ void render_world(App& app) {
             app.cube.draw();
         }
     }
+}
+
+static void render_entities(App& app) {
+    using namespace qe::math;
 
     app.world_shader.set_int("uUseTexture", 0);
     for (const auto& ent : app.entities) {
@@ -130,6 +142,10 @@ void render_world(App& app) {
             app.world_shader.set_float("uEmissionStrength", 0.0f);
         }
     }
+}
+
+static void render_projectiles(App& app) {
+    using namespace qe::math;
 
     for (const auto& projectile : app.projectiles) {
         if (!projectile.active) {
@@ -145,6 +161,10 @@ void render_world(App& app) {
     }
     app.world_shader.set_vec3("uEmission", Vec3::zero());
     app.world_shader.set_float("uEmissionStrength", 0.0f);
+}
+
+static void render_pickups(App& app) {
+    using namespace qe::math;
 
     for (const auto& pickup : app.powerups.pickups()) {
         if (!pickup.alive) {
@@ -162,10 +182,25 @@ void render_world(App& app) {
     }
     app.world_shader.set_vec3("uEmission", Vec3::zero());
     app.world_shader.set_float("uEmissionStrength", 0.0f);
+}
+
+// ── Public render_world ─────────────────────────────────────────────────────
+
+void render_world(App& app) {
+    using namespace qe::renderer::gl;
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    setup_world_shader(app);
+    setup_point_lights(app);
+    render_decorations(app);
+    render_entities(app);
+    render_projectiles(app);
+    render_pickups(app);
 
     glDisable(GL_CULL_FACE);
     app.world_shader.set_int("uUseTexture", 0);
-    app.world_shader.set_mat4("uModel", Mat4::identity());
+    app.world_shader.set_mat4("uModel", qe::math::Mat4::identity());
     glBindVertexArray(app.grid.vao);
     glDrawElements(GL_LINES, app.grid.index_count, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);

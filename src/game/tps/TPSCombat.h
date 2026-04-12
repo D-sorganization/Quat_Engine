@@ -172,81 +172,19 @@ public:
 
         for (auto& target : targets) {
             if (!target.alive) continue;
+            if (!is_in_melee_arc(attacker_pos, attacker_rot, target.position, move))
+                continue;
 
-            // Check range and arc
-            math::Vec3 to_target = target.position - attacker_pos;
-            float dist = to_target.length();
-            if (dist > move.range) continue;
-
-            // Arc check using quaternion-derived forward
-            if (dist > 0.01f) {
-                math::Vec3 forward = attacker_rot.rotate(math::Vec3::forward());
-                float dot = forward.dot(to_target.normalized());
-                float half_arc = move.arc_angle * 0.5f;
-                if (dot < std::cos(half_arc)) continue;
-            }
-
-            // Compute damage
-            float base_dmg = move.base_damage * char_stats.melee_damage_mult;
-            if (is_backstab) {
-                base_dmg = make_melee_move(MeleeMove::Backstab).base_damage
-                         * char_stats.melee_damage_mult;
-            }
-
-            // Critical hit
-            bool crit = roll_critical(char_stats.critical_chance);
-            if (crit) base_dmg *= char_stats.critical_multiplier;
-
-            // Apply resistance
-            float resist = target.get_resistance(false, false, true);
-            float final_dmg = base_dmg * (1.0f - resist);
-
-            HitResult hr;
-            hr.hit = true;
-            hr.critical = crit;
-            hr.damage_dealt = final_dmg;
-            hr.target_id = target.id;
-
-            bool killed = target.take_damage(final_dmg, resist);
-            hr.killed = killed;
-
-            if (killed) {
-                hr.score_earned = target.config.score_value;
-                if (is_backstab) hr.score_earned = static_cast<int>(hr.score_earned * 1.5f);
-                stats_.total_kills++;
-                stats_.melee_kills++;
-                if (is_backstab) stats_.backstab_kills++;
-                stats_.score += hr.score_earned;
-                if (crit) stats_.critical_hits++;
-            }
+            HitResult hr = apply_melee_damage(
+                target, move, char_stats, is_backstab);
 
             results.push_back(hr);
 
             // Splash damage for jump attack
             if (move.splash_radius > 0.0f) {
-                for (auto& other : targets) {
-                    if (!other.alive || other.id == target.id) continue;
-                    float splash_dist = other.position.distance_to(target.position);
-                    if (splash_dist <= move.splash_radius) {
-                        float falloff = 1.0f - (splash_dist / move.splash_radius);
-                        float splash_dmg = final_dmg * 0.5f * falloff;
-                        float splash_resist = other.get_resistance(false, false, true);
-                        bool splash_killed = other.take_damage(splash_dmg, splash_resist);
-
-                        HitResult shr;
-                        shr.hit = true;
-                        shr.damage_dealt = splash_dmg * (1.0f - splash_resist);
-                        shr.target_id = other.id;
-                        shr.killed = splash_killed;
-                        if (splash_killed) {
-                            shr.score_earned = other.config.score_value;
-                            stats_.total_kills++;
-                            stats_.melee_kills++;
-                            stats_.score += shr.score_earned;
-                        }
-                        results.push_back(shr);
-                    }
-                }
+                apply_splash_damage(
+                    results, targets, target, hr.damage_dealt,
+                    move.splash_radius);
                 break;  // Splash only from first target hit
             }
         }
@@ -319,6 +257,94 @@ public:
     void reset() { stats_.reset(); }
 
 private:
+    /** Check if a target position is within the melee arc. */
+    static bool is_in_melee_arc(const math::Vec3& attacker_pos,
+                                 const math::Quaternion& attacker_rot,
+                                 const math::Vec3& target_pos,
+                                 const MeleeMoveConfig& move) {
+        math::Vec3 to_target = target_pos - attacker_pos;
+        float dist = to_target.length();
+        if (dist > move.range) return false;
+
+        if (dist > 0.01f) {
+            math::Vec3 forward = attacker_rot.rotate(math::Vec3::forward());
+            float dot = forward.dot(to_target.normalized());
+            float half_arc = move.arc_angle * 0.5f;
+            if (dot < std::cos(half_arc)) return false;
+        }
+        return true;
+    }
+
+    /** Compute and apply melee damage to a single target, updating stats. */
+    HitResult apply_melee_damage(MutantInstance& target,
+                                  const MeleeMoveConfig& move,
+                                  const CharacterStats& char_stats,
+                                  bool is_backstab) {
+        float base_dmg = move.base_damage * char_stats.melee_damage_mult;
+        if (is_backstab) {
+            base_dmg = make_melee_move(MeleeMove::Backstab).base_damage
+                     * char_stats.melee_damage_mult;
+        }
+
+        bool crit = roll_critical(char_stats.critical_chance);
+        if (crit) base_dmg *= char_stats.critical_multiplier;
+
+        float resist = target.get_resistance(false, false, true);
+        float final_dmg = base_dmg * (1.0f - resist);
+
+        HitResult hr;
+        hr.hit = true;
+        hr.critical = crit;
+        hr.damage_dealt = final_dmg;
+        hr.target_id = target.id;
+
+        bool killed = target.take_damage(final_dmg, resist);
+        hr.killed = killed;
+
+        if (killed) {
+            hr.score_earned = target.config.score_value;
+            if (is_backstab) hr.score_earned = static_cast<int>(hr.score_earned * 1.5f);
+            stats_.total_kills++;
+            stats_.melee_kills++;
+            if (is_backstab) stats_.backstab_kills++;
+            stats_.score += hr.score_earned;
+            if (crit) stats_.critical_hits++;
+        }
+
+        return hr;
+    }
+
+    /** Apply splash damage from an impact point to nearby targets. */
+    void apply_splash_damage(std::vector<HitResult>& results,
+                              std::vector<MutantInstance>& targets,
+                              const MutantInstance& origin_target,
+                              float base_damage,
+                              float splash_radius) {
+        for (auto& other : targets) {
+            if (!other.alive || other.id == origin_target.id) continue;
+            float splash_dist = other.position.distance_to(origin_target.position);
+            if (splash_dist <= splash_radius) {
+                float falloff = 1.0f - (splash_dist / splash_radius);
+                float splash_dmg = base_damage * 0.5f * falloff;
+                float splash_resist = other.get_resistance(false, false, true);
+                bool splash_killed = other.take_damage(splash_dmg, splash_resist);
+
+                HitResult shr;
+                shr.hit = true;
+                shr.damage_dealt = splash_dmg * (1.0f - splash_resist);
+                shr.target_id = other.id;
+                shr.killed = splash_killed;
+                if (splash_killed) {
+                    shr.score_earned = other.config.score_value;
+                    stats_.total_kills++;
+                    stats_.melee_kills++;
+                    stats_.score += shr.score_earned;
+                }
+                results.push_back(shr);
+            }
+        }
+    }
+
     HitResult hitscan(const math::Vec3& origin, const math::Vec3& dir,
                       const TPSWeaponConfig& weapon,
                       const CharacterStats& char_stats,

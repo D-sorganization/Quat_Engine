@@ -341,24 +341,21 @@ static void update(TPSApp& app, float dt) {
 
 // ── Render World ─────────────────────────────────────────────────────────────
 
-static void render_world(TPSApp& app) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// ── render_world helpers ─────────────────────────────────────────────────────
 
+static void setup_tps_world_shader(TPSApp& app) {
     const auto& env = app.game.scene_data().environment;
 
-    // Set clear color from environment
     glClearColor(env.sky_color.x * 0.3f, env.sky_color.y * 0.3f,
                  env.sky_color.z * 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     app.world_shader.use();
 
-    // Camera matrices
     qe::math::Mat4 vp = app.camera.vp_matrix();
     app.world_shader.set_mat4("u_VP", vp);
     app.world_shader.set_vec3("u_CameraPos", app.camera.position());
 
-    // Lighting from environment
     app.world_shader.set_vec3("u_LightDir",
         env.light_direction.length_squared() > 0.01f
         ? env.light_direction.normalized() : qe::math::Vec3(0.3f, -0.8f, 0.5f));
@@ -366,14 +363,15 @@ static void render_world(TPSApp& app) {
         qe::math::Vec3(1.0f, 0.95f, 0.9f) * env.light_intensity);
     app.world_shader.set_vec3("u_AmbientColor", env.ambient_color);
 
-    // Fog
     app.world_shader.set_vec3("u_FogColor", env.fog_color);
     app.world_shader.set_float("u_FogStart", env.fog_start);
     app.world_shader.set_float("u_FogEnd", env.fog_end);
 
     app.world_shader.set_int("u_UseTexture", 0);
+}
 
-    // Draw floor
+static void render_tps_scene_objects(TPSApp& app) {
+    // Floor
     {
         qe::math::Mat4 model = qe::math::Mat4::trs(
             qe::math::Vec3(0, -0.01f, 0),
@@ -384,7 +382,7 @@ static void render_world(TPSApp& app) {
         app.floor_mesh.draw();
     }
 
-    // Draw cover objects
+    // Cover objects
     for (const auto& obj : app.game.scene_data().cover_objects) {
         qe::math::Mat4 model = qe::math::Mat4::trs(
             obj.position, obj.rotation, obj.scale);
@@ -393,7 +391,7 @@ static void render_world(TPSApp& app) {
         draw_mesh(app, obj.mesh_type);
     }
 
-    // Draw decorations
+    // Decorations
     for (const auto& deco : app.game.scene_data().decorations) {
         qe::math::Mat4 model = qe::math::Mat4::trs(
             deco.position, deco.rotation, deco.scale);
@@ -401,8 +399,24 @@ static void render_world(TPSApp& app) {
         app.world_shader.set_vec3("u_Tint", deco.color);
         draw_mesh(app, deco.mesh_type);
     }
+}
 
-    // Draw player character
+static qe::math::Vec3 player_class_color(qe::game::tps::CharacterClassType cls) {
+    switch (cls) {
+        case qe::game::tps::CharacterClassType::Vanguard:
+            return {0.2f, 0.5f, 0.8f};
+        case qe::game::tps::CharacterClassType::Recon:
+            return {0.3f, 0.8f, 0.3f};
+        case qe::game::tps::CharacterClassType::Heavy:
+            return {0.8f, 0.5f, 0.2f};
+        case qe::game::tps::CharacterClassType::Phantom:
+            return {0.5f, 0.2f, 0.7f};
+    }
+    return {0.5f, 0.5f, 0.5f};
+}
+
+static void render_tps_characters(TPSApp& app) {
+    // Player
     {
         const auto& player = app.game.player();
         qe::math::Vec3 player_scale(0.4f, 0.9f, 0.4f);
@@ -410,31 +424,17 @@ static void render_world(TPSApp& app) {
             player.position() + qe::math::Vec3(0, player_scale.y * 0.5f, 0),
             player.rotation(), player_scale);
         app.world_shader.set_mat4("u_Model", model);
-
-        // Player color based on class
-        qe::math::Vec3 player_color;
-        switch (player.class_type()) {
-            case qe::game::tps::CharacterClassType::Vanguard:
-                player_color = {0.2f, 0.5f, 0.8f}; break;
-            case qe::game::tps::CharacterClassType::Recon:
-                player_color = {0.3f, 0.8f, 0.3f}; break;
-            case qe::game::tps::CharacterClassType::Heavy:
-                player_color = {0.8f, 0.5f, 0.2f}; break;
-            case qe::game::tps::CharacterClassType::Phantom:
-                player_color = {0.5f, 0.2f, 0.7f}; break;
-        }
-        app.world_shader.set_vec3("u_Tint", player_color);
+        app.world_shader.set_vec3("u_Tint", player_class_color(player.class_type()));
         app.capsule.draw();
     }
 
-    // Draw enemies
+    // Enemies
     for (const auto& enemy : app.game.enemies()) {
         if (!enemy.alive) continue;
 
         qe::math::Vec3 scale = qe::game::tps::mutant_scale(enemy.config.type);
         qe::math::Vec3 color = qe::game::tps::mutant_color(enemy.config.type);
 
-        // Hit flash
         if (enemy.current_health < enemy.config.health * 0.99f) {
             // Recently damaged — brief white flash
         }
@@ -448,7 +448,7 @@ static void render_world(TPSApp& app) {
         draw_mesh(app, qe::game::tps::mutant_mesh_type(enemy.config.type));
     }
 
-    // Draw projectiles
+    // Projectiles
     for (const auto& proj : app.game.projectiles()) {
         if (!proj.active) continue;
         qe::math::Mat4 model = qe::math::Mat4::trs(
@@ -458,8 +458,16 @@ static void render_world(TPSApp& app) {
         app.world_shader.set_vec3("u_Tint", proj.color);
         app.sphere.draw();
     }
+}
 
-    // Draw grid
+static void render_world(TPSApp& app) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    setup_tps_world_shader(app);
+    render_tps_scene_objects(app);
+    render_tps_characters(app);
+
+    // Grid
     app.world_shader.set_mat4("u_Model", qe::math::Mat4::identity());
     app.world_shader.set_vec3("u_Tint", qe::math::Vec3(0.15f, 0.15f, 0.15f));
     app.grid.draw();
@@ -495,55 +503,35 @@ static void render_particles(TPSApp& app) {
 
 // ── Render HUD ───────────────────────────────────────────────────────────────
 
-static void render_hud(TPSApp& app) {
-    glDisable(GL_DEPTH_TEST);
+// ── render_hud helpers ───────────────────────────────────────────────────────
 
-    app.hud_shader.use();
+/** Convert a TPSHUDBarData to a renderer HUDBar and draw it. */
+static void draw_hud_bar(qe::renderer::HUD& hud,
+                          const qe::game::tps::HUDBarData& src) {
+    qe::renderer::HUDBar bar;
+    bar.x = src.x;
+    bar.y = src.y;
+    bar.width = src.width;
+    bar.height = src.height;
+    bar.fill = src.fill;
+    bar.r = src.fill_color.x;
+    bar.g = src.fill_color.y;
+    bar.b = src.fill_color.z;
+    hud.draw_bar(bar);
+}
 
-    auto hud_state = app.game.build_hud(app.time);
+static void render_hud_status_bars(TPSApp& app,
+                                    const qe::game::tps::TPSHUDState& hud_state) {
+    draw_hud_bar(app.hud, hud_state.health_bar);
+    draw_hud_bar(app.hud, hud_state.stamina_bar);
 
-    // Health bar
-    {
-        qe::renderer::HUDBar bar;
-        bar.x = hud_state.health_bar.x;
-        bar.y = hud_state.health_bar.y;
-        bar.width = hud_state.health_bar.width;
-        bar.height = hud_state.health_bar.height;
-        bar.fill = hud_state.health_bar.fill;
-        bar.r = hud_state.health_bar.fill_color.x;
-        bar.g = hud_state.health_bar.fill_color.y;
-        bar.b = hud_state.health_bar.fill_color.z;
-        app.hud.draw_bar(bar);
-    }
-
-    // Stamina bar
-    {
-        qe::renderer::HUDBar bar;
-        bar.x = hud_state.stamina_bar.x;
-        bar.y = hud_state.stamina_bar.y;
-        bar.width = hud_state.stamina_bar.width;
-        bar.height = hud_state.stamina_bar.height;
-        bar.fill = hud_state.stamina_bar.fill;
-        bar.r = hud_state.stamina_bar.fill_color.x;
-        bar.g = hud_state.stamina_bar.fill_color.y;
-        bar.b = hud_state.stamina_bar.fill_color.z;
-        app.hud.draw_bar(bar);
-    }
-
-    // Boss health bar
     if (hud_state.boss_health_bar.visible) {
-        qe::renderer::HUDBar bar;
-        bar.x = hud_state.boss_health_bar.x;
-        bar.y = hud_state.boss_health_bar.y;
-        bar.width = hud_state.boss_health_bar.width;
-        bar.height = hud_state.boss_health_bar.height;
-        bar.fill = hud_state.boss_health_bar.fill;
-        bar.r = hud_state.boss_health_bar.fill_color.x;
-        bar.g = hud_state.boss_health_bar.fill_color.y;
-        bar.b = hud_state.boss_health_bar.fill_color.z;
-        app.hud.draw_bar(bar);
+        draw_hud_bar(app.hud, hud_state.boss_health_bar);
     }
+}
 
+static void render_hud_combat_indicators(TPSApp& app,
+                                          const qe::game::tps::TPSHUDState& hud_state) {
     // Crosshair / Lock-on reticle
     if (hud_state.lock_on_reticle.visible) {
         float rx = hud_state.lock_on_reticle.wobble_x;
@@ -577,6 +565,16 @@ static void render_hud(TPSApp& app) {
         float iy = std::cos(angle) * 0.3f;
         app.hud.draw_indicator(ix, iy, 0.04f * intensity, 0.9f, 0.1f, 0.1f);
     }
+}
+
+static void render_hud(TPSApp& app) {
+    glDisable(GL_DEPTH_TEST);
+    app.hud_shader.use();
+
+    auto hud_state = app.game.build_hud(app.time);
+
+    render_hud_status_bars(app, hud_state);
+    render_hud_combat_indicators(app, hud_state);
 
     glEnable(GL_DEPTH_TEST);
 }
