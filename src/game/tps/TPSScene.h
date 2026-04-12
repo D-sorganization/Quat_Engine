@@ -75,107 +75,87 @@ struct TPSSceneData {
 
 // ── Scene Builder ────────────────────────────────────────────────────────────
 
-/** Build a complete scene from level data.
- *  @pre level_data.check_invariants() passes
- *  @post scene.enemies.size() == level_data.total_enemy_count
- */
-inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42) {
-    TPSSceneData scene;
-    scene.environment = level_data.environment;
+// ── build_scene helpers ─────────────────────────────────────────────────────
 
-    // Ground
-    float radius = level_data.arena_radius;
-    scene.ground_scale = math::Vec3(radius, 0.1f, radius);
+/** Apply environment-specific shape, scale, and color to a cover object. */
+inline void apply_cover_style(SceneObject& obj, EnvironmentType env_type,
+                               int shape_variant, core::Rng& rng) {
+    auto rf = [&rng](float lo, float hi) { return rng.random_float(lo, hi); };
 
-    // RNG
-    core::Rng rng(seed + static_cast<uint32_t>(level_data.level_number * 7919));
-    auto rand_float = [&rng](float lo, float hi) -> float {
-        return rng.random_float(lo, hi);
-    };
+    switch (env_type) {
+        case EnvironmentType::Military:
+            if (shape_variant == 0) obj.mesh_type = SceneObjectType::Wedge;
+            else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Cylinder;
+            obj.scale = math::Vec3(rf(1.0f, 3.0f), rf(1.5f, 3.0f), rf(0.5f, 1.5f));
+            obj.color = math::Vec3(0.35f, 0.3f, 0.25f);
+            break;
+        case EnvironmentType::Underground:
+            if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cone;
+            else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Cylinder;
+            obj.scale = math::Vec3(rf(0.8f, 2.0f), rf(2.0f, 4.0f), rf(0.8f, 2.0f));
+            obj.color = math::Vec3(0.25f, 0.25f, 0.3f);
+            break;
+        case EnvironmentType::Urban:
+            if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+            else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Wedge;
+            else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Pyramid;
+            obj.scale = math::Vec3(rf(1.0f, 4.0f), rf(0.5f, 2.5f), rf(1.0f, 3.0f));
+            obj.color = math::Vec3(0.4f, 0.35f, 0.3f);
+            break;
+        case EnvironmentType::Forest:
+            if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+            else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Sphere;
+            else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Cone;
+            else obj.mesh_type = SceneObjectType::Sphere;
+            obj.scale = math::Vec3(rf(0.3f, 0.8f), rf(2.0f, 5.0f), rf(0.3f, 0.8f));
+            obj.color = math::Vec3(0.2f, 0.35f, 0.15f);
+            break;
+        case EnvironmentType::Industrial:
+            if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+            else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Capsule;
+            else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Cone;
+            obj.scale = math::Vec3(rf(2.0f, 5.0f), rf(1.0f, 3.0f), rf(0.5f, 1.0f));
+            obj.color = math::Vec3(0.4f, 0.3f, 0.2f);
+            break;
+        case EnvironmentType::Cathedral:
+            if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
+            else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Capsule;
+            else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Pyramid;
+            obj.scale = math::Vec3(rf(1.0f, 2.0f), rf(3.0f, 8.0f), rf(1.0f, 2.0f));
+            obj.color = math::Vec3(0.45f, 0.4f, 0.35f);
+            break;
+        default:
+            obj.scale = math::Vec3(rf(1.0f, 3.0f), rf(1.0f, 3.0f), rf(1.0f, 3.0f));
+            obj.color = math::Vec3(0.35f, 0.35f, 0.35f);
+            break;
+    }
+}
 
-    // Generate cover objects based on environment type
+/** Generate cover objects for the scene. */
+inline void generate_cover(TPSSceneData& scene, const LevelData& level_data,
+                            float radius, core::Rng& rng) {
     int cover_count = 8 + level_data.level_number * 2;
     for (int i = 0; i < cover_count; ++i) {
         SceneObject obj;
         float angle = (2.0f * PI * i) / static_cast<float>(cover_count);
-        float dist = rand_float(radius * 0.2f, radius * 0.7f);
+        float dist = rng.random_float(radius * 0.2f, radius * 0.7f);
 
         obj.position = math::Vec3(
-            std::cos(angle) * dist,
-            0.0f,
-            std::sin(angle) * dist
-        );
+            std::cos(angle) * dist, 0.0f, std::sin(angle) * dist);
         obj.rotation = math::Quaternion::from_axis_angle(
-            math::Vec3::up(), rand_float(0.0f, PI * 2.0f));
+            math::Vec3::up(), rng.random_float(0.0f, PI * 2.0f));
 
-        // Pick shape variation within environment
-        int shape_variant = static_cast<int>(rng.next() & 0x3); // 0-3
+        int shape_variant = static_cast<int>(rng.next() & 0x3);
+        apply_cover_style(obj, level_data.environment.type, shape_variant, rng);
 
-        switch (level_data.environment.type) {
-            case EnvironmentType::Military:
-                // Barricades (cubes), sandbag walls (wedges), watchtower legs (cylinders)
-                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Wedge;
-                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Cylinder;
-                obj.scale = math::Vec3(rand_float(1.0f, 3.0f), rand_float(1.5f, 3.0f),
-                                       rand_float(0.5f, 1.5f));
-                obj.color = math::Vec3(0.35f, 0.3f, 0.25f);
-                break;
-            case EnvironmentType::Underground:
-                // Stalagmites (cones), pillars (cylinders), rubble (cubes)
-                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cone;
-                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Cylinder;
-                obj.scale = math::Vec3(rand_float(0.8f, 2.0f), rand_float(2.0f, 4.0f),
-                                       rand_float(0.8f, 2.0f));
-                obj.color = math::Vec3(0.25f, 0.25f, 0.3f);
-                break;
-            case EnvironmentType::Urban:
-                // Buildings (cubes), bollards (cylinders), ramps (wedges), rubble (pyramids)
-                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
-                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Wedge;
-                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Pyramid;
-                obj.scale = math::Vec3(rand_float(1.0f, 4.0f), rand_float(0.5f, 2.5f),
-                                       rand_float(1.0f, 3.0f));
-                obj.color = math::Vec3(0.4f, 0.35f, 0.3f);
-                break;
-            case EnvironmentType::Forest:
-                // Tree trunks (cylinders), canopies (spheres), boulders (spheres), stumps (cones)
-                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
-                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Sphere;
-                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Cone;
-                else obj.mesh_type = SceneObjectType::Sphere;
-                obj.scale = math::Vec3(rand_float(0.3f, 0.8f), rand_float(2.0f, 5.0f),
-                                       rand_float(0.3f, 0.8f));
-                obj.color = math::Vec3(0.2f, 0.35f, 0.15f);
-                break;
-            case EnvironmentType::Industrial:
-                // Pipes (cylinders), tanks (capsules), crates (cubes), hoppers (cones)
-                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
-                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Capsule;
-                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Cone;
-                obj.scale = math::Vec3(rand_float(2.0f, 5.0f), rand_float(1.0f, 3.0f),
-                                       rand_float(0.5f, 1.0f));
-                obj.color = math::Vec3(0.4f, 0.3f, 0.2f);
-                break;
-            case EnvironmentType::Cathedral:
-                // Columns (cylinders), arches (capsules), altars (pyramids), pews (cubes)
-                if (shape_variant == 0) obj.mesh_type = SceneObjectType::Cylinder;
-                else if (shape_variant == 1) obj.mesh_type = SceneObjectType::Capsule;
-                else if (shape_variant == 2) obj.mesh_type = SceneObjectType::Pyramid;
-                obj.scale = math::Vec3(rand_float(1.0f, 2.0f), rand_float(3.0f, 8.0f),
-                                       rand_float(1.0f, 2.0f));
-                obj.color = math::Vec3(0.45f, 0.4f, 0.35f);
-                break;
-            default:
-                obj.scale = math::Vec3(rand_float(1.0f, 3.0f), rand_float(1.0f, 3.0f),
-                                       rand_float(1.0f, 3.0f));
-                obj.color = math::Vec3(0.35f, 0.35f, 0.35f);
-                break;
-        }
         obj.position.y = obj.scale.y * 0.5f;
         scene.cover_objects.push_back(obj);
     }
+}
 
-    // Generate decorative props with varied shapes
+/** Generate decorative props for the scene. */
+inline void generate_decorations(TPSSceneData& scene, const LevelData& level_data,
+                                  float radius, core::Rng& rng) {
     int deco_count = 5 + level_data.level_number;
     const SceneObjectType deco_shapes[] = {
         SceneObjectType::Cube, SceneObjectType::Cone, SceneObjectType::Pyramid,
@@ -183,40 +163,39 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
     };
     for (int i = 0; i < deco_count; ++i) {
         SceneObject deco;
-        float angle = rand_float(0.0f, PI * 2.0f);
-        float dist = rand_float(radius * 0.1f, radius * 0.85f);
+        float angle = rng.random_float(0.0f, PI * 2.0f);
+        float dist = rng.random_float(radius * 0.1f, radius * 0.85f);
         deco.position = math::Vec3(
             std::cos(angle) * dist, 0.0f, std::sin(angle) * dist);
-        deco.scale = math::Vec3(rand_float(0.3f, 1.0f), rand_float(0.1f, 0.5f),
-                                rand_float(0.3f, 1.0f));
+        deco.scale = math::Vec3(rng.random_float(0.3f, 1.0f),
+                                rng.random_float(0.1f, 0.5f),
+                                rng.random_float(0.3f, 1.0f));
         deco.color = scene.environment.ambient_color * 2.0f;
         deco.mesh_type = deco_shapes[i % 6];
         deco.position.y = deco.scale.y * 0.5f;
         scene.decorations.push_back(deco);
     }
+}
 
-    // Spawn enemies from level spawn table
+/** Spawn enemies from the level's spawn table with difficulty scaling. */
+inline void spawn_enemies(TPSSceneData& scene, const LevelData& level_data,
+                           float radius, core::Rng& rng) {
     int enemy_id = 1;
     for (const auto& entry : level_data.spawn_table) {
         for (int i = 0; i < entry.count; ++i) {
-            float angle = rand_float(0.0f, PI * 2.0f);
-            float dist = rand_float(radius * 0.3f, radius * 0.8f);
+            float angle = rng.random_float(0.0f, PI * 2.0f);
+            float dist = rng.random_float(radius * 0.3f, radius * 0.8f);
             math::Vec3 spawn_pos(
-                std::cos(angle) * dist,
-                0.0f,
-                std::sin(angle) * dist
-            );
+                std::cos(angle) * dist, 0.0f, std::sin(angle) * dist);
 
-            // Flying enemies spawn higher
             if (entry.type == MutantType::Amalgam) {
-                spawn_pos.y = rand_float(3.0f, 6.0f);
+                spawn_pos.y = rng.random_float(3.0f, 6.0f);
             }
 
             auto mutant = spawn_mutant(entry.type, spawn_pos, enemy_id++);
-            mutant.patrol_radius = rand_float(4.0f, 10.0f);
-            mutant.patrol_phase = rand_float(0.0f, PI * 2.0f);
+            mutant.patrol_radius = rng.random_float(4.0f, 10.0f);
+            mutant.patrol_phase = rng.random_float(0.0f, PI * 2.0f);
 
-            // Apply level difficulty scaling
             mutant.config.health *= level_data.enemy_health_mult;
             mutant.current_health = mutant.config.health;
             mutant.config.move_speed *= level_data.enemy_speed_mult;
@@ -226,6 +205,26 @@ inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42)
             scene.enemies.push_back(mutant);
         }
     }
+}
+
+// ── Scene Builder ────────────────────────────────────────────────────────────
+
+/** Build a complete scene from level data.
+ *  @pre level_data.check_invariants() passes
+ *  @post scene.enemies.size() == level_data.total_enemy_count
+ */
+inline TPSSceneData build_scene(const LevelData& level_data, uint32_t seed = 42) {
+    TPSSceneData scene;
+    scene.environment = level_data.environment;
+
+    float radius = level_data.arena_radius;
+    scene.ground_scale = math::Vec3(radius, 0.1f, radius);
+
+    core::Rng rng(seed + static_cast<uint32_t>(level_data.level_number * 7919));
+
+    generate_cover(scene, level_data, radius, rng);
+    generate_decorations(scene, level_data, radius, rng);
+    spawn_enemies(scene, level_data, radius, rng);
 
     assert(static_cast<int>(scene.enemies.size()) == level_data.total_enemy_count);
     return scene;

@@ -148,10 +148,9 @@ void handle_events(App& app) {
     }
 }
 
-void update(App& app, float dt) {
-    using namespace qe::game;
-    using namespace qe::math;
+// ── Update helpers ──────────────────────────────────────────────────────────
 
+static void update_camera(App& app, float dt) {
     app.camera.process_mouse(app.input.look_x(), app.input.look_y());
     app.camera.process_scroll(app.input.zoom());
     app.camera.process_movement(
@@ -161,9 +160,12 @@ void update(App& app, float dt) {
         app.input.sprint(),
         dt);
     app.camera.update(dt);
+}
+
+static void update_wave_spawns(App& app) {
+    using namespace qe::game;
 
     const int alive = count_alive(app.entities);
-    app.waves.update(dt, alive);
 
     if (app.waves.state() == GameState::WaveIntro && alive == 0 &&
         app.waves.time_in_state() < 0.1f && app.waves.current_wave() > 1) {
@@ -173,9 +175,9 @@ void update(App& app, float dt) {
     if (app.waves.state() == GameState::WaveIntro && app.entities.empty()) {
         spawn_wave_targets(app);
     }
+}
 
-    app.weapons.update(dt);
-
+static void update_combat_config(App& app) {
     const float fire_rate_mult = app.powerups.get_fire_rate_multiplier();
     const float damage_mult = app.powerups.get_damage_multiplier();
     const auto& weapon = app.weapons.current();
@@ -185,66 +187,82 @@ void update(App& app, float dt) {
     app.combat_cfg.projectile_lifetime = qe::config::PROJECTILE_LIFETIME;
     app.combat_cfg.projectile_radius = qe::config::PROJECTILE_RADIUS;
     app.combat_cfg.kill_score = qe::config::KILL_SCORE;
+}
 
-    if (app.input.shoot_held() && app.weapons.can_fire() &&
-        app.waves.state() == GameState::WaveActive) {
-        app.weapons.fire();
+static void process_new_kills(App& app, const qe::math::Vec3& /*dir*/) {
+    using namespace qe::math;
+    using namespace qe::game;
 
-        const auto directions =
-            app.weapons.compute_fire_directions(app.camera.forward(), Vec3::up());
+    for (auto& ent : app.entities) {
+        if (!ent.alive && ent.health <= 0 && ent.death_timer < 0.01f) {
+            const float score_mult = app.powerups.get_score_multiplier();
+            app.score.record_kill(
+                app.combat_cfg.kill_score,
+                score_mult,
+                app.waves.wave_config().bonus_points / 10);
 
-        for (const auto& dir : directions) {
-            qe::game::CombatStats dummy_stats;
-            qe::game::shoot(
-                app.camera.position(),
-                dir,
-                app.combat_cfg,
-                app.projectiles,
-                app.entities,
-                dummy_stats);
+            auto death_cfg = qe::renderer::ParticleSystem::preset_death_burst();
+            death_cfg.position = ent.position;
+            app.particles.emit(death_cfg);
 
-            if (dummy_stats.total_hits > 0) {
-                app.score.record_hit();
-            } else {
-                app.score.record_miss();
-            }
+            app.powerups.try_spawn_random(ent.position + Vec3(0, 0.5f, 0));
 
-            for (auto& ent : app.entities) {
-                if (!ent.alive && ent.health <= 0 && ent.death_timer < 0.01f) {
-                    const float score_mult = app.powerups.get_score_multiplier();
-                    app.score.record_kill(
-                        app.combat_cfg.kill_score,
-                        score_mult,
-                        app.waves.wave_config().bonus_points / 10);
-
-                    auto death_cfg = qe::renderer::ParticleSystem::preset_death_burst();
-                    death_cfg.position = ent.position;
-                    app.particles.emit(death_cfg);
-
-                    app.powerups.try_spawn_random(ent.position + Vec3(0, 0.5f, 0));
-
-                    for (size_t j = 0; j < app.behaviors.size(); ++j) {
-                        if (app.behaviors[j].type == BehaviorType::Dodge &&
-                            app.entities[j].alive) {
-                            const float dist =
-                                ent.position.distance_to(app.entities[j].position);
-                            if (dist < 8.0f) {
-                                app.behaviors[j].alert();
-                            }
-                        }
+            for (size_t j = 0; j < app.behaviors.size(); ++j) {
+                if (app.behaviors[j].type == BehaviorType::Dodge &&
+                    app.entities[j].alive) {
+                    const float dist =
+                        ent.position.distance_to(app.entities[j].position);
+                    if (dist < 8.0f) {
+                        app.behaviors[j].alert();
                     }
                 }
             }
-
-            auto muzzle_cfg = qe::renderer::ParticleSystem::preset_muzzle_flash();
-            muzzle_cfg.position = app.camera.position() + dir * 0.8f;
-            muzzle_cfg.orientation =
-                qe::math::Quaternion::from_two_vectors(Vec3(0, 0, 1), dir);
-            app.particles.emit(muzzle_cfg);
         }
     }
+}
 
-    qe::game::update_projectiles(app.projectiles, dt);
+static void update_shooting(App& app) {
+    using namespace qe::game;
+    using namespace qe::math;
+
+    if (!(app.input.shoot_held() && app.weapons.can_fire() &&
+          app.waves.state() == GameState::WaveActive)) {
+        return;
+    }
+
+    app.weapons.fire();
+
+    const auto directions =
+        app.weapons.compute_fire_directions(app.camera.forward(), Vec3::up());
+
+    for (const auto& dir : directions) {
+        qe::game::CombatStats dummy_stats;
+        qe::game::shoot(
+            app.camera.position(),
+            dir,
+            app.combat_cfg,
+            app.projectiles,
+            app.entities,
+            dummy_stats);
+
+        if (dummy_stats.total_hits > 0) {
+            app.score.record_hit();
+        } else {
+            app.score.record_miss();
+        }
+
+        process_new_kills(app, dir);
+
+        auto muzzle_cfg = qe::renderer::ParticleSystem::preset_muzzle_flash();
+        muzzle_cfg.position = app.camera.position() + dir * 0.8f;
+        muzzle_cfg.orientation =
+            qe::math::Quaternion::from_two_vectors(Vec3(0, 0, 1), dir);
+        app.particles.emit(muzzle_cfg);
+    }
+}
+
+static void update_projectile_collisions(App& app) {
+    using namespace qe::math;
 
     for (auto& proj : app.projectiles) {
         if (!proj.active) {
@@ -278,7 +296,9 @@ void update(App& app, float dt) {
             }
         }
     }
+}
 
+static void update_entities(App& app, float dt) {
     const float enemy_speed_mult = app.powerups.get_enemy_speed_multiplier();
     for (size_t i = 0; i < app.entities.size(); ++i) {
         app.entities[i].update(dt);
@@ -290,6 +310,26 @@ void update(App& app, float dt) {
             app.entities[i].rotation = app.behaviors[i].compute_rotation(adjusted_time);
         }
     }
+}
+
+// ── Public update function ──────────────────────────────────────────────────
+
+void update(App& app, float dt) {
+    using namespace qe::game;
+
+    update_camera(app, dt);
+
+    const int alive = count_alive(app.entities);
+    app.waves.update(dt, alive);
+    update_wave_spawns(app);
+
+    app.weapons.update(dt);
+    update_combat_config(app);
+    update_shooting(app);
+
+    qe::game::update_projectiles(app.projectiles, dt);
+    update_projectile_collisions(app);
+    update_entities(app, dt);
 
     app.powerups.update(dt);
     app.powerups.try_collect(app.camera.position());

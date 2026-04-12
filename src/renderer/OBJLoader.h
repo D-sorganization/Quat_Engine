@@ -170,48 +170,51 @@ private:
         return fv;
     }
 
+    /** Convert a single face vertex to a renderable Vertex. */
+    static Vertex build_vertex(const RawMesh& raw, const RawMesh::FaceVertex& fv,
+                                float r, float g, float b) {
+        Vertex vert{};
+
+        // Position
+        if (fv.pos_idx >= 0 && fv.pos_idx * 3 + 2 < static_cast<int>(raw.positions.size())) {
+            vert.position[0] = raw.positions[fv.pos_idx * 3 + 0];
+            vert.position[1] = raw.positions[fv.pos_idx * 3 + 1];
+            vert.position[2] = raw.positions[fv.pos_idx * 3 + 2];
+        }
+
+        // Normal
+        if (fv.norm_idx >= 0 && fv.norm_idx * 3 + 2 < static_cast<int>(raw.normals.size())) {
+            vert.normal[0] = raw.normals[fv.norm_idx * 3 + 0];
+            vert.normal[1] = raw.normals[fv.norm_idx * 3 + 1];
+            vert.normal[2] = raw.normals[fv.norm_idx * 3 + 2];
+        } else {
+            vert.normal[0] = 0; vert.normal[1] = 1; vert.normal[2] = 0;
+        }
+
+        // Texcoord
+        if (fv.tex_idx >= 0 && fv.tex_idx * 2 + 1 < static_cast<int>(raw.texcoords.size())) {
+            vert.uv[0] = raw.texcoords[fv.tex_idx * 2 + 0];
+            vert.uv[1] = raw.texcoords[fv.tex_idx * 2 + 1];
+        }
+
+        // Color
+        vert.color[0] = r;
+        vert.color[1] = g;
+        vert.color[2] = b;
+
+        return vert;
+    }
+
     static Mesh build_mesh(const RawMesh& raw, float r, float g, float b) {
         Mesh mesh;
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
 
         for (size_t i = 0; i < raw.face_verts.size(); ++i) {
-            const auto& fv = raw.face_verts[i];
-            Vertex vert{};
-
-            // Position
-            if (fv.pos_idx >= 0 && fv.pos_idx * 3 + 2 < static_cast<int>(raw.positions.size())) {
-                vert.position[0] = raw.positions[fv.pos_idx * 3 + 0];
-                vert.position[1] = raw.positions[fv.pos_idx * 3 + 1];
-                vert.position[2] = raw.positions[fv.pos_idx * 3 + 2];
-            }
-
-            // Normal
-            if (fv.norm_idx >= 0 && fv.norm_idx * 3 + 2 < static_cast<int>(raw.normals.size())) {
-                vert.normal[0] = raw.normals[fv.norm_idx * 3 + 0];
-                vert.normal[1] = raw.normals[fv.norm_idx * 3 + 1];
-                vert.normal[2] = raw.normals[fv.norm_idx * 3 + 2];
-            } else {
-                // Default up normal if missing
-                vert.normal[0] = 0; vert.normal[1] = 1; vert.normal[2] = 0;
-            }
-
-            // Texcoord
-            if (fv.tex_idx >= 0 && fv.tex_idx * 2 + 1 < static_cast<int>(raw.texcoords.size())) {
-                vert.uv[0] = raw.texcoords[fv.tex_idx * 2 + 0];
-                vert.uv[1] = raw.texcoords[fv.tex_idx * 2 + 1];
-            }
-
-            // Color
-            vert.color[0] = r;
-            vert.color[1] = g;
-            vert.color[2] = b;
-
-            vertices.push_back(vert);
+            vertices.push_back(build_vertex(raw, raw.face_verts[i], r, g, b));
             indices.push_back(static_cast<unsigned int>(i));
         }
 
-        // Compute face normals for faces that didn't have normals
         if (raw.normals.empty()) {
             compute_face_normals(vertices, indices);
         }
