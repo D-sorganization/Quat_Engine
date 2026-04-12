@@ -178,6 +178,159 @@ void test_next_prev_weapon_cycle() {
     ASSERT_TRUE(mgr.current_index() == 3);
 }
 
+// ── Weapon Negative / Error-Path Tests ─────────────────────────────────────
+//
+// These verify the documented no-op / clamp contracts in Weapons.h. The
+// API never throws — instead, invalid operations are silently ignored so
+// callers can fire the input layer blindly without guarding every call.
+// Each test below pins one of those error paths.
+
+void test_weapons_fire_with_empty_ammo_silently_fails() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(1); // Shotgun, max_ammo=8
+    // Drain the magazine deterministically — allow enough time between
+    // shots to clear the cooldown each round.
+    for (int i = 0; i < 8; ++i) {
+        ASSERT_TRUE(mgr.can_fire());
+        mgr.fire();
+        mgr.update(10.0f); // Clear cooldown only — we never call reload().
+    }
+    ASSERT_TRUE(mgr.current().ammo == 0);
+    ASSERT_TRUE(!mgr.can_fire());        // Contract: empty ammo disables firing.
+    ASSERT_TRUE(!mgr.is_reloading());    // Contract: fire() does NOT auto-reload.
+
+    // Calling fire() with an empty magazine must be a silent no-op: no
+    // exception, no crash, no negative ammo, no cooldown kicked.
+    mgr.fire();
+    ASSERT_TRUE(mgr.current().ammo == 0);
+    ASSERT_NEAR(mgr.cooldown_progress(), 0.0f, 1e-6f);
+    ASSERT_TRUE(!mgr.is_reloading());
+}
+
+void test_weapons_reload_while_reloading_is_noop() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(1); // Shotgun, reload_time=2.0
+    mgr.fire();
+    mgr.update(10.0f); // Clear cooldown so reload() is the only state change.
+
+    mgr.reload();
+    ASSERT_TRUE(mgr.is_reloading());
+
+    // Advance part-way through the reload, then request a second reload.
+    mgr.update(0.5f);
+    float progress_before = mgr.reload_progress();
+    ASSERT_TRUE(progress_before > 0.0f);
+    ASSERT_TRUE(progress_before < 1.0f);
+
+    mgr.reload(); // Contract: must be a no-op — do NOT restart the timer.
+    ASSERT_TRUE(mgr.is_reloading());
+    // Progress should be unchanged (no second reload_timer_ reset).
+    ASSERT_NEAR(mgr.reload_progress(), progress_before, 1e-5f);
+
+    // And the reload should still complete on the original schedule.
+    mgr.update(1.6f);
+    ASSERT_TRUE(!mgr.is_reloading());
+    ASSERT_TRUE(mgr.current().ammo == mgr.current().max_ammo);
+}
+
+void test_weapons_reload_at_full_ammo_is_noop() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(1); // Shotgun, starts full.
+    ASSERT_TRUE(mgr.current().ammo == mgr.current().max_ammo);
+
+    mgr.reload(); // Contract: reloading a full magazine is a no-op.
+    ASSERT_TRUE(!mgr.is_reloading());
+    ASSERT_NEAR(mgr.reload_progress(), 0.0f, 1e-6f);
+}
+
+void test_weapons_reload_infinite_ammo_is_noop() {
+    qe::game::WeaponManager mgr;
+    // Pistol has max_ammo == -1 (infinite); reload() must early-return.
+    ASSERT_TRUE(mgr.current().max_ammo == -1);
+    mgr.reload();
+    ASSERT_TRUE(!mgr.is_reloading());
+}
+
+void test_weapons_switch_to_invalid_index_is_ignored() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(2); // RailGun
+    ASSERT_TRUE(mgr.current_index() == 2);
+
+    // Out-of-range indices must be silently ignored — no throw, no change.
+    mgr.switch_weapon(-1);
+    ASSERT_TRUE(mgr.current_index() == 2);
+
+    mgr.switch_weapon(99);
+    ASSERT_TRUE(mgr.current_index() == 2);
+
+    mgr.switch_weapon(mgr.weapon_count());
+    ASSERT_TRUE(mgr.current_index() == 2);
+
+    // Sanity: a valid index still works after rejected calls.
+    mgr.switch_weapon(0);
+    ASSERT_TRUE(mgr.current_index() == 0);
+}
+
+void test_weapons_can_fire_returns_false_during_reload() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(1); // Shotgun
+    mgr.fire();
+    mgr.update(10.0f); // Clear cooldown so can_fire()==true before reload.
+    ASSERT_TRUE(mgr.can_fire());
+
+    mgr.reload();
+    ASSERT_TRUE(mgr.is_reloading());
+    ASSERT_TRUE(!mgr.can_fire());            // Contract: cannot fire mid-reload.
+
+    // Firing during reload must be a silent no-op — ammo must not tick down
+    // and the reload must continue unaffected.
+    int ammo_before = mgr.current().ammo;
+    mgr.fire();
+    ASSERT_TRUE(mgr.current().ammo == ammo_before);
+    ASSERT_TRUE(mgr.is_reloading());
+}
+
+void test_weapons_can_fire_returns_false_during_cooldown() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(2); // RailGun, fire_rate=1.5
+    ASSERT_TRUE(mgr.can_fire());
+    mgr.fire();
+    ASSERT_TRUE(!mgr.can_fire());            // Contract: cooldown blocks fire.
+
+    // Cooldown progress should be (close to) 1.0 immediately after firing
+    // and must fall monotonically to 0 as we advance time.
+    float start = mgr.cooldown_progress();
+    ASSERT_TRUE(start > 0.0f);
+    mgr.update(0.75f);
+    ASSERT_TRUE(mgr.cooldown_progress() < start);
+    ASSERT_TRUE(!mgr.can_fire());
+    mgr.update(1.0f);
+    ASSERT_NEAR(mgr.cooldown_progress(), 0.0f, 1e-5f);
+    ASSERT_TRUE(mgr.can_fire());
+}
+
+void test_weapons_switch_weapon_cancels_reload() {
+    qe::game::WeaponManager mgr;
+    mgr.switch_weapon(1); // Shotgun
+    mgr.fire();
+    mgr.update(10.0f);
+    mgr.reload();
+    ASSERT_TRUE(mgr.is_reloading());
+
+    // Documented behaviour in switch_weapon: reload state is cleared on
+    // weapon change (reloading_ = false; reload_timer_ = 0).
+    mgr.switch_weapon(2);
+    ASSERT_TRUE(!mgr.is_reloading());
+    ASSERT_NEAR(mgr.reload_progress(), 0.0f, 1e-6f);
+}
+
+void test_weapons_reload_progress_is_zero_when_not_reloading() {
+    qe::game::WeaponManager mgr;
+    ASSERT_NEAR(mgr.reload_progress(), 0.0f, 1e-6f);
+    mgr.switch_weapon(1);
+    ASSERT_NEAR(mgr.reload_progress(), 0.0f, 1e-6f);
+}
+
 // ── Scoring Tests ───────────────────────────────────────────────────────────
 
 void test_initial_score_is_zero() {
@@ -322,6 +475,17 @@ int main() {
     RUN_TEST(test_cooldown_prevents_rapid_fire);
     RUN_TEST(test_compute_fire_directions_uses_quaternion);
     RUN_TEST(test_next_prev_weapon_cycle);
+
+    std::cout << "\n--- Weapon Negative Paths ---" << std::endl;
+    RUN_TEST(test_weapons_fire_with_empty_ammo_silently_fails);
+    RUN_TEST(test_weapons_reload_while_reloading_is_noop);
+    RUN_TEST(test_weapons_reload_at_full_ammo_is_noop);
+    RUN_TEST(test_weapons_reload_infinite_ammo_is_noop);
+    RUN_TEST(test_weapons_switch_to_invalid_index_is_ignored);
+    RUN_TEST(test_weapons_can_fire_returns_false_during_reload);
+    RUN_TEST(test_weapons_can_fire_returns_false_during_cooldown);
+    RUN_TEST(test_weapons_switch_weapon_cancels_reload);
+    RUN_TEST(test_weapons_reload_progress_is_zero_when_not_reloading);
 
     std::cout << "\n--- Scoring ---" << std::endl;
     RUN_TEST(test_initial_score_is_zero);
