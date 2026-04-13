@@ -40,8 +40,8 @@ jobs:
       - name: Install dependencies
         run: |
           if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
+            sudo apt-get -o DPkg::Lock::Timeout=300 update
+            sudo apt-get -o DPkg::Lock::Timeout=300 install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
           else
             echo "Skipping apt dependency install on runners without passwordless sudo"
             python3 -m pip install --user --break-system-packages cmake gcovr

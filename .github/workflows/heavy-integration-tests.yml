@@ -34,8 +34,8 @@ jobs:
 
       - name: Install native toolchain
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt-get -o DPkg::Lock::Timeout=300 update
+          sudo apt-get -o DPkg::Lock::Timeout=300 install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Configure heavy integration build
         run: cmake -S . -B build-heavy -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
