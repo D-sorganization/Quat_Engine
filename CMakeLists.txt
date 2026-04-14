@@ -210,6 +210,12 @@ qe_add_test(test_math_core
     LABELS unit math
 )
 
+qe_add_test(test_objloader
+    SOURCE tests/test_objloader.cpp
+    LIBS qe_core
+    LABELS unit renderer
+)
+
 if(QE_BUILD_DEMO)
     qe_add_test(test_postprocess
         SOURCE tests/test_postprocess.cpp

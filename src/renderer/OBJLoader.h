@@ -14,15 +14,25 @@
  *   f v1/vt1 v2/vt2 v3/vt3        (position + texcoord)
  *   f v1/vt1/vn1 v2/vt2/vn2 ...   (position + texcoord + normal)
  *   f v1//vn1 v2//vn2 v3//vn3     (position + normal, no texcoord)
+ *
+ * Error handling:
+ *   - Missing file: returns empty Mesh and logs an error.
+ *   - Malformed face tokens: logged, face skipped (no throw, no silent garbage).
+ *   - Incomplete vertex records: logged, vertex skipped.
+ *   - Out-of-range face indices: logged, face skipped.
+ *   - Parse errors are counted in ParseResult::error_count.
+ *
+ * For headless testing without an OpenGL context, use OBJParser.h directly
+ * (parse_content / parse_stream) — it has no SDL or GL dependencies.
  */
 
 #include "Mesh.h"
+#include "OBJParser.h"
 #include "../core/Logger.h"
 
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -31,29 +41,47 @@ namespace renderer {
 
 class OBJLoader {
 public:
-    struct RawMesh {
-        std::vector<float> positions;   // x, y, z (groups of 3)
-        std::vector<float> texcoords;   // u, v (groups of 2)
-        std::vector<float> normals;     // x, y, z (groups of 3)
+    // Re-export the parser types so existing callers using OBJLoader::RawMesh
+    // still compile.
+    using RawMesh     = OBJRawMesh;
+    using ParseResult = OBJParseResult;
 
-        struct FaceVertex {
-            int pos_idx = -1;
-            int tex_idx = -1;
-            int norm_idx = -1;
-        };
-        std::vector<FaceVertex> face_verts;  // Triangulated face vertices
-    };
+    // ── Public parse API (no GPU) ────────────────────────────────────────────
+
+    /** Parse OBJ content from a string (no file I/O, no GPU upload). */
+    static ParseResult parse_content(const std::string& content) {
+        return OBJParser::parse_content(content);
+    }
+
+    /** Parse OBJ content from an already-open stream (no GPU upload). */
+    static ParseResult parse_stream(std::istream& stream) {
+        return OBJParser::parse_stream(stream);
+    }
+
+    // ── GPU load ─────────────────────────────────────────────────────────────
 
     /** Load an OBJ file and return a renderable Mesh. */
     static Mesh load(const std::string& path,
                      float r = 0.7f, float g = 0.7f, float b = 0.7f) {
-        RawMesh raw;
-        if (!parse_file(path, raw)) {
-            QE_LOG_ERROR("OBJ") << "Failed to load: " << path << std::endl;
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            QE_LOG_ERROR("OBJ") << "Failed to open: " << path << std::endl;
             return Mesh();
         }
 
-        return build_mesh(raw, r, g, b);
+        ParseResult result = OBJParser::parse_stream(file);
+
+        if (result.error_count > 0) {
+            QE_LOG_WARN("OBJ") << path << ": " << result.error_count
+                               << " parse error(s) — " << result.error_message
+                               << std::endl;
+        }
+
+        QE_LOG_INFO("OBJ") << "Loaded " << path << ": "
+                  << result.mesh.positions.size() / 3 << " verts, "
+                  << result.mesh.face_verts.size() / 3 << " tris" << std::endl;
+
+        return build_mesh(result.mesh, r, g, b);
     }
 
     /** Write a simple OBJ file for a given set of vertices and faces. */
@@ -87,91 +115,8 @@ public:
     }
 
 private:
-    static bool parse_file(const std::string& path, RawMesh& raw) {
-        std::ifstream file(path);
-        if (!file.is_open()) return false;
-
-        std::string line;
-        while (std::getline(file, line)) {
-            if (line.empty() || line[0] == '#') continue;
-
-            std::istringstream iss(line);
-            std::string prefix;
-            iss >> prefix;
-
-            if (prefix == "v") {
-                float x = 0, y = 0, z = 0;
-                iss >> x >> y >> z;
-                raw.positions.push_back(x);
-                raw.positions.push_back(y);
-                raw.positions.push_back(z);
-            } else if (prefix == "vt") {
-                float u = 0, v = 0;
-                iss >> u >> v;
-                raw.texcoords.push_back(u);
-                raw.texcoords.push_back(v);
-            } else if (prefix == "vn") {
-                float x = 0, y = 0, z = 0;
-                iss >> x >> y >> z;
-                raw.normals.push_back(x);
-                raw.normals.push_back(y);
-                raw.normals.push_back(z);
-            } else if (prefix == "f") {
-                std::vector<RawMesh::FaceVertex> face;
-                std::string token;
-                while (iss >> token) {
-                    face.push_back(parse_face_vertex(token));
-                }
-                // Triangulate (fan from first vertex)
-                for (size_t i = 1; i + 1 < face.size(); ++i) {
-                    raw.face_verts.push_back(face[0]);
-                    raw.face_verts.push_back(face[i]);
-                    raw.face_verts.push_back(face[i + 1]);
-                }
-            }
-        }
-
-        QE_LOG_INFO("OBJ") << "Loaded " << path << ": "
-                  << raw.positions.size() / 3 << " verts, "
-                  << raw.face_verts.size() / 3 << " tris" << std::endl;
-        return true;
-    }
-
-    static RawMesh::FaceVertex parse_face_vertex(const std::string& token) {
-        RawMesh::FaceVertex fv;
-
-        // Count slashes
-        size_t s1 = token.find('/');
-        if (s1 == std::string::npos) {
-            // Just position index
-            fv.pos_idx = std::stoi(token) - 1;
-            return fv;
-        }
-
-        size_t s2 = token.find('/', s1 + 1);
-
-        // Position
-        fv.pos_idx = std::stoi(token.substr(0, s1)) - 1;
-
-        // Texcoord (may be empty for v//vn format)
-        std::string tc_str = token.substr(s1 + 1, s2 - s1 - 1);
-        if (!tc_str.empty()) {
-            fv.tex_idx = std::stoi(tc_str) - 1;
-        }
-
-        // Normal
-        if (s2 != std::string::npos) {
-            std::string n_str = token.substr(s2 + 1);
-            if (!n_str.empty()) {
-                fv.norm_idx = std::stoi(n_str) - 1;
-            }
-        }
-
-        return fv;
-    }
-
     /** Convert a single face vertex to a renderable Vertex. */
-    static Vertex build_vertex(const RawMesh& raw, const RawMesh::FaceVertex& fv,
+    static Vertex build_vertex(const OBJRawMesh& raw, const OBJRawMesh::FaceVertex& fv,
                                 float r, float g, float b) {
         Vertex vert{};
 
@@ -205,7 +150,7 @@ private:
         return vert;
     }
 
-    static Mesh build_mesh(const RawMesh& raw, float r, float g, float b) {
+    static Mesh build_mesh(const OBJRawMesh& raw, float r, float g, float b) {
         Mesh mesh;
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
