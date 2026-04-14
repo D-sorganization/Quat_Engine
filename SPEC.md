@@ -27,8 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-| **Spec Version** | 1.0.7 |
-| **Last Spec Update** | 2026-04-11 |
+| **Spec Version** | 1.0.9 |
+| **Last Spec Update** | 2026-04-14 |
 
 ## 2. Purpose & Mission
 
@@ -54,7 +54,7 @@ QuatEngine is a modern C++ 3D game engine built from first principles with a foc
 - Not a general-purpose rendering framework (game-specific features prioritized)
 - Not a replacement for Unreal, Unity, or Godot
 - Not intended for mobile or WebGL targets
-- No built-in mesh loading or asset pipeline (Phase 4 dependent)
+- No built-in mesh loading or asset pipeline (Phase 4 dependent; OBJLoader exists but is renderer-only, not a general pipeline)
 
 ## 4. Architecture Overview
 
@@ -79,6 +79,8 @@ QuatEngine/
 │   │   ├── GLLoader.h
 │   │   ├── Shader.h
 │   │   ├── Mesh.h
+│   │   ├── OBJParser.h         # Pure-C++ OBJ text parser (no GL/SDL)
+│   │   ├── OBJLoader.h         # GPU-upload wrapper around OBJParser
 │   │   └── Camera.h
 │   ├── input/                   # SDL2 input handling
 │   │   └── InputManager.h
@@ -253,7 +255,7 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 - [ ] TPS controller responds to input and updates position correctly
 - [ ] FPS controller implements proper mouse look with no gimbal lock
 - [ ] Post-processing effects apply without framebuffer corruption
-- [ ] 23 test files execute via ctest with 100% pass rate on C++17 compiler
+- [ ] 24 test files execute via ctest with 100% pass rate on C++17 compiler
 - [x] Patrol behavior wraps negative-time progression consistently for both position and facing rotation
 
 ## 8. Quality Standards
@@ -400,6 +402,7 @@ gcovr --print-summary --html coverage/
 | 2026-04-10 | 1.0.5 | DRY: extracted `math::Constants.h` (PI, TWO_PI) shared by Scene.h, TPSScene.h, ParticleSystem.h, removing inline duplicates; added `PowerUpManager::get_effect_value` helper eliminating repeated iteration pattern across four multiplier getters (closes #93) |
 | 2026-04-11 | 1.0.7 | Refactor: decomposed 7 oversized functions (78-148 LOC) across RuntimeSystems.cpp, Rendering.cpp, tps_main.cpp, TPSScene.h, TPSCombat.h, and OBJLoader.h into focused helpers; public signatures unchanged (closes #92) |
 | 2026-04-11 | 1.0.6 | TDD: replaced placeholder `tests/test_architecture_dbc.py` with real layered-architecture invariants (math ← core ← renderer/input ← game ← demo), DbC decorator coverage for `src/contracts.py`, and Weapons.h public-contract pins; added nine negative-path tests to `tests/test_weapons.cpp` covering empty-ammo fire, reload-while-reloading, reload-at-full, reload-on-infinite-ammo, invalid switch index, can_fire during reload/cooldown, and switch_weapon cancelling an in-progress reload (closes #94) |
+| 2026-04-14 | 1.0.9 | OBJLoader error handling: extracted `OBJParser.h` (pure-C++, no GL/SDL) from `OBJLoader.h`, replacing silent `std::stoi` throws and zero-fill on bad streams with explicit per-line error counting and face skipping; added `parse_content`/`parse_stream` public API; added `tests/test_objloader.cpp` with 18 tests covering triangle/quad parse, v//vn/vt/vt+vn formats, missing normals, malformed tokens, out-of-range indices, zero index, incomplete vertex records, face-before-vertices, fewer-than-3-vertex faces, and good-face-after-bad-face; total ctest count raised to 24 (closes #105) |
 | 2026-03-28 | 1.0.0 | Initial specification |
 | 2026-03-30 | 1.0.1 | A-N Assessment remediation: add .env to .gitignore, add MIT LICENSE, add DbC assertions to Combat.h/Scoring.h, add Camera::set_aspect/set_smoothing interface methods (LoD), update main.cpp to use new Camera interface |
 
