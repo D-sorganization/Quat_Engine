@@ -39,14 +39,20 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # System toolchain (cmake, build-essential, GL headers) via apt.
+          # gcovr is installed via pip so we control the version — apt-provided
+          # gcovr bundles an old template engine that breaks on modern jinja2
+          # (ImportError: cannot import name 'Markup' from 'jinja2').
           if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
             sudo apt-get -o DPkg::Lock::Timeout=300 update
-            sudo apt-get -o DPkg::Lock::Timeout=300 install -y cmake build-essential gcovr libgl1-mesa-dev libglu1-mesa-dev
+            sudo apt-get -o DPkg::Lock::Timeout=300 install -y cmake build-essential libgl1-mesa-dev libglu1-mesa-dev
           else
             echo "Skipping apt dependency install on runners without passwordless sudo"
-            python3 -m pip install --user --break-system-packages cmake gcovr
-            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+            python3 -m pip install --user --break-system-packages cmake
           fi
+          # Always install a modern gcovr via pip (uses markupsafe.Markup, not jinja2.Markup)
+          python3 -m pip install --user --break-system-packages 'gcovr>=7.2'
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
