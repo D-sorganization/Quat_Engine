@@ -9,6 +9,7 @@
  *   - ADS spread reduction
  *   - Loadout weapon switching
  *   - Damage category assignments
+ *   - Invalid inputs raise std::invalid_argument / std::logic_error (Issue #104)
  */
 
 #include "test_framework.h"
@@ -17,6 +18,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 
@@ -201,6 +203,74 @@ void test_weapon_names() {
     ASSERT_TRUE(std::string(weapon_name(TPSWeaponType::TeslaCoil)) == "Tesla Arc Projector");
 }
 
+// ── Validation / Error Handling Tests (Issue #104) ──────────────────────────
+
+void test_config_zero_damage_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.damage = 0.0f;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_negative_damage_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.damage = -1.0f;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_zero_fire_rate_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.fire_rate = 0.0f;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_negative_spread_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.spread_angle = -0.1f;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_zero_pellet_count_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.pellet_count = 0;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_zero_magazine_size_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.magazine_size = 0;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_zero_reload_time_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.reload_time = 0.0f;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_config_ads_zoom_below_one_throws() {
+    auto cfg = TPSWeaponState::make_assault_rifle();
+    cfg.ads_zoom = 0.5f;
+    ASSERT_THROWS_AS(cfg.check_invariants(), std::invalid_argument);
+}
+
+void test_update_negative_dt_throws() {
+    TPSWeaponState weapon(TPSWeaponState::make_assault_rifle());
+    ASSERT_THROWS_AS(weapon.update(-0.1f), std::invalid_argument);
+}
+
+void test_add_reserve_negative_throws() {
+    TPSWeaponState weapon(TPSWeaponState::make_assault_rifle());
+    ASSERT_THROWS_AS(weapon.add_reserve_ammo(-1), std::invalid_argument);
+}
+
+void test_add_reserve_zero_is_valid() {
+    // zero is a valid (no-op) amount — should not throw
+    TPSWeaponState weapon(TPSWeaponState::make_assault_rifle());
+    int before = weapon.reserve();
+    weapon.add_reserve_ammo(0);
+    ASSERT_TRUE(weapon.reserve() == before);
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 int main() {
     std::cout << "=== TPS Weapons Tests ===" << std::endl;
@@ -232,6 +302,19 @@ int main() {
     RUN_TEST(test_loadout_switch);
     RUN_TEST(test_loadout_add_weapon);
     RUN_TEST(test_weapon_names);
+
+    std::cout << "\n--- Validation / Contract Guards (Issue #104) ---" << std::endl;
+    RUN_TEST(test_config_zero_damage_throws);
+    RUN_TEST(test_config_negative_damage_throws);
+    RUN_TEST(test_config_zero_fire_rate_throws);
+    RUN_TEST(test_config_negative_spread_throws);
+    RUN_TEST(test_config_zero_pellet_count_throws);
+    RUN_TEST(test_config_zero_magazine_size_throws);
+    RUN_TEST(test_config_zero_reload_time_throws);
+    RUN_TEST(test_config_ads_zoom_below_one_throws);
+    RUN_TEST(test_update_negative_dt_throws);
+    RUN_TEST(test_add_reserve_negative_throws);
+    RUN_TEST(test_add_reserve_zero_is_valid);
 
     return TEST_REPORT();
 }

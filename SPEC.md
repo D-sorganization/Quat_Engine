@@ -27,8 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-| **Spec Version** | 1.0.7 |
-| **Last Spec Update** | 2026-04-11 |
+| **Spec Version** | 1.0.8 |
+| **Last Spec Update** | 2026-04-14 |
 
 ## 2. Purpose & Mission
 
@@ -400,6 +400,7 @@ gcovr --print-summary --html coverage/
 | 2026-04-10 | 1.0.5 | DRY: extracted `math::Constants.h` (PI, TWO_PI) shared by Scene.h, TPSScene.h, ParticleSystem.h, removing inline duplicates; added `PowerUpManager::get_effect_value` helper eliminating repeated iteration pattern across four multiplier getters (closes #93) |
 | 2026-04-11 | 1.0.7 | Refactor: decomposed 7 oversized functions (78-148 LOC) across RuntimeSystems.cpp, Rendering.cpp, tps_main.cpp, TPSScene.h, TPSCombat.h, and OBJLoader.h into focused helpers; public signatures unchanged (closes #92) |
 | 2026-04-11 | 1.0.6 | TDD: replaced placeholder `tests/test_architecture_dbc.py` with real layered-architecture invariants (math ← core ← renderer/input ← game ← demo), DbC decorator coverage for `src/contracts.py`, and Weapons.h public-contract pins; added nine negative-path tests to `tests/test_weapons.cpp` covering empty-ammo fire, reload-while-reloading, reload-at-full, reload-on-infinite-ammo, invalid switch index, can_fire during reload/cooldown, and switch_weapon cancelling an in-progress reload (closes #94) |
+| 2026-04-14 | 1.0.8 | DbC: replaced all runtime `assert` statements in `TPSWeapons.h` and `WaveSystem.h` with explicit `if (!cond) throw std::invalid_argument/std::logic_error(...)` guards that remain active in NDEBUG/release builds; added 11 negative-path tests to `test_tps_weapons.cpp` and 9 to `test_wave.cpp` verifying every guard throws on invalid input (closes #104) |
 | 2026-03-28 | 1.0.0 | Initial specification |
 | 2026-03-30 | 1.0.1 | A-N Assessment remediation: add .env to .gitignore, add MIT LICENSE, add DbC assertions to Combat.h/Scoring.h, add Camera::set_aspect/set_smoothing interface methods (LoD), update main.cpp to use new Camera interface |
 

@@ -22,8 +22,9 @@
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 
-#include <cassert>
 #include <cstdint>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace qe {
@@ -72,14 +73,22 @@ struct TPSWeaponConfig {
     int chain_targets;        // For Tesla: number of chain bounces
 
     void check_invariants() const {
-        assert(damage > 0.0f);
-        assert(fire_rate > 0.0f);
-        assert(spread_angle >= 0.0f);
-        assert(pellet_count >= 1);
-        assert(range > 0.0f);
-        assert(magazine_size > 0);
-        assert(reload_time > 0.0f);
-        assert(ads_zoom >= 1.0f);
+        if (damage <= 0.0f)
+            throw std::invalid_argument("TPSWeaponConfig: damage must be > 0");
+        if (fire_rate <= 0.0f)
+            throw std::invalid_argument("TPSWeaponConfig: fire_rate must be > 0");
+        if (spread_angle < 0.0f)
+            throw std::invalid_argument("TPSWeaponConfig: spread_angle must be >= 0");
+        if (pellet_count < 1)
+            throw std::invalid_argument("TPSWeaponConfig: pellet_count must be >= 1");
+        if (range <= 0.0f)
+            throw std::invalid_argument("TPSWeaponConfig: range must be > 0");
+        if (magazine_size <= 0)
+            throw std::invalid_argument("TPSWeaponConfig: magazine_size must be > 0");
+        if (reload_time <= 0.0f)
+            throw std::invalid_argument("TPSWeaponConfig: reload_time must be > 0");
+        if (ads_zoom < 1.0f)
+            throw std::invalid_argument("TPSWeaponConfig: ads_zoom must be >= 1");
     }
 };
 
@@ -100,7 +109,8 @@ public:
     TPSWeaponState() : config_(make_assault_rifle()) {}
 
     void update(float dt) {
-        assert(dt >= 0.0f);
+        if (dt < 0.0f)
+            throw std::invalid_argument("TPSWeaponState::update: dt must be >= 0");
         if (fire_cooldown_ > 0.0f) {
             fire_cooldown_ -= dt;
             if (fire_cooldown_ < 0.0f) fire_cooldown_ = 0.0f;
@@ -183,7 +193,8 @@ public:
     }
 
     void add_reserve_ammo(int amount) {
-        assert(amount >= 0);
+        if (amount < 0)
+            throw std::invalid_argument("TPSWeaponState::add_reserve_ammo: amount must be >= 0");
         config_.reserve_ammo += amount;
     }
 
@@ -385,12 +396,14 @@ public:
     }
 
     TPSWeaponState& current() {
-        assert(!weapons_.empty());
+        if (weapons_.empty())
+            throw std::logic_error("TPSLoadout::current: loadout is empty");
         return weapons_[current_];
     }
 
     const TPSWeaponState& current() const {
-        assert(!weapons_.empty());
+        if (weapons_.empty())
+            throw std::logic_error("TPSLoadout::current: loadout is empty");
         return weapons_[current_];
     }
 
