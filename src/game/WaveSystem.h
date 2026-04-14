@@ -14,7 +14,7 @@
  */
 
 #include <algorithm>
-#include <cassert>
+#include <stdexcept>
 
 namespace qe {
 namespace game {
@@ -56,7 +56,8 @@ public:
     /** Generate a WaveConfig for wave number n.
      *  @pre n >= 1 */
     static WaveConfig generate_wave(int n) {
-        assert(n >= 1 && "generate_wave: wave number must be >= 1");
+        if (n < 1)
+            throw std::invalid_argument("generate_wave: wave number must be >= 1");
 
         WaveConfig cfg;
         cfg.wave_number       = n;
@@ -68,10 +69,15 @@ public:
         cfg.bonus_points      = 100 * n;
         cfg.time_bonus_seconds = std::max(20, 60 - n * 2);
 
-        assert(cfg.target_count > 0);
-        assert(cfg.speed_multiplier >= 1.0f);
-        assert(cfg.health_multiplier >= 1.0f);
-        assert(cfg.time_bonus_seconds >= 20);
+        // Postcondition checks (invariants of generated config)
+        if (cfg.target_count <= 0)
+            throw std::logic_error("generate_wave: computed target_count must be > 0");
+        if (cfg.speed_multiplier < 1.0f)
+            throw std::logic_error("generate_wave: computed speed_multiplier must be >= 1");
+        if (cfg.health_multiplier < 1.0f)
+            throw std::logic_error("generate_wave: computed health_multiplier must be >= 1");
+        if (cfg.time_bonus_seconds < 20)
+            throw std::logic_error("generate_wave: computed time_bonus_seconds must be >= 20");
         return cfg;
     }
 
@@ -97,8 +103,8 @@ public:
      *  @pre  state is Menu or GameOver
      *  @post state is WaveIntro, wave_number == 1 */
     void start_game() {
-        assert((state_ == GameState::Menu || state_ == GameState::GameOver)
-               && "start_game: must be in Menu or GameOver");
+        if (state_ != GameState::Menu && state_ != GameState::GameOver)
+            throw std::logic_error("start_game: must be in Menu or GameOver");
 
         wave_number_ = 1;
         total_time_  = 0.0f;
@@ -106,16 +112,21 @@ public:
         config_      = generate_wave(1);
         transition_to(GameState::WaveIntro);
 
-        assert(state_ == GameState::WaveIntro);
-        assert(wave_number_ >= 1);
+        // Postconditions
+        if (state_ != GameState::WaveIntro)
+            throw std::logic_error("start_game: postcondition failed — state not WaveIntro");
+        if (wave_number_ < 1)
+            throw std::logic_error("start_game: postcondition failed — wave_number < 1");
     }
 
     /** Advance the state machine.
      *  @param dt            frame delta time (seconds), must be >= 0
      *  @param alive_targets number of alive enemies in the current wave */
     void update(float dt, int alive_targets) {
-        assert(dt >= 0.0f && "update: dt must be non-negative");
-        assert(alive_targets >= 0 && "update: alive_targets must be non-negative");
+        if (dt < 0.0f)
+            throw std::invalid_argument("update: dt must be non-negative");
+        if (alive_targets < 0)
+            throw std::invalid_argument("update: alive_targets must be non-negative");
 
         // Accumulate game time only while playing
         if (is_playing()) {
@@ -155,15 +166,16 @@ public:
     /** Transition to the GameOver state.
      *  @pre state is a playing state (WaveIntro, WaveActive, WaveClear) */
     void game_over() {
-        assert(is_playing() && "game_over: must be in a playing state");
+        if (!is_playing())
+            throw std::logic_error("game_over: must be in a playing state");
         transition_to(GameState::GameOver);
     }
 
     /** Return to Menu from GameOver.
      *  @pre state is GameOver */
     void return_to_menu() {
-        assert(state_ == GameState::GameOver
-               && "return_to_menu: must be in GameOver");
+        if (state_ != GameState::GameOver)
+            throw std::logic_error("return_to_menu: must be in GameOver");
         transition_to(GameState::Menu);
     }
 
@@ -178,8 +190,8 @@ private:
     // ── Internal ─────────────────────────────────────────────────────────
 
     void transition_to(GameState next) {
-        assert(is_valid_transition(state_, next)
-               && "transition_to: invalid state transition");
+        if (!is_valid_transition(state_, next))
+            throw std::logic_error("transition_to: invalid state transition");
         state_       = next;
         state_timer_ = 0.0f;
     }
@@ -187,8 +199,8 @@ private:
     /** Advance to the next wave.
      *  @pre state is WaveClear */
     void next_wave() {
-        assert(state_ == GameState::WaveClear
-               && "next_wave: must be in WaveClear");
+        if (state_ != GameState::WaveClear)
+            throw std::logic_error("next_wave: must be in WaveClear");
 
         wave_number_++;
         if (wave_number_ > best_wave_) {
@@ -197,7 +209,8 @@ private:
         config_ = generate_wave(wave_number_);
         transition_to(GameState::WaveIntro);
 
-        assert(wave_number_ >= 2);
+        if (wave_number_ < 2)
+            throw std::logic_error("next_wave: postcondition failed — wave_number < 2");
     }
 
     static bool is_valid_transition(GameState from, GameState to) {
@@ -221,11 +234,12 @@ private:
     }
 
     void check_invariants() const {
-        assert(state_timer_ >= 0.0f && "invariant: state_timer must be non-negative");
-        assert(total_time_ >= 0.0f  && "invariant: total_time must be non-negative");
-        if (is_playing()) {
-            assert(wave_number_ >= 1 && "invariant: wave_number >= 1 while playing");
-        }
+        if (state_timer_ < 0.0f)
+            throw std::logic_error("invariant violation: state_timer must be non-negative");
+        if (total_time_ < 0.0f)
+            throw std::logic_error("invariant violation: total_time must be non-negative");
+        if (is_playing() && wave_number_ < 1)
+            throw std::logic_error("invariant violation: wave_number must be >= 1 while playing");
     }
 };
 

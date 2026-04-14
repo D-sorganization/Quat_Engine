@@ -2,6 +2,14 @@
  * @file test_wave.cpp
  * @brief Tests for WaveSystem: state machine transitions, wave config scaling,
  *        timed transitions, and game time accumulation.
+ *
+ * Also covers release-safe validation guards (Issue #104):
+ *   - generate_wave with n < 1 throws std::invalid_argument
+ *   - update with negative dt throws std::invalid_argument
+ *   - update with negative alive_targets throws std::invalid_argument
+ *   - start_game from invalid state throws std::logic_error
+ *   - game_over from non-playing state throws std::logic_error
+ *   - return_to_menu from non-GameOver state throws std::logic_error
  */
 
 #include "test_framework.h"
@@ -10,6 +18,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 
@@ -242,6 +251,57 @@ void test_wave_config_spawn_radius() {
     ASSERT_NEAR(cfg.spawn_radius_max, 20.0f, 1e-5f);
 }
 
+// ── Validation / Contract Guards (Issue #104) ───────────────────────────────
+
+void test_generate_wave_zero_throws() {
+    ASSERT_THROWS_AS(qe::game::WaveSystem::generate_wave(0), std::invalid_argument);
+}
+
+void test_generate_wave_negative_throws() {
+    ASSERT_THROWS_AS(qe::game::WaveSystem::generate_wave(-5), std::invalid_argument);
+}
+
+void test_update_negative_dt_throws() {
+    qe::game::WaveSystem ws;
+    ASSERT_THROWS_AS(ws.update(-0.1f, 0), std::invalid_argument);
+}
+
+void test_update_negative_alive_targets_throws() {
+    qe::game::WaveSystem ws;
+    ASSERT_THROWS_AS(ws.update(0.1f, -1), std::invalid_argument);
+}
+
+void test_start_game_from_wave_intro_throws() {
+    qe::game::WaveSystem ws;
+    ws.start_game();  // -> WaveIntro
+    // start_game requires Menu or GameOver — WaveIntro should throw
+    ASSERT_THROWS_AS(ws.start_game(), std::logic_error);
+}
+
+void test_start_game_from_wave_active_throws() {
+    qe::game::WaveSystem ws;
+    ws.start_game();
+    ws.update(2.1f, 5);  // -> WaveActive
+    ASSERT_THROWS_AS(ws.start_game(), std::logic_error);
+}
+
+void test_game_over_from_menu_throws() {
+    qe::game::WaveSystem ws;
+    ASSERT_THROWS_AS(ws.game_over(), std::logic_error);
+}
+
+void test_return_to_menu_from_menu_throws() {
+    qe::game::WaveSystem ws;
+    ASSERT_THROWS_AS(ws.return_to_menu(), std::logic_error);
+}
+
+void test_return_to_menu_from_wave_active_throws() {
+    qe::game::WaveSystem ws;
+    ws.start_game();
+    ws.update(2.1f, 5);  // -> WaveActive
+    ASSERT_THROWS_AS(ws.return_to_menu(), std::logic_error);
+}
+
 // ── Restart game from GameOver ──────────────────────────────────────────────
 
 void test_restart_game_from_game_over() {
@@ -289,6 +349,17 @@ int main() {
     std::cout << "\n--- Game Time ---" << std::endl;
     RUN_TEST(test_total_game_time_accumulates_while_playing);
     RUN_TEST(test_best_wave_tracking);
+
+    std::cout << "\n--- Validation / Contract Guards (Issue #104) ---" << std::endl;
+    RUN_TEST(test_generate_wave_zero_throws);
+    RUN_TEST(test_generate_wave_negative_throws);
+    RUN_TEST(test_update_negative_dt_throws);
+    RUN_TEST(test_update_negative_alive_targets_throws);
+    RUN_TEST(test_start_game_from_wave_intro_throws);
+    RUN_TEST(test_start_game_from_wave_active_throws);
+    RUN_TEST(test_game_over_from_menu_throws);
+    RUN_TEST(test_return_to_menu_from_menu_throws);
+    RUN_TEST(test_return_to_menu_from_wave_active_throws);
 
     return TEST_REPORT();
 }
