@@ -1,232 +1,255 @@
 {
   "repository": "QuatEngine",
-  "assessment_date": "2026-04-17",
-  "run_at_utc": "2026-04-17T08:01:19.6221680Z",
-  "sync_status": "pull-blocked",
-  "sync_notes": "ff-only pull failed: fatal: couldn't find remote ref codex/an-assessment-2026-04-14",
-  "overall_grade": "C",
-  "overall_score": 76,
-  "category_grades": [
+  "latest_run_date": "2026-04-14",
+  "latest_overall_grade": "C",
+  "latest_overall_score": 70,
+  "runs": [
     {
-      "id": "A",
-      "name": "Architecture and Boundaries",
-      "grade": "B",
-      "score": 82,
-      "evidence": [
-        "148 tracked first-party files",
-        "59 files under source-like directories"
+      "repository": "QuatEngine",
+      "run_date": "2026-04-14",
+      "run_time_utc": "2026-04-15T00:07:58.893266+00:00",
+      "sync_status": "blocked",
+      "sync_notes": "fetch failed: fatal: unable to access 'https://github.com/D-sorganization/QuatEngine.git/': schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e) - No credentials are available in the security package",
+      "overall_grade": "C",
+      "overall_score": 70,
+      "category_grades": [
+        {
+          "name": "A. Architecture and Boundaries",
+          "grade": "B",
+          "score": 81,
+          "description": "Assesses source organization, package boundaries, and separation of first-party concerns.",
+          "evidence": [
+            "146 tracked first-party files",
+            "59 code files under source-like directories",
+            "src/contracts.py",
+            "src/core/AABB.h",
+            "src/core/EngineConfig.h",
+            "src/core/Entity.h"
+          ]
+        },
+        {
+          "name": "B. Build and Dependency Management",
+          "grade": "D",
+          "score": 69,
+          "description": "Checks whether build and dependency declarations are explicit and reproducible.",
+          "evidence": [
+            "CMakeLists.txt"
+          ]
+        },
+        {
+          "name": "C. Configuration and Environment Hygiene",
+          "grade": "B",
+          "score": 85,
+          "description": "Checks committed environment/tool configuration and local setup clarity.",
+          "evidence": [
+            ".github/workflows/ci.yml",
+            ".github/workflows/heavy-integration-tests.yml",
+            ".github/workflows/spec-check.yml",
+            ".pre-commit-config.yaml",
+            "data/levels/level01.json",
+            "data/levels/level02.json",
+            "data/levels/level03.json",
+            "data/levels/level04.json"
+          ]
+        },
+        {
+          "name": "D. Contracts, Types, and Domain Modeling",
+          "grade": "C",
+          "score": 73,
+          "description": "Evaluates Design by Contract signals: validation, types, assertions, and explicit invariants.",
+          "evidence": [
+            "src/contracts.py",
+            "src/demo/Rendering.cpp",
+            "src/demo/RuntimeSystems.cpp",
+            "src/game/PowerUp.h",
+            "src/game/Scene.h",
+            "src/game/TargetBehavior.h",
+            "src/game/Weapons.h",
+            "src/game/tps/CharacterClass.h"
+          ]
+        },
+        {
+          "name": "E. Reliability and Error Handling",
+          "grade": "C",
+          "score": 77,
+          "description": "Reviews tests plus explicit validation, exception, and failure-path handling.",
+          "evidence": [
+            ".github/workflows/heavy-integration-tests.yml",
+            ".github/workflows/spec-check.yml",
+            "Dockerfile.heavy_test",
+            "SPEC.md",
+            "src/contracts.py",
+            "src/core/Logger.h",
+            "src/core/Transform.h",
+            "src/demo/Bootstrap.cpp"
+          ]
+        },
+        {
+          "name": "F. Function, Module Size, and SRP",
+          "grade": "F",
+          "score": 45,
+          "description": "Evaluates coarse function/module size and single responsibility risk using static size signals.",
+          "evidence": [
+            "src/renderer/Mesh.h (711 lines)",
+            "src/game/tps/LevelSystem.h (670 lines)",
+            "tests/test_math_core.cpp (614 lines)",
+            "src/tps_main.cpp (603 lines)",
+            "tests/test_weapons.cpp (503 lines)",
+            "src/game/tps/PlayerController.h (491 lines)",
+            "tests/test_math.cpp (490 lines)",
+            "tests/test_game_extended.cpp (464 lines)"
+          ]
+        },
+        {
+          "name": "G. Testing Discipline and TDD",
+          "grade": "B",
+          "score": 82,
+          "description": "Evaluates automated test presence and TDD support; commit history was not used to prove TDD workflow.",
+          "evidence": [
+            "32 test-like files for 86 code files",
+            ".github/workflows/heavy-integration-tests.yml",
+            ".github/workflows/spec-check.yml",
+            "Dockerfile.heavy_test",
+            "SPEC.md",
+            "docs/assessments/Assessment_C_Test_Coverage.md",
+            "tests/__init__.py"
+          ]
+        },
+        {
+          "name": "H. CI/CD and Release Safety",
+          "grade": "B",
+          "score": 80,
+          "description": "Checks workflow files and release automation gates.",
+          "evidence": [
+            ".github/workflows/ci.yml",
+            ".github/workflows/heavy-integration-tests.yml",
+            ".github/workflows/spec-check.yml"
+          ]
+        },
+        {
+          "name": "I. Code Style and Static Analysis",
+          "grade": "D",
+          "score": 62,
+          "description": "Looks for formatters, linters, type-checker configuration, and style enforcement.",
+          "evidence": [
+            ".github/workflows/ci.yml",
+            ".github/workflows/heavy-integration-tests.yml",
+            ".github/workflows/spec-check.yml",
+            ".pre-commit-config.yaml",
+            "data/levels/level01.json",
+            "data/levels/level02.json",
+            "data/levels/level03.json",
+            "data/levels/level04.json"
+          ]
+        },
+        {
+          "name": "J. API Design and Encapsulation",
+          "grade": "C",
+          "score": 75,
+          "description": "Evaluates API surface and Law of Demeter risk from organization and oversized modules.",
+          "evidence": [
+            "src/contracts.py",
+            "src/core/AABB.h",
+            "src/core/EngineConfig.h",
+            "src/core/Entity.h",
+            "src/core/Logger.h",
+            "src/core/Projectile.h",
+            [
+              "src/renderer/Mesh.h",
+              711
+            ],
+            [
+              "src/game/tps/LevelSystem.h",
+              670
+            ]
+          ]
+        },
+        {
+          "name": "K. Data Handling and Persistence",
+          "grade": "C",
+          "score": 70,
+          "description": "Checks schema, migration, serialization, and persistence evidence.",
+          "evidence": [
+            "src/game/tps/LevelSystem.h",
+            "src/input/Gamepad.h"
+          ]
+        },
+        {
+          "name": "L. Observability and Logging",
+          "grade": "D",
+          "score": 63,
+          "description": "Checks logging, diagnostics, and operational visibility signals.",
+          "evidence": [
+            "src/core/Logger.h",
+            "src/demo/App.h",
+            "src/demo/RuntimeSystems.cpp",
+            "src/game/tps/PlayerController.h",
+            "src/game/tps/TPSInput.h",
+            "src/input/Gamepad.h",
+            "src/input/InputManager.h",
+            "src/renderer/OBJLoader.h"
+          ]
+        },
+        {
+          "name": "M. Maintainability, DRY, DbC, LoD",
+          "grade": "F",
+          "score": 48,
+          "description": "Explicitly evaluates DRY, Design by Contract, Law of Demeter, and maintainability signals.",
+          "evidence": [
+            "DRY/SRP risk: src/renderer/Mesh.h (711 lines)",
+            "DRY/SRP risk: src/game/tps/LevelSystem.h (670 lines)",
+            "DRY/SRP risk: tests/test_math_core.cpp (614 lines)",
+            "DRY/SRP risk: src/tps_main.cpp (603 lines)",
+            "DRY/SRP risk: tests/test_weapons.cpp (503 lines)",
+            "DRY/SRP risk: src/game/tps/PlayerController.h (491 lines)",
+            "src/contracts.py",
+            "src/demo/Rendering.cpp",
+            "src/demo/RuntimeSystems.cpp",
+            "src/game/PowerUp.h"
+          ]
+        },
+        {
+          "name": "N. Scalability and Operational Readiness",
+          "grade": "C",
+          "score": 77,
+          "description": "Checks deploy/build readiness and scaling signals from CI, config, and project structure.",
+          "evidence": [
+            ".github/workflows/ci.yml",
+            ".github/workflows/heavy-integration-tests.yml",
+            ".github/workflows/spec-check.yml",
+            "CMakeLists.txt"
+          ]
+        }
       ],
-      "notes": "Assesses source organization and boundary clarity from tracked first-party layout."
-    },
-    {
-      "id": "B",
-      "name": "Build and Dependency Management",
-      "grade": "C",
-      "score": 72,
-      "evidence": [
-        "CMakeLists.txt",
-        "Dockerfile.heavy_test"
+      "key_risks": [
+        "Split oversized modules to restore SRP and maintainability"
       ],
-      "notes": "Assesses committed build, dependency, and tool configuration."
-    },
-    {
-      "id": "C",
-      "name": "Configuration and Environment Hygiene",
-      "grade": "C",
-      "score": 78,
-      "evidence": [
-        "CMakeLists.txt",
-        "Dockerfile.heavy_test"
+      "prioritized_recommendations": [
+        {
+          "title": "Split oversized modules to restore SRP and maintainability",
+          "severity": "medium",
+          "problem": "Oversized first-party files indicate single responsibility and DRY risks.",
+          "evidence": [
+            "src/renderer/Mesh.h has 711 lines.",
+            "src/game/tps/LevelSystem.h has 670 lines.",
+            "tests/test_math_core.cpp has 614 lines.",
+            "src/tps_main.cpp has 603 lines.",
+            "tests/test_weapons.cpp has 503 lines."
+          ],
+          "impact": "Large modules increase review cost, hide duplicated logic, and weaken Law of Demeter boundaries.",
+          "fix": "Extract cohesive units behind small interfaces, then pin behavior with tests before refactoring.",
+          "acceptance": [
+            "Largest modules are split by responsibility.",
+            "Extracted modules have targeted tests.",
+            "Callers depend on narrow interfaces rather than deep object traversal."
+          ]
+        }
       ],
-      "notes": "Checks whether runtime and developer configuration is explicit."
-    },
-    {
-      "id": "D",
-      "name": "Contracts, Types, and Domain Modeling",
-      "grade": "B",
-      "score": 82,
-      "evidence": [
-        "src/contracts.py",
-        "src/game/WaveSystem.h",
-        "src/game/tps/CharacterClass.h",
-        "src/game/tps/JumpSystem.h",
-        "src/game/tps/LevelSystem.h",
-        "src/game/tps/LockOnSystem.h",
-        "src/game/tps/MeleeSystem.h",
-        "src/game/tps/MutantTypes.h",
-        "src/game/tps/TPSScene.h",
-        "src/game/tps/TPSWeapons.h"
-      ],
-      "notes": "Design by Contract evidence includes validation, assertions, typed models, explicit raised errors, and invariants."
-    },
-    {
-      "id": "E",
-      "name": "Reliability and Error Handling",
-      "grade": "C",
-      "score": 76,
-      "evidence": [
-        "docs/assessments/Assessment_C_Test_Coverage.md",
-        "tests/__init__.py",
-        "tests/test_architecture_dbc.py",
-        "tests/test_behavior.cpp",
-        "tests/test_framework.h",
-        "src/contracts.py",
-        "src/game/WaveSystem.h",
-        "src/game/tps/CharacterClass.h",
-        "src/game/tps/JumpSystem.h",
-        "src/game/tps/LevelSystem.h"
-      ],
-      "notes": "Reliability is graded from test presence plus explicit validation/error-handling signals."
-    },
-    {
-      "id": "F",
-      "name": "Function, Module Size, and SRP",
-      "grade": "F",
-      "score": 55,
-      "evidence": [
-        "src/game/tps/LevelSystem.h (671 lines)",
-        "src/renderer/Mesh.h (712 lines)",
-        "src/tps_main.cpp (604 lines)",
-        "tests/test_math_core.cpp (615 lines)",
-        "tests/test_weapons.cpp (504 lines)"
-      ],
-      "notes": "Evaluates function size, script/module size, and single responsibility using static size signals."
-    },
-    {
-      "id": "G",
-      "name": "Testing and TDD Posture",
-      "grade": "B",
-      "score": 82,
-      "evidence": [
-        "docs/assessments/Assessment_C_Test_Coverage.md",
-        "tests/__init__.py",
-        "tests/test_architecture_dbc.py",
-        "tests/test_behavior.cpp",
-        "tests/test_framework.h",
-        "tests/test_game.cpp",
-        "tests/test_game_extended.cpp",
-        "tests/test_math.cpp",
-        "tests/test_math_core.cpp",
-        "tests/test_math_extended.cpp",
-        "tests/test_particles.cpp",
-        "tests/test_postprocess.cpp"
-      ],
-      "notes": "TDD history cannot be confirmed statically; grade reflects committed automated test posture."
-    },
-    {
-      "id": "H",
-      "name": "CI/CD and Automation",
-      "grade": "C",
-      "score": 78,
-      "evidence": [
-        ".github/workflows/ci.yml",
-        ".github/workflows/heavy-integration-tests.yml",
-        ".github/workflows/spec-check.yml"
-      ],
-      "notes": "Checks for tracked CI/CD workflow files."
-    },
-    {
-      "id": "I",
-      "name": "Security and Secret Hygiene",
-      "grade": "B",
-      "score": 82,
-      "evidence": [],
-      "notes": "Secret scan is regex-based; findings require manual confirmation."
-    },
-    {
-      "id": "J",
-      "name": "Documentation and Onboarding",
-      "grade": "B",
-      "score": 82,
-      "evidence": [
-        "AGENTS.md",
-        "Dockerfile.heavy_test",
-        "LICENSE",
-        "README.md",
-        "SPEC.md",
-        "docs/assessments/A-N_Assessment_2026-03-30.md",
-        "docs/assessments/A-N_Assessment_2026-03-31.md",
-        "docs/assessments/A-N_Assessment_2026-04-02.md",
-        "docs/assessments/A-N_Assessment_2026-04-04.md",
-        "docs/assessments/A-N_Assessment_2026-04-09.md",
-        "docs/assessments/A-N_Assessment_2026-04-10.md",
-        "docs/assessments/A-N_Assessment_2026-04-11.md"
-      ],
-      "notes": "Checks docs, README, onboarding, and release documents."
-    },
-    {
-      "id": "K",
-      "name": "Maintainability, DRY, and Duplication",
-      "grade": "B",
-      "score": 80,
-      "evidence": [
-        "src/input/InputManager.h"
-      ],
-      "notes": "DRY is assessed through duplicate filename clusters and TODO/FIXME density as static heuristics."
-    },
-    {
-      "id": "L",
-      "name": "API Surface and Law of Demeter",
-      "grade": "D",
-      "score": 68,
-      "evidence": [
-        "src/game/tps/TPSGameState.h",
-        "src/game/tps/TPSScene.h",
-        "src/tps_main.cpp",
-        "tests/test_tps_ai.cpp",
-        "tests/test_tps_gamestate.cpp"
-      ],
-      "notes": "Law of Demeter is approximated with deep member-chain hints; confirmed violations require semantic review."
-    },
-    {
-      "id": "M",
-      "name": "Observability and Operability",
-      "grade": "C",
-      "score": 74,
-      "evidence": [
-        "docs/assessments/Assessment_L_Logging.md",
-        "src/core/Logger.h"
-      ],
-      "notes": "Checks for logging, metrics, monitoring, and operational artifacts."
-    },
-    {
-      "id": "N",
-      "name": "Governance, Licensing, and Release Hygiene",
-      "grade": "C",
-      "score": 74,
-      "evidence": [
-        "LICENSE",
-        "docs/assessments/Assessment_F_Security.md"
-      ],
-      "notes": "Checks ownership, release, contribution, security, and license metadata."
+      "coverage_notes": [
+        "Reviewed tracked first-party files from git ls-files, excluding cache, build, vendor, virtualenv, and generated output directories.",
+        "Reviewed 146 tracked files, including 86 code files, 32 test-like files, 3 CI files, 1 build/dependency files, and 30 documentation files.",
+        "This is a read-only static assessment. TDD history and full Law of Demeter semantics cannot be proven without commit-by-commit workflow review and deeper call-graph analysis."
+      ]
     }
-  ],
-  "key_risks": [
-    "Large modules/scripts reduce maintainability and SRP clarity."
-  ],
-  "recommendations": [
-    "Split the largest modules by responsibility and add characterization tests before refactoring."
-  ],
-  "issue_candidates": [
-    {
-      "title": "Split oversized modules by responsibility",
-      "severity": "medium",
-      "problem": "Oversized files found: src/game/tps/LevelSystem.h (671 lines); src/renderer/Mesh.h (712 lines); src/tps_main.cpp (604 lines); tests/test_math_core.cpp (615 lines); tests/test_weapons.cpp (504 lines)",
-      "evidence": "Category F lists files over 500 lines or coarse long-definition signals.",
-      "impact": "Large modules obscure ownership, complicate review, and weaken SRP.",
-      "fix": "Add characterization tests, then split cohesive responsibilities into smaller modules.",
-      "acceptance": "Largest files are reduced or justified; extracted modules have focused tests.",
-      "refs": "SRP, function size, module size, maintainability"
-    }
-  ],
-  "coverage": {
-    "tracked_files": 148,
-    "code_files": 86,
-    "test_files": 28,
-    "ci_files": 3,
-    "config_files": 2,
-    "docs_files": 33,
-    "exclusions": "cache/build/vendor/virtualenv/temp/generated output directories excluded",
-    "static_limits": "TDD workflow history and confirmed Law of Demeter semantics require deeper review."
-  }
+  ]
 }
