@@ -48,10 +48,14 @@ jobs:
             sudo apt-get -o DPkg::Lock::Timeout=300 install -y cmake build-essential libgl1-mesa-dev libglu1-mesa-dev
           else
             echo "Skipping apt dependency install on runners without passwordless sudo"
-            python3 -m pip install --user --break-system-packages cmake
+            PIP_BREAK_SYSTEM_PACKAGES=""
+            if python3 -m pip install --help | grep -q -- '--break-system-packages'; then
+              PIP_BREAK_SYSTEM_PACKAGES="--break-system-packages"
+            fi
+            python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES cmake
           fi
           # Always install a modern gcovr via pip (uses markupsafe.Markup, not jinja2.Markup)
-          python3 -m pip install --user --break-system-packages 'gcovr>=7.2'
+          python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES 'gcovr>=7.2'
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Configure CMake
