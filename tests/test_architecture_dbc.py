@@ -21,6 +21,7 @@ import importlib.util
 import re
 import sys
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -28,7 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC = REPO_ROOT / "src"
 
 
-def _load_contracts_module():
+def _load_contracts_module() -> ModuleType:
     """Load ``src/contracts.py`` directly — there is no ``src/__init__.py``."""
     spec = importlib.util.spec_from_file_location("qe_contracts", SRC / "contracts.py")
     assert spec is not None and spec.loader is not None
@@ -82,42 +83,42 @@ def _forbidden_layer_includes(
 # ── Architecture invariants ────────────────────────────────────────────────
 
 
-def test_math_has_no_upward_dependencies():
+def test_math_has_no_upward_dependencies() -> None:
     """``src/math`` is the foundation — it must not include from any other layer."""
     forbidden = ("core/", "renderer/", "input/", "game/", "demo/")
     violations = _forbidden_layer_includes("math", forbidden)
     assert not violations, f"math/ has forbidden upward includes: {violations}"
 
 
-def test_core_depends_only_on_math():
+def test_core_depends_only_on_math() -> None:
     """``src/core`` may depend on math but not on renderer/input/game/demo."""
     forbidden = ("renderer/", "input/", "game/", "demo/")
     violations = _forbidden_layer_includes("core", forbidden)
     assert not violations, f"core/ has forbidden upward includes: {violations}"
 
 
-def test_renderer_does_not_depend_on_game_or_demo():
+def test_renderer_does_not_depend_on_game_or_demo() -> None:
     """``src/renderer`` must stay game-agnostic."""
     forbidden = ("game/", "demo/", "input/")
     violations = _forbidden_layer_includes("renderer", forbidden)
     assert not violations, f"renderer/ has forbidden upward includes: {violations}"
 
 
-def test_input_does_not_depend_on_game_or_demo():
+def test_input_does_not_depend_on_game_or_demo() -> None:
     """``src/input`` is a platform abstraction — no game/demo references."""
     forbidden = ("game/", "demo/", "renderer/")
     violations = _forbidden_layer_includes("input", forbidden)
     assert not violations, f"input/ has forbidden upward includes: {violations}"
 
 
-def test_game_does_not_depend_on_demo():
+def test_game_does_not_depend_on_demo() -> None:
     """``src/game`` modules must not depend on the demo wiring layer."""
     forbidden = ("demo/",)
     violations = _forbidden_layer_includes("game", forbidden)
     assert not violations, f"game/ has forbidden upward includes: {violations}"
 
 
-def test_all_expected_layers_exist():
+def test_all_expected_layers_exist() -> None:
     """The directories referenced by the layering rules must all exist."""
     for subdir in ("math", "core", "renderer", "input", "game", "demo"):
         assert (SRC / subdir).is_dir(), f"Missing expected layer: src/{subdir}"
@@ -126,7 +127,7 @@ def test_all_expected_layers_exist():
 # ── Design-by-Contract: src/contracts.py ───────────────────────────────────
 
 
-def test_require_decorator_enforces_precondition():
+def test_require_decorator_enforces_precondition() -> None:
     """``require`` must raise ``ValueError`` when the predicate is falsy."""
     contracts = _load_contracts_module()
 
@@ -139,7 +140,7 @@ def test_require_decorator_enforces_precondition():
         sqrt_positive(-1)
 
 
-def test_ensure_decorator_enforces_postcondition():
+def test_ensure_decorator_enforces_postcondition() -> None:
     """``ensure`` must raise ``RuntimeError`` when the result predicate is falsy."""
     contracts = _load_contracts_module()
 
@@ -179,7 +180,7 @@ def _weapons_source() -> str:
         "float cooldown_progress() const",
     ],
 )
-def test_weapon_manager_exposes_public_signature(signature: str):
+def test_weapon_manager_exposes_public_signature(signature: str) -> None:
     """Each public WeaponManager method must remain declared in Weapons.h."""
     source = _weapons_source()
     assert signature in source, (
@@ -192,7 +193,7 @@ def test_weapon_manager_exposes_public_signature(signature: str):
     "weapon_type",
     ["Pistol", "Shotgun", "RailGun", "RocketLauncher", "MiniGun"],
 )
-def test_weapon_type_enum_values_preserved(weapon_type: str):
+def test_weapon_type_enum_values_preserved(weapon_type: str) -> None:
     """The WeaponType enum must keep its five documented variants."""
     source = _weapons_source()
     assert re.search(rf"\b{weapon_type}\b", source), (
@@ -200,7 +201,7 @@ def test_weapon_type_enum_values_preserved(weapon_type: str):
     )
 
 
-def test_weapons_header_documents_invariants():
+def test_weapons_header_documents_invariants() -> None:
     """Weapons.h must keep its public doc comment documenting weapon types.
 
     Negative-check: if someone strips the documentation, this test fails so
@@ -214,7 +215,7 @@ def test_weapons_header_documents_invariants():
     assert "@brief" in source
 
 
-def test_weapons_header_reloading_guard_invariant():
+def test_weapons_header_reloading_guard_invariant() -> None:
     """Weapons.h reload() must keep the `if (reloading_) return;` guard.
 
     Documented contract: calling ``reload()`` while already reloading is a
@@ -227,7 +228,7 @@ def test_weapons_header_reloading_guard_invariant():
     )
 
 
-def test_weapons_header_switch_weapon_bounds_check():
+def test_weapons_header_switch_weapon_bounds_check() -> None:
     """``switch_weapon`` must keep its out-of-range guard (clamps via early return)."""
     source = _weapons_source()
     # The bounds check can be written in a few ways — accept any of them.
@@ -239,7 +240,7 @@ def test_weapons_header_switch_weapon_bounds_check():
     )
 
 
-def test_weapons_header_fire_respects_can_fire():
+def test_weapons_header_fire_respects_can_fire() -> None:
     """``fire()`` must early-return when ``can_fire()`` is false.
 
     This is the empty-ammo silent-fail contract covered by the C++ negative
