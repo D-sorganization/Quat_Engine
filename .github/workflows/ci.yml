@@ -43,15 +43,15 @@ jobs:
           # gcovr is installed via pip so we control the version — apt-provided
           # gcovr bundles an old template engine that breaks on modern jinja2
           # (ImportError: cannot import name 'Markup' from 'jinja2').
+          PIP_BREAK_SYSTEM_PACKAGES=""
+          if python3 -m pip install --help | grep -q -- '--break-system-packages'; then
+            PIP_BREAK_SYSTEM_PACKAGES="--break-system-packages"
+          fi
           if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
             sudo apt-get -o DPkg::Lock::Timeout=300 update
             sudo apt-get -o DPkg::Lock::Timeout=300 install -y cmake build-essential libgl1-mesa-dev libglu1-mesa-dev
           else
             echo "Skipping apt dependency install on runners without passwordless sudo"
-            PIP_BREAK_SYSTEM_PACKAGES=""
-            if python3 -m pip install --help | grep -q -- '--break-system-packages'; then
-              PIP_BREAK_SYSTEM_PACKAGES="--break-system-packages"
-            fi
             python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES cmake
           fi
           # Always install a modern gcovr via pip (uses markupsafe.Markup, not jinja2.Markup)
