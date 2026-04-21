@@ -17,6 +17,7 @@
 #include "renderer/Camera.h"
 #include "renderer/HUD.h"
 #include "renderer/Mesh.h"
+#include "renderer/MeshPrimitives.h"
 #include "renderer/ParticleSystem.h"
 #include "renderer/PostProcess.h"
 #include "renderer/Shader.h"
@@ -205,15 +206,15 @@ static void init_assets(TPSApp& app) {
     app.particle_shader.load("shaders/particle.vert", "shaders/particle.frag");
     app.hud_shader.load("shaders/hud.vert", "shaders/hud.frag");
 
-    app.cube = qe::renderer::Mesh::create_cube();
-    app.sphere = qe::renderer::Mesh::create_sphere(2, 0.5f);
-    app.floor_mesh = qe::renderer::Mesh::create_floor_plane(50.0f, 8.0f);
-    app.grid = qe::renderer::Mesh::create_grid(25, 2.0f);
-    app.cylinder = qe::renderer::Mesh::create_cylinder();
-    app.cone = qe::renderer::Mesh::create_cone();
-    app.capsule = qe::renderer::Mesh::create_capsule();
-    app.wedge = qe::renderer::Mesh::create_wedge();
-    app.pyramid = qe::renderer::Mesh::create_pyramid();
+    app.cube = qe::renderer::create_cube();
+    app.sphere = qe::renderer::create_sphere(2, 0.5f);
+    app.floor_mesh = qe::renderer::create_floor_plane(50.0f, 8.0f);
+    app.grid = qe::renderer::create_grid(25, 2.0f);
+    app.cylinder = qe::renderer::create_cylinder();
+    app.cone = qe::renderer::create_cone();
+    app.capsule = qe::renderer::create_capsule();
+    app.wedge = qe::renderer::create_wedge();
+    app.pyramid = qe::renderer::create_pyramid();
 
     app.hud.init_crosshair();
     app.input.init();
