@@ -27,8 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-| **Spec Version** | 1.0.9 |
-| **Last Spec Update** | 2026-04-14 |
+| **Spec Version** | 1.0.10 |
+| **Last Spec Update** | 2026-04-21 |
 
 ## 2. Purpose & Mission
 
@@ -79,6 +79,7 @@ QuatEngine/
 │   │   ├── GLLoader.h
 │   │   ├── Shader.h
 │   │   ├── Mesh.h
+│   │   ├── MeshPrimitives.h    # Procedural mesh factory functions
 │   │   ├── OBJParser.h         # Pure-C++ OBJ text parser (no GL/SDL)
 │   │   ├── OBJLoader.h         # GPU-upload wrapper around OBJParser
 │   │   └── Camera.h
@@ -125,6 +126,7 @@ QuatEngine/
 | GL Renderer | `src/renderer/GLLoader.h` | OpenGL initialization and context management |
 | Shader System | `src/renderer/Shader.h` | GLSL compilation, linking, and uniform management |
 | Mesh | `src/renderer/Mesh.h` | Geometry data (vertices, indices, normals, UVs) |
+| Mesh Primitives | `src/renderer/MeshPrimitives.h` | Procedural cube, sphere, grid, floor, and related primitive mesh factories |
 | Camera | `src/renderer/Camera.h` | View matrix, projection, SLERP interpolation |
 | Input Manager | `src/input/InputManager.h` | SDL2 keyboard/mouse event handling |
 | Demo Bootstrap | `src/demo/Bootstrap.cpp` | Window, GL, asset setup, runtime boot, cleanup |
