@@ -6,6 +6,7 @@
 #include "demo/App.h"
 
 #include "renderer/GLLoader.h"
+#include "renderer/MeshPrimitives.h"
 
 #include <iostream>
 
@@ -87,10 +88,10 @@ bool init_gl(App& app) {
 }
 
 void init_assets(App& app) {
-    app.cube = qe::renderer::Mesh::create_cube();
-    app.sphere = qe::renderer::Mesh::create_sphere(3, 0.5f, 0.8f, 0.6f, 0.3f);
-    app.floor_plane = qe::renderer::Mesh::create_floor_plane(40, 12);
-    app.grid = qe::renderer::Mesh::create_grid(40, 1);
+    app.cube = qe::renderer::create_cube();
+    app.sphere = qe::renderer::create_sphere(3, 0.5f, 0.8f, 0.6f, 0.3f);
+    app.floor_plane = qe::renderer::create_floor_plane(40, 12);
+    app.grid = qe::renderer::create_grid(40, 1);
 
     app.tex_checker =
         qe::renderer::Texture::create_checkerboard(256, 8, 220, 220, 230, 50, 50, 60);
