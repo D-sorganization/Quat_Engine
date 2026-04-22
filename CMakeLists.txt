@@ -271,6 +271,15 @@ set_tests_properties(test_tps_levels PROPERTIES
     ENVIRONMENT "QE_LEVELS_DIR=${CMAKE_SOURCE_DIR}/data/levels"
 )
 
+qe_add_test(test_tps_level_modules
+    SOURCE tests/test_tps_level_modules.cpp
+    LIBS qe_tps
+    LABELS unit gameplay tps
+)
+set_tests_properties(test_tps_level_modules PROPERTIES
+    ENVIRONMENT "QE_LEVELS_DIR=${CMAKE_SOURCE_DIR}/data/levels"
+)
+
 qe_add_test(test_tps_combat
     SOURCE tests/test_tps_combat.cpp
     LIBS qe_tps
