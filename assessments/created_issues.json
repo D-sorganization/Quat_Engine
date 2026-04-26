@@ -1,0 +1,142 @@
+[
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/139",
+    "title": "[P1] [A] QuatEngine lacks lockfile for CMake dependencies",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/140",
+    "title": "[P2] [A] No CONTRIBUTING.md",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/141",
+    "title": "[P1] [B] Missing CLAUDE.md and CONTRIBUTING.md",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/142",
+    "title": "[P2] [B] Low docstring coverage (24 docstrings)",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/143",
+    "title": "[P0] [C] No test coverage data (.coverage missing)",
+    "priority": "P0"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/144",
+    "title": "[P1] [C] No property-based tests found",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/145",
+    "title": "[P1] [D] No bare excepts found but boundary validation unclear",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/146",
+    "title": "[P1] [E] No benchmark infrastructure",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/147",
+    "title": "[P2] [E] No Big-O complexity annotations",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/148",
+    "title": "[P1] [F] Pre-commit not configured for C++ linting",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/149",
+    "title": "[P2] [F] Magic numbers present in source",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/150",
+    "title": "[P1] [G] No dependency lockfile",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/151",
+    "title": "[P2] [G] License file present but no license audit",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/152",
+    "title": "[P1] [H] No SAST scan artifacts",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/153",
+    "title": "[P2] [H] Hardcoded secrets scan inconclusive",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/154",
+    "title": "[P1] [I] No .env.example file",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/155",
+    "title": "[P2] [I] No Dockerfile for standard build",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/156",
+    "title": "[P1] [J] No structured logging or metrics",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/157",
+    "title": "[P2] [J] No health endpoint",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/158",
+    "title": "[P2] [K] Low TODO/FIXME count but no suppression tracking",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/159",
+    "title": "[P1] [L] GitHub workflows present but CI status unknown",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/160",
+    "title": "[P2] [L] Workflow pass rate not tracked",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/161",
+    "title": "[P1] [M] No standard Dockerfile or docker-compose",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/162",
+    "title": "[P2] [M] No CHANGELOG.md",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/163",
+    "title": "[P2] [N] No copyright headers in source files",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/164",
+    "title": "[P2] [N] No DCO or signed-off-by enforcement",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/165",
+    "title": "[P1] [O] Missing CLAUDE.md",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/QuatEngine/issues/166",
+    "title": "[P2] [O] SPEC.md present (240 lines)",
+    "priority": "P2"
+  }
+]

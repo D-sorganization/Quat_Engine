@@ -1,0 +1,22 @@
+=== A: Project Organization ===
+Top-level files:
+AGENTS.md
+CMakeLists.txt
+Dockerfile.heavy_test
+LICENSE
+README.md
+SPEC.md
+assessments
+data
+docs
+shaders
+src
+tests
+Manifests:
+./CMakeLists.txt
+Src dirs:
+./src
+Test dirs:
+./tests
+.gitignore:
+45

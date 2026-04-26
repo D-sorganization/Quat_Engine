@@ -1,0 +1,9 @@
+=== O: Agentic Usability ===
+CLAUDE.md:
+NO
+AGENTS.md:
+YES
+API examples:
+0
+SPEC.md lines:
+427

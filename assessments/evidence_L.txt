@@ -1,0 +1,8 @@
+=== L: CI/CD ===
+GitHub workflows:
+ci.yml
+heavy-integration-tests.yml
+spec-check.yml
+Branch protection:
+CI status (last):
+[{"conclusion":"success","status":"completed"}]

@@ -1,0 +1,7 @@
+=== F: Code Quality ===
+Magic numbers:
+8
+Dead code:
+0
+Pre-commit:
+YES
