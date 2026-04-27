@@ -20,6 +20,7 @@ jobs:
     name: Reject hosted runner routing
     runs-on: d-sorg-fleet
     steps:
+      # Triggered on any PR to satisfy branch protection
       - name: Checkout repository without external actions
         shell: bash
         env:
