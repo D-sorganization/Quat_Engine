@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file PlayerController.h
  * @brief Player state machine integrating all TPS combat and movement systems.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 #include "test_framework.h"
 
 #include "../src/math/Quaternion.h"

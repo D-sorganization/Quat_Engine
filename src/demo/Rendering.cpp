@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file Rendering.cpp
  * @brief Demo world, particle, and HUD rendering systems.

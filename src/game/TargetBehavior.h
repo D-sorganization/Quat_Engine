@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TargetBehavior.h
  * @brief AI target movement behaviors driven by quaternion SLERP interpolation.

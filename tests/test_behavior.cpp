@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_behavior.cpp
  * @brief Tests for AI target behaviors driven by quaternion SLERP interpolation.

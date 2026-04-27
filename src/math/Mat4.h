@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Mat4.h
  * @brief 4x4 Matrix class for 3D transformations.

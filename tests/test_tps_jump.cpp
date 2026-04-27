@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_jump.cpp
  * @brief Tests for JumpSystem — gravity, coyote time, double jump, slam.

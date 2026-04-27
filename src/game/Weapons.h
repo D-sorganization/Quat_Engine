@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Weapons.h
  * @brief Weapon system with multiple weapon types and quaternion-based spread.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_gamestate.cpp
  * @brief Integration tests for TPSGameState — full game loop, level progression.

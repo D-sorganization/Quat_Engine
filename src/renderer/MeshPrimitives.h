@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file MeshPrimitives.h
  * @brief Procedural mesh generators — static factory functions for common 3-D shapes.

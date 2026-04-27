@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_lockon.cpp
  * @brief Tests for LockOnSystem — targeting, wobble, switching, break conditions.

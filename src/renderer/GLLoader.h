@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file GLLoader.h
  * @brief Minimal OpenGL 3.3 Core Profile function loader.

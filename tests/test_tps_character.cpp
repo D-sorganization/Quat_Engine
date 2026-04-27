@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_character.cpp
  * @brief Tests for CharacterClass system — stats, damage reduction, class balance.

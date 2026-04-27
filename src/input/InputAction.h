@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file InputAction.h
  * @brief Abstract input actions decoupled from device (keyboard, mouse, gamepad).

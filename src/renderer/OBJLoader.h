@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file OBJLoader.h
  * @brief Simple Wavefront .OBJ mesh file loader.

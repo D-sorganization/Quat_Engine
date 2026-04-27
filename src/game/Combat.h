@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Combat.h
  * @brief Shooting mechanics, projectile management, and collision resolution.

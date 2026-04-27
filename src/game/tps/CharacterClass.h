@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file CharacterClass.h
  * @brief Character class system with distinct strengths, weaknesses, and weapon affinities.

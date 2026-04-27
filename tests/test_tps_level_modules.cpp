@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_level_modules.cpp
  * @brief Characterization tests for split TPS level type and loader headers.

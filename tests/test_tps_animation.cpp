@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_animation.cpp
  * @brief Tests for AnimationSystem — state machine, blending, root motion.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_ai.cpp
  * @brief Tests for MutantAI — patrol, detection, chasing, attacking, retreat.

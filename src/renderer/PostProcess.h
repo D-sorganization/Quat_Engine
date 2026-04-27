@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file PostProcess.h
  * @brief Full-screen post-processing pipeline (CRT scanlines, chromatic

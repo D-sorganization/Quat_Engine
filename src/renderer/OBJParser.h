@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file OBJParser.h
  * @brief Pure Wavefront .OBJ text parser — no GPU, no SDL, no OpenGL.

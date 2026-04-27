@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file MeleeSystem.h
  * @brief Action-game quality melee combat with combos, counters, and aerial moves.

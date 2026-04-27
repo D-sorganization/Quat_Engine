@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file MutantAI.h
  * @brief Enemy AI behavior system for mutant combat encounters.

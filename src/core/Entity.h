@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Entity.h
  * @brief Game entity with health, AABB collision, damage, and respawn.

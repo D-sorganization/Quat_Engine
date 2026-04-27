@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Scoring.h
  * @brief Combo and scoring system for tracking kills, streaks, and multipliers.

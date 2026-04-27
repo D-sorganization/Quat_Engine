@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Texture.h
  * @brief OpenGL texture wrapper with procedural texture generators.

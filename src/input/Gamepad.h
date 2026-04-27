@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Gamepad.h
  * @brief Xbox/generic gamepad wrapper using SDL2 GameController API.

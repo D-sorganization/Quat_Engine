@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_powerup.cpp
  * @brief Tests for PowerUp system: quaternion animation, collection,

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file Rng.h
  * @brief Shared xorshift32 pseudo-random number generator.

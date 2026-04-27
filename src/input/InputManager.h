@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file InputManager.h
  * @brief Unified input manager — keyboard, mouse, and gamepad in one interface.

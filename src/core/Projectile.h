@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Projectile.h
  * @brief Simple 3D projectile with velocity, lifetime, and visual properties.

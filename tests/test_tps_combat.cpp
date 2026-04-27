@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_combat.cpp
  * @brief Integration tests for TPSCombat — ranged, melee, resistance, backstab.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file tps_main.cpp
  * @brief Full rendering entry point for the TPS game.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_particles.cpp
  * @brief Tests for the quaternion-driven ParticleSystem.

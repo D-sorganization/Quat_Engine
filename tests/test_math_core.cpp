@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_math_core.cpp
  * @brief Focused unit tests for core math operations: Vec3, Quaternion, Mat4.

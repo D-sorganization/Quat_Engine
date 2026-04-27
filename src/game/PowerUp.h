@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file PowerUp.h
  * @brief Power-up system with quaternion-animated collectibles.

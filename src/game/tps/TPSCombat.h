@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TPSCombat.h
  * @brief Combined ranged + melee combat pipeline for TPS game.

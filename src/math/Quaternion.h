@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Quaternion.h
  * @brief Quaternion class for 3D rotation with SLERP interpolation.

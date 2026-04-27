@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file App.h
  * @brief Shared demo application state and subsystem declarations.
