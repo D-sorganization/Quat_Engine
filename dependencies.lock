@@ -1,0 +1,12 @@
+# QuatEngine Dependency Lockfile
+#
+# This file records the exact versions of all external dependencies
+# so that builds are reproducible across machines and time.
+#
+# CMake FetchContent already pins these via GIT_TAG / URL_HASH,
+# but this lockfile serves as a human-readable audit trail.
+
+sdl2             2.30.10   # FetchContent GIT_TAG release-2.30.10
+opengl           3.3       # System-provided (driver-dependent)
+cmake            3.20+     # Minimum required (policy NEW)
+c++ compiler     17        # GCC 9+, Clang 10+, MSVC 2019+
