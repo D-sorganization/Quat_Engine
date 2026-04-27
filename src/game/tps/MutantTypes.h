@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file MutantTypes.h
  * @brief Post-apocalyptic mutant enemy types with distinct combat behaviors.

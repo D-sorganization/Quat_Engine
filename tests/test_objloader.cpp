@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_objloader.cpp
  * @brief Tests for OBJLoader — malformed input handling and valid parse paths.

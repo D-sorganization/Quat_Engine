@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file WaveSystem.h
  * @brief Wave-based game state machine with progressive difficulty scaling.

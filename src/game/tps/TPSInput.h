@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TPSInput.h
  * @brief Maps abstract input values to PlayerController actions for TPS gameplay.

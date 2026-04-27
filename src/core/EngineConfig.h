@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file EngineConfig.h
  * @brief Centralized engine configuration constants.

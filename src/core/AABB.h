@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file AABB.h
  * @brief Axis-Aligned Bounding Box with intersection tests.

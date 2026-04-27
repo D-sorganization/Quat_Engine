@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_weapons.cpp
  * @brief Tests for Weapon system and Combo/Scoring system.

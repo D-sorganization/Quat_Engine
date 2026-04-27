@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Shader.h
  * @brief OpenGL shader program compilation and uniform management.

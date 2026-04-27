@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_game.cpp
  * @brief Tests for game components: AABB, Entity, Projectile, Combat.

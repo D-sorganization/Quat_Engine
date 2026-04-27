@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 #include "renderer/PostProcess.h"
 #include <iostream>
 #include <cassert>

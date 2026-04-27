@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file LevelTypes.h
  * @brief Pure data contracts for TPS level configuration and objectives.

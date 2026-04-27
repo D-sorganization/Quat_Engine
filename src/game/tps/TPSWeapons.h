@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TPSWeapons.h
  * @brief Seven weapon classes for the TPS game with distinct tactical roles.

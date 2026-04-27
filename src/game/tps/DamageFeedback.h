@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file DamageFeedback.h
  * @brief Visual feedback state management for combat events.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_wave.cpp
  * @brief Tests for WaveSystem: state machine transitions, wave config scaling,

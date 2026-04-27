@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TPSGameState.h
  * @brief Main game orchestrator that coordinates all TPS subsystems per frame.

@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Transform.h
  * @brief 3D Transform component using quaternion rotation.

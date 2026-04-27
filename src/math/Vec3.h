@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Vec3.h
  * @brief 3D Vector class for game mathematics.

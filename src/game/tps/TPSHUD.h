@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TPSHUD.h
  * @brief HUD layout data for TPS game — pure state, no rendering dependency.

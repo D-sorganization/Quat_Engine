@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_game_extended.cpp
  * @brief Extended coverage tests for AABB, Scoring, Behavior, and PowerUp.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_math.cpp
  * @brief Comprehensive tests for Vec3, Quaternion (with SLERP), Mat4, and Transform.

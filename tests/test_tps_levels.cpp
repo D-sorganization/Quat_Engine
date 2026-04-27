@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_levels.cpp
  * @brief Tests for LevelSystem — all 12 levels, progression, objectives, state machine.

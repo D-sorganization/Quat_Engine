@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file TPSScene.h
  * @brief Level environment generation and enemy spawning for TPS game.

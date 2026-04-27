@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file LevelLoader.h
  * @brief JSON-backed TPS level loader and parser helpers.

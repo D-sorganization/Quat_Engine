@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file HUD.h
  * @brief Heads-Up Display rendering: crosshair, health bars, ammo, combo text.

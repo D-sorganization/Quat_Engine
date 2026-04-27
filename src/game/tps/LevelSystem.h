@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file LevelSystem.h
  * @brief 12-level progression system for the post-apocalyptic TPS game.

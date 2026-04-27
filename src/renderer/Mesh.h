@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Mesh.h
  * @brief GPU mesh data — VAO/VBO/EBO wrapper for vertex data upload and drawing.

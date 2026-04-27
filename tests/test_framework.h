@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_framework.h
  * @brief Shared lightweight test framework for QuatEngine tests.

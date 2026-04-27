@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_math_extended.cpp
  * @brief Extended coverage tests for Vec3, Quaternion, Mat4, and Transform.

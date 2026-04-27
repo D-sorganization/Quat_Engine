@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_melee.cpp
  * @brief Tests for MeleeSystem — combos, parry, backstab, arc detection, state machine.

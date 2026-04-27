@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_weapons.cpp
  * @brief Tests for TPSWeapons — 7 weapon types, firing, reload, ADS, loadout.

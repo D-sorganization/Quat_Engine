@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file LockOnSystem.h
  * @brief Lock-on targeting system with aim wobble for third-person combat.

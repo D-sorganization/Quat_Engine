@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file Logger.h
  * @brief Minimal structured logging with compile-time and runtime level control.

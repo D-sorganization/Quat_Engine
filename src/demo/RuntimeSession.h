@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file RuntimeSession.h
  * @brief Pure session helpers for the QuatEngine demo runtime.

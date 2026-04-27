@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file Constants.h
  * @brief Shared mathematical constants for the QuatEngine.

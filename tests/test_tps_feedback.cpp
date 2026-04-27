@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_tps_feedback.cpp
  * @brief Tests for DamageFeedback — screen shake, hit markers, damage numbers.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
 /**
  * @file test_runtime_session.cpp
  * @brief Tests for extracted demo runtime/session helpers.

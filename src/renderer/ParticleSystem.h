@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file ParticleSystem.h
  * @brief Quaternion-driven particle system for visual effects.

@@ -1,4 +1,6 @@
 #pragma once
+// Copyright (c) 2026 D-Sorganization. All rights reserved.
+
 /**
  * @file AnimationSystem.h
  * @brief Animation state machine for realistic third-person character movement.
