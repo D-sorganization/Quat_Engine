@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  engine:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - BUILD_TYPE=Release
+    command: >
+      bash -c "cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j 4 && ./build/tests/unit_tests"
