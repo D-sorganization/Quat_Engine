@@ -1,0 +1,6 @@
+=== E: Performance ===
+Benchmarks dir:
+NO
+Benchmark files:
+Big-O comments:
+6

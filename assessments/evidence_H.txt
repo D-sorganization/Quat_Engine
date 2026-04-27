@@ -1,0 +1,9 @@
+=== H: Security ===
+Bandit output:
+NO
+Hardcoded secrets:
+4
+SQL injection risk:
+0
+Subprocess shell:
+0
