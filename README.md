@@ -1,5 +1,7 @@
 # QuatEngine
 
+[![CI](https://github.com/D-sorganization/QuatEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/D-sorganization/QuatEngine/actions/workflows/ci.yml)
+
 A modern C++17 3D game engine built from first principles, using **quaternion mathematics** for gimbal-lock-free rotation and **SLERP interpolation** for smooth camera movement. Combines educational clarity with a playable FPS/TPS shooter built on SDL2 and OpenGL 3.3.
 
 ## What It Does
