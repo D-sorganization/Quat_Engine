@@ -22,7 +22,7 @@
 #include "../math/Vec3.h"
 
 #include <cmath>
-#include <cstdlib>
+#include <random>
 
 namespace qe {
 namespace game {
@@ -317,7 +317,10 @@ public:
 
         // Generate a random perpendicular dodge using quaternion rotation.
         // Pick a random angle and rotate a forward offset around the up axis.
-        float random_angle = static_cast<float>(std::rand() % 628) / 100.0f;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> dist(0.0f, 6.28f);
+        float random_angle = dist(gen);
         math::Quaternion dodge_rot = math::Quaternion::from_axis_angle(
             math::Vec3::up(), random_angle);
         dodge_offset = dodge_rot.rotate(math::Vec3(radius, 0.0f, 0.0f));

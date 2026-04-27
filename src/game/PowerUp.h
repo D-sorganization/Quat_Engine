@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstdint>
 #include <vector>
+#include <random>
 
 namespace qe {
 namespace game {
@@ -124,7 +125,8 @@ struct ActiveEffect {
 class PowerUpManager {
     std::vector<PowerUp> pickups_;
     std::vector<ActiveEffect> effects_;
-    qe::core::Rng rng_{54321};
+    std::random_device rd_;
+    qe::core::Rng rng_{rd_()};
 
 public:
     // --- Config per type ---
