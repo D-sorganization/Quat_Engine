@@ -1,89 +1,98 @@
 # Contributing to QuatEngine
 
-Thank you for your interest in contributing to QuatEngine! This document provides guidelines for participating in this project.
+Thanks for contributing to QuatEngine. Keep changes focused, preserve the
+engine's C++17 and quaternion-first design, and follow the local testing
+workflow before opening or updating a pull request.
 
-## Code of Conduct
+## Before You Start
 
-Be respectful, constructive, and inclusive in all interactions.
+- Read [`SPEC.md`](SPEC.md) for the repository's current architecture,
+  functionality, and documentation contract.
+- If you change behavior, add or update the matching native test first when
+  practical.
+- Keep fixes narrow. One issue should usually map to one pull request.
 
-## How to Contribute
+## Reporting Issues
 
-### Reporting Issues
+- Use GitHub Issues for bugs, regressions, or feature requests.
+- Include a clear description, reproduction steps, and expected versus actual
+  behavior.
+- When relevant, include your platform, compiler, and renderer context.
 
-- Use GitHub Issues to report bugs or request features.
-- Provide a clear description, steps to reproduce, and expected vs. actual behavior.
-- Include your environment (OS, compiler version, GPU).
+## Developer Certificate of Origin
 
-### Submitting Changes
+QuatEngine enforces the Developer Certificate of Origin (DCO) on all commits.
+Sign every commit with `-s`:
 
-1. **Fork** the repository and create a feature branch:
-   ```bash
-   git checkout -b feat/your-feature-name
-   ```
-2. **Write** clear, focused commits following [Conventional Commits](https://www.conventionalcommits.org/):
-   ```
-   feat: add dual-quaternion skinning
-   fix: correct SLERP boundary condition
-   docs: update build instructions for macOS
-   test: add unit test for quaternion normalization
-   ```
-3. **Build** and **test** locally before pushing:
-   ```bash
-   cmake -S . -B build && cmake --build build
-   ctest --test-dir build
-   ```
-4. **Push** your branch and open a Pull Request.
-5. Ensure CI passes and respond to review feedback promptly.
+```bash
+git commit -s -m "fix: short summary"
+```
 
-## Development Setup
+By contributing, you agree to the [DCO](https://developercertificate.org/).
+
+## Local Development
 
 ### Prerequisites
 
-- CMake >= 3.16
-- C++17 compatible compiler (GCC 9+, Clang 10+, MSVC 2019+)
-- SDL2 development libraries
-- OpenGL 3.3 capable GPU
+- CMake 3.20 or newer
+- A C++17 compiler
+- An internet connection on the first demo build so CMake can fetch SDL2
 
-### Build
+### Configure and Build
+
+Build the native test suite without the demo targets when you only need fast
+headless validation:
+
+```bash
+cmake -S . -B build -DQE_BUILD_DEMO=OFF
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+Build the demo applications when your change touches renderer, SDL2, or runtime
+composition code:
 
 ```bash
 cmake -S . -B build
 cmake --build build
 ```
 
-### Run Tests
+### Focused Validation
+
+Run a smaller test slice when you are iterating locally, then run the relevant
+full validation before you ask for review:
 
 ```bash
-ctest --test-dir build
+ctest --test-dir build --output-on-failure -L unit
+ctest --test-dir build --output-on-failure -L integration
+ctest --test-dir build --output-on-failure -L tps
 ```
 
-## Code Style
+Enable coverage only on GCC or Clang builds:
 
-- Use modern C++17 practices.
-- Include docstrings for all public APIs.
-- Follow the existing `.clang-format` style:
-  ```bash
-  find src -name "*.cpp" -o -name "*.h" | xargs clang-format -i
-  ```
-- Keep functions focused and under 50 lines where possible.
-- Prefer `const` correctness and RAII.
+```bash
+cmake -S . -B build -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+ctest --test-dir build --output-on-failure
+gcovr --root . --filter src --exclude tests --print-summary
+```
 
-## Testing
+## Pull Requests
 
-- Add unit tests for new algorithms in `tests/`.
-- Add integration tests for new rendering features.
-- Ensure all tests pass before submitting a PR.
+- Use a clear branch name such as `fix/...`, `feat/...`, or `docs/...`.
+- Use Conventional Commit prefixes such as `fix:`, `feat:`, `docs:`, or `ci:`.
+- Link the issue in the PR body with `Closes #<number>` when the PR should
+  close it.
+- Update [`SPEC.md`](SPEC.md) when the PR changes documented functionality,
+  architecture, or operating expectations.
+- Do not merge until required GitHub checks pass.
 
-## Documentation
+## Testing Expectations
 
-- Update `README.md` if user-facing behavior changes.
-- Update `CLAUDE.md` if agent-relevant build/test commands change.
-- Update `CHANGELOG.md` under the `## [Unreleased]` section.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
-
----
-
-If you have questions, open a Discussion or reach out via GitHub Issues.
+- Math and engine changes need deterministic native tests.
+- Gameplay changes should include a realistic flow or regression test, not only
+  a happy-path example.
+- Renderer-adjacent changes should separate pure logic coverage from anything
+  that depends on a graphics context.
+- Documentation-only changes should still leave the repository in a clean diff
+  state.
