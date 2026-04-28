@@ -57,13 +57,13 @@ jobs:
           fi
           # Always install a modern gcovr via pip (uses markupsafe.Markup, not jinja2.Markup)
           python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES 'gcovr>=7.2'
-          python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES pytest pytest-cov
+          python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES pytest pytest-cov hypothesis
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run Python contract tests with coverage
         run: |
           mkdir -p build
-          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -p pytest_cov tests/test_architecture_dbc.py \
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -p pytest_cov tests/test_architecture_dbc.py tests/test_math_properties.py \
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml:build/python-coverage.xml

@@ -26,7 +26,7 @@
 | **Owner** | D-sorganization |
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
-| **Spec Version** | 1.0.12 |
+| **Spec Version** | 1.0.13 |
 | **Last Spec Update** | 2026-04-28 |
 
 ## 2. Purpose & Mission
@@ -249,7 +249,7 @@ Configuration is managed via:
 
 ### Testing Strategy
 
-Three-tier testing with unit tests for math (vectors, quaternions), integration tests for renderer systems, and heavy integration tests for full game loops. Labels distinguish quick unit tests (run in every CI) from slow integration/render tests (run selectively). Coverage tracked via gcov/gcovr. Demo runtime helpers are kept in native ctest coverage so `main.cpp` can stay a thin composition root.
+Three-tier testing with unit tests for math (vectors, quaternions), integration tests for renderer systems, and heavy integration tests for full game loops. Labels distinguish quick unit tests (run in every CI) from slow integration/render tests (run selectively). Coverage tracked via gcov/gcovr. Demo runtime helpers are kept in native ctest coverage so `main.cpp` can stay a thin composition root. Python pytest coverage includes architecture/contract checks plus Hypothesis-backed properties that compile a temporary C++ probe against the real math headers.
 
 ### Test Organization
 
@@ -258,6 +258,7 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 | Unit | `tests/unit/` | ctest | `unit` |
 | Integration | `tests/integration/` | ctest | `integration` |
 | Render | `tests/render/` | ctest | `render` |
+| Property | `tests/test_math_properties.py` | pytest + Hypothesis | generated math invariants |
 
 ### Coverage Requirements
 
@@ -427,6 +428,7 @@ gcovr --print-summary --html coverage/
 | 2026-04-11 | 1.0.6 | TDD: replaced placeholder `tests/test_architecture_dbc.py` with real layered-architecture invariants (math ← core ← renderer/input ← game ← demo), DbC decorator coverage for `src/contracts.py`, and Weapons.h public-contract pins; added nine negative-path tests to `tests/test_weapons.cpp` covering empty-ammo fire, reload-while-reloading, reload-at-full, reload-on-infinite-ammo, invalid switch index, can_fire during reload/cooldown, and switch_weapon cancelling an in-progress reload (closes #94) |
 | 2026-04-14 | 1.0.8 | DbC: replaced all runtime `assert` statements in `TPSWeapons.h` and `WaveSystem.h` with explicit `if (!cond) throw std::invalid_argument/std::logic_error(...)` guards that remain active in NDEBUG/release builds; added 11 negative-path tests to `test_tps_weapons.cpp` and 9 to `test_wave.cpp` verifying every guard throws on invalid input (closes #104) |
 | 2026-04-28 | 1.0.12 | Observability: added `src/core/Readiness.h` with embeddable `/alive` and `/ready` status helpers plus JSON serialization; added `tests/test_readiness.cpp` coverage for alive, ready, not-ready, and payload behavior (closes #157) |
+| 2026-04-28 | 1.0.13 | Testing: added Hypothesis-backed property tests for quaternion/vector invariants through a temporary C++ math probe and wired Hypothesis into CI Python tests (closes #144) |
 | 2026-04-14 | 1.0.9 | OBJLoader error handling: extracted `OBJParser.h` (pure-C++, no GL/SDL) from `OBJLoader.h`, replacing silent `std::stoi` throws and zero-fill on bad streams with explicit per-line error counting and face skipping; added `parse_content`/`parse_stream` public API; added `tests/test_objloader.cpp` with 18 tests covering triangle/quad parse, v//vn/vt/vt+vn formats, missing normals, malformed tokens, out-of-range indices, zero index, incomplete vertex records, face-before-vertices, fewer-than-3-vertex faces, and good-face-after-bad-face; total ctest count raised to 24 (closes #105) |
 | 2026-04-22 | 1.0.11 | Refactor: split TPS level data contracts and JSON loading out of `LevelSystem.h` into `LevelTypes.h` and `LevelLoader.h`; added `test_tps_level_modules.cpp` to pin standalone include behavior and level loading without the state machine (addresses #119) |
 | 2026-03-28 | 1.0.0 | Initial specification |
