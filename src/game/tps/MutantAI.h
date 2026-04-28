@@ -25,6 +25,7 @@
  */
 
 #include "../../core/Rng.h"
+#include "../../math/Constants.h"
 #include "../../math/Quaternion.h"
 #include "../../math/Vec3.h"
 #include "MutantTypes.h"
@@ -37,8 +38,6 @@
 namespace qe {
 namespace game {
 namespace tps {
-
-inline constexpr float AI_PI = 3.14159265358979f;
 
 // Forward declarations
 inline math::Vec3 compute_approach_direction(

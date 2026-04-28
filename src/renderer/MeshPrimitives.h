@@ -21,6 +21,7 @@
  *   create_grid()        — reference grid lines on XZ (use GL_LINES)
  */
 
+#include "../math/Constants.h"
 #include "Mesh.h"
 
 #include <cmath>
@@ -155,8 +156,8 @@ inline Mesh create_sphere(int subdivisions = 2, float r = 0.5f,
         v.position[0] = pos[i]*r; v.position[1] = pos[i+1]*r; v.position[2] = pos[i+2]*r;
         v.normal[0] = pos[i]; v.normal[1] = pos[i+1]; v.normal[2] = pos[i+2];
         v.color[0] = cr; v.color[1] = cg; v.color[2] = cb;
-        v.uv[0] = 0.5f + std::atan2(pos[i+2], pos[i]) / (2.0f * 3.14159265f);
-        v.uv[1] = 0.5f - std::asin(pos[i+1]) / 3.14159265f;
+        v.uv[0] = 0.5f + std::atan2(pos[i+2], pos[i]) / math::TWO_PI;
+        v.uv[1] = 0.5f - std::asin(pos[i+1]) / math::PI;
         vertices.push_back(v);
     }
 
@@ -170,11 +171,10 @@ inline Mesh create_cylinder(int segments = 16, float radius = 0.5f, float height
     Mesh mesh;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    const float pi = 3.14159265f;
     float half_h = height * 0.5f;
 
     for (int i = 0; i <= segments; ++i) {
-        float angle = 2.0f * pi * static_cast<float>(i) / static_cast<float>(segments);
+        float angle = math::TWO_PI * static_cast<float>(i) / static_cast<float>(segments);
         float nx = std::cos(angle);
         float nz = std::sin(angle);
         float u = static_cast<float>(i) / static_cast<float>(segments);
@@ -221,7 +221,7 @@ inline Mesh create_cylinder(int segments = 16, float radius = 0.5f, float height
 
     unsigned int bot_ring_start = static_cast<unsigned int>(vertices.size());
     for (int i = 0; i <= segments; ++i) {
-        float angle = 2.0f * pi * static_cast<float>(i) / static_cast<float>(segments);
+        float angle = math::TWO_PI * static_cast<float>(i) / static_cast<float>(segments);
         float nx = std::cos(angle);
         float nz = std::sin(angle);
         Vertex v{};
@@ -233,7 +233,7 @@ inline Mesh create_cylinder(int segments = 16, float radius = 0.5f, float height
     }
     unsigned int top_ring_start = static_cast<unsigned int>(vertices.size());
     for (int i = 0; i <= segments; ++i) {
-        float angle = 2.0f * pi * static_cast<float>(i) / static_cast<float>(segments);
+        float angle = math::TWO_PI * static_cast<float>(i) / static_cast<float>(segments);
         float nx = std::cos(angle);
         float nz = std::sin(angle);
         Vertex v{};
@@ -265,15 +265,14 @@ inline Mesh create_cone(int segments = 16, float radius = 0.5f, float height = 1
     Mesh mesh;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    const float pi = 3.14159265f;
     float half_h = height * 0.5f;
     float slope = radius / height;
 
     unsigned int apex_start = static_cast<unsigned int>(vertices.size());
 
     for (int i = 0; i < segments; ++i) {
-        float a0 = 2.0f * pi * static_cast<float>(i) / static_cast<float>(segments);
-        float a1 = 2.0f * pi * static_cast<float>(i + 1) / static_cast<float>(segments);
+        float a0 = math::TWO_PI * static_cast<float>(i) / static_cast<float>(segments);
+        float a1 = math::TWO_PI * static_cast<float>(i + 1) / static_cast<float>(segments);
         float amid = (a0 + a1) * 0.5f;
 
         float nx = std::cos(amid);
@@ -321,7 +320,7 @@ inline Mesh create_cone(int segments = 16, float radius = 0.5f, float height = 1
 
     unsigned int cap_start = static_cast<unsigned int>(vertices.size());
     for (int i = 0; i <= segments; ++i) {
-        float angle = 2.0f * pi * static_cast<float>(i) / static_cast<float>(segments);
+        float angle = math::TWO_PI * static_cast<float>(i) / static_cast<float>(segments);
         float cx = std::cos(angle);
         float cz = std::sin(angle);
         Vertex v{};
@@ -348,7 +347,6 @@ inline Mesh create_capsule(int segments = 16, int rings = 8,
     Mesh mesh;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    const float pi = 3.14159265f;
     float half_h = height * 0.5f;
 
     int half_rings = rings / 2;
@@ -363,7 +361,7 @@ inline Mesh create_capsule(int segments = 16, int rings = 8,
             float sin_lat = std::sin(lat);
 
             for (int s = 0; s <= segments; ++s) {
-                float lon = 2.0f * pi * static_cast<float>(s) / static_cast<float>(segments);
+                float lon = math::TWO_PI * static_cast<float>(s) / static_cast<float>(segments);
                 float cos_lon = std::cos(lon);
                 float sin_lon = std::sin(lon);
 
@@ -394,12 +392,12 @@ inline Mesh create_capsule(int segments = 16, int rings = 8,
         }
     };
 
-    add_ring(-half_h, -pi * 0.5f, 0.0f, half_rings, false);
+    add_ring(-half_h, -math::PI * 0.5f, 0.0f, half_rings, false);
 
     {
         unsigned int base = static_cast<unsigned int>(vertices.size());
         for (int s = 0; s <= segments; ++s) {
-            float lon = 2.0f * pi * static_cast<float>(s) / static_cast<float>(segments);
+            float lon = math::TWO_PI * static_cast<float>(s) / static_cast<float>(segments);
             Vertex v{};
             v.position[0] = std::cos(lon) * radius;
             v.position[1] = -half_h;
@@ -410,7 +408,7 @@ inline Mesh create_capsule(int segments = 16, int rings = 8,
             vertices.push_back(v);
         }
         for (int s = 0; s <= segments; ++s) {
-            float lon = 2.0f * pi * static_cast<float>(s) / static_cast<float>(segments);
+            float lon = math::TWO_PI * static_cast<float>(s) / static_cast<float>(segments);
             Vertex v{};
             v.position[0] = std::cos(lon) * radius;
             v.position[1] = half_h;
@@ -432,7 +430,7 @@ inline Mesh create_capsule(int segments = 16, int rings = 8,
         }
     }
 
-    add_ring(half_h, 0.0f, pi * 0.5f, half_rings, true);
+    add_ring(half_h, 0.0f, math::PI * 0.5f, half_rings, true);
 
     mesh.upload(vertices, indices);
     return mesh;
