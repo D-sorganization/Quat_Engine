@@ -16,15 +16,15 @@ jobs:
 
       - name: Install Bandit
         run: |
-          python3 -m venv .venv-bandit
-          . .venv-bandit/bin/activate
+          python3 -m venv "$RUNNER_TEMP/venv-bandit"
+          . "$RUNNER_TEMP/venv-bandit/bin/activate"
           python -m ensurepip --upgrade
           python -m pip install --upgrade pip
           python -m pip install bandit
 
       - name: Run Bandit on Python files
         run: |
-          . .venv-bandit/bin/activate
+          . "$RUNNER_TEMP/venv-bandit/bin/activate"
           bandit -r . -f json -o bandit_output.json || true
           # Also generate human-readable summary
           bandit -r . -f txt -o bandit_summary.txt || true
@@ -39,7 +39,7 @@ jobs:
 
       - name: Check for high-severity issues
         run: |
-          . .venv-bandit/bin/activate
+          . "$RUNNER_TEMP/venv-bandit/bin/activate"
           if [ -s bandit_output.json ]; then
             HIGH=$(python -c "import json,sys; d=json.load(open('bandit_output.json')); print(len([r for r in d.get('results',[]) if r.get('issue_severity')=='HIGH']))" 2>/dev/null || echo "0")
             if [ "$HIGH" -gt 0 ]; then
