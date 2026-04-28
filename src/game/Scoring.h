@@ -15,7 +15,8 @@
  *     accumulation, high score tracking, and recent event display for the HUD.
  */
 
-#include <cassert>
+#include <cmath>
+#include <stdexcept>
 #include <vector>
 
 namespace qe {
@@ -61,6 +62,9 @@ struct ComboState {
     }
 
     void update(float dt) {
+        if (!std::isfinite(dt) || dt < 0.0f) {
+            throw std::invalid_argument("ComboState::update: dt must be finite and non-negative");
+        }
         combo_timer += dt;
         if (combo_timer > combo_window && streak > 0) {
             streak = 0;  // Combo expired
@@ -97,14 +101,21 @@ class ScoreTracker {
 
 public:
     /** Record a kill and compute score.
-     *  @pre base_score >= 0
-     *  @pre powerup_multiplier >= 1.0
-     *  @pre wave_bonus >= 0
+     *  @throws std::invalid_argument if base_score or wave_bonus is negative, or
+     *          if powerup_multiplier is non-finite or less than 1.0.
      */
     ScoreEvent record_kill(int base_score, float powerup_multiplier = 1.0f, int wave_bonus = 0) {
-        assert(base_score >= 0          && "record_kill: base_score must be non-negative");
-        assert(powerup_multiplier >= 1.0f && "record_kill: powerup_multiplier must be >= 1");
-        assert(wave_bonus >= 0          && "record_kill: wave_bonus must be non-negative");
+        if (base_score < 0) {
+            throw std::invalid_argument("record_kill: base_score must be non-negative");
+        }
+        if (!std::isfinite(powerup_multiplier) || powerup_multiplier < 1.0f) {
+            throw std::invalid_argument(
+                "record_kill: powerup_multiplier must be finite and >= 1"
+            );
+        }
+        if (wave_bonus < 0) {
+            throw std::invalid_argument("record_kill: wave_bonus must be non-negative");
+        }
         combo_.register_hit();
         combo_.register_kill();
 
@@ -135,17 +146,18 @@ public:
     }
 
     /** Add a bonus directly to the score.
-     *  @pre points >= 0
+     *  @throws std::invalid_argument if points is negative.
      */
     void add_bonus(int points) {
-        assert(points >= 0 && "add_bonus: points must be non-negative");
+        if (points < 0) {
+            throw std::invalid_argument("add_bonus: points must be non-negative");
+        }
         score_ += points;
         if (score_ > high_score_) high_score_ = score_;
     }
 
-    /** @pre dt >= 0 */
+    /** @throws std::invalid_argument if dt is non-finite or negative. */
     void update(float dt) {
-        assert(dt >= 0.0f && "ScoreTracker::update: dt must be non-negative");
         combo_.update(dt);
         if (event_display_timer_ > 0) {
             event_display_timer_ -= dt;
