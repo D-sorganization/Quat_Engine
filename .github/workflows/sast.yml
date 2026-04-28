@@ -16,16 +16,17 @@ jobs:
 
       - name: Install Bandit
         run: |
-          python3 -m venv .venv-bandit
-          . .venv-bandit/bin/activate
+          python3 -m venv "$RUNNER_TEMP/venv-bandit"
+          . "$RUNNER_TEMP/venv-bandit/bin/activate"
           python -m pip install --upgrade pip
           python -m pip install bandit
 
       - name: Run Bandit on Python files
         run: |
-          .venv-bandit/bin/bandit -r . -f json -o bandit_output.json || true
+          . "$RUNNER_TEMP/venv-bandit/bin/activate"
+          bandit -r . -f json -o bandit_output.json || true
           # Also generate human-readable summary
-          .venv-bandit/bin/bandit -r . -f txt -o bandit_summary.txt || true
+          bandit -r . -f txt -o bandit_summary.txt || true
 
       - name: Upload SAST artifacts
         uses: actions/upload-artifact@v4
@@ -37,8 +38,9 @@ jobs:
 
       - name: Check for high-severity issues
         run: |
+          . "$RUNNER_TEMP/venv-bandit/bin/activate"
           if [ -s bandit_output.json ]; then
-            HIGH=$(python3 -c "import json,sys; d=json.load(open('bandit_output.json')); print(len([r for r in d.get('results',[]) if r.get('issue_severity')=='HIGH']))" 2>/dev/null || echo "0")
+            HIGH=$(python -c "import json,sys; d=json.load(open('bandit_output.json')); print(len([r for r in d.get('results',[]) if r.get('issue_severity')=='HIGH']))" 2>/dev/null || echo "0")
             if [ "$HIGH" -gt 0 ]; then
               echo "::error::Found $HIGH high-severity security issues"
               exit 1
