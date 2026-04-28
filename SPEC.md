@@ -27,13 +27,8 @@
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
 | **Current Version** | N/A |
-<<<<<<< HEAD
-| **Spec Version** | 1.0.9 |
-| **Last Spec Update** | 2026-04-14 |
-=======
-| **Spec Version** | 1.0.11 |
-| **Last Spec Update** | 2026-04-22 |
->>>>>>> origin/main
+| **Spec Version** | 1.0.12 |
+| **Last Spec Update** | 2026-04-28 |
 
 ## 2. Purpose & Mission
 
@@ -79,15 +74,13 @@ QuatEngine/
 │   ├── core/                    # Component system, transforms, utilities
 │   │   ├── Transform.h
 │   │   ├── Rng.h               # Shared xorshift32 PRNG
-│   │   └── Logger.h            # Structured logging (DEBUG/INFO/WARN/ERROR)
+│   │   ├── Logger.h            # Structured logging (DEBUG/INFO/WARN/ERROR)
+│   │   └── Readiness.h         # Embeddable /alive and /ready status records
 │   ├── renderer/                # Graphics pipeline
 │   │   ├── GLLoader.h
 │   │   ├── Shader.h
 │   │   ├── Mesh.h
-<<<<<<< HEAD
-=======
 │   │   ├── MeshPrimitives.h    # Procedural mesh factory functions
->>>>>>> origin/main
 │   │   ├── OBJParser.h         # Pure-C++ OBJ text parser (no GL/SDL)
 │   │   ├── OBJLoader.h         # GPU-upload wrapper around OBJParser
 │   │   └── Camera.h
@@ -133,6 +126,7 @@ QuatEngine/
 | Transform Component | `src/core/Transform.h` | Game object positioning and rotation |
 | PRNG | `src/core/Rng.h` | Deterministic xorshift32 random number generator |
 | Logger | `src/core/Logger.h` | Structured logging with compile-time and runtime level control |
+| Readiness | `src/core/Readiness.h` | Embeddable `/alive` and `/ready` status records for host processes |
 | GL Renderer | `src/renderer/GLLoader.h` | OpenGL initialization and context management |
 | Shader System | `src/renderer/Shader.h` | GLSL compilation, linking, and uniform management |
 | Mesh | `src/renderer/Mesh.h` | Geometry data (vertices, indices, normals, UVs) |
@@ -163,6 +157,7 @@ QuatEngine/
 | F7 | Particle System | ✅ | Particle emission, lifetime management, physics simulation |
 | F8 | Post-Processing Pipeline | ✅ | Screen-space effects: bloom, blur, color grading |
 | F9 | NLERP vs. SLERP Visualization | ✅ | Comparison tool showing interpolation differences |
+| F10 | Health / Readiness Surface | ✅ | Header-only `/alive` and `/ready` status helpers for launchers and embedding hosts |
 
 ### API / Interface Contract
 
@@ -205,6 +200,23 @@ Vec3 rotated = q1.Rotate(vec);
 
 ```cpp
 camera.RotateTo(targetQuaternion, duration_seconds);  // Smooth interpolation
+```
+
+**Health / Readiness API:**
+
+QuatEngine does not run a network service by itself. Embedding hosts can expose
+these stable status records as their `/alive` and `/ready` endpoints without
+adding a web framework to the engine:
+
+```cpp
+auto alive = qe::core::alive_status();
+auto ready = qe::core::ready_status({
+    .configuration_loaded = true,
+    .assets_available = true,
+    .renderer_available = true,
+});
+
+std::string payload = qe::core::to_json(ready);
 ```
 
 ## 6. Data & Configuration
@@ -267,11 +279,7 @@ Three-tier testing with unit tests for math (vectors, quaternions), integration 
 - [ ] TPS controller responds to input and updates position correctly
 - [ ] FPS controller implements proper mouse look with no gimbal lock
 - [ ] Post-processing effects apply without framebuffer corruption
-<<<<<<< HEAD
-- [ ] 24 test files execute via ctest with 100% pass rate on C++17 compiler
-=======
-- [ ] 25 test files execute via ctest with 100% pass rate on C++17 compiler
->>>>>>> origin/main
+- [ ] 26 non-render test files execute via ctest with 100% pass rate on C++17 compiler
 - [x] Patrol behavior wraps negative-time progression consistently for both position and facing rotation
 
 ## 8. Quality Standards
@@ -419,11 +427,9 @@ gcovr --print-summary --html coverage/
 | 2026-04-11 | 1.0.7 | Refactor: decomposed 7 oversized functions (78-148 LOC) across RuntimeSystems.cpp, Rendering.cpp, tps_main.cpp, TPSScene.h, TPSCombat.h, and OBJLoader.h into focused helpers; public signatures unchanged (closes #92) |
 | 2026-04-11 | 1.0.6 | TDD: replaced placeholder `tests/test_architecture_dbc.py` with real layered-architecture invariants (math ← core ← renderer/input ← game ← demo), DbC decorator coverage for `src/contracts.py`, and Weapons.h public-contract pins; added nine negative-path tests to `tests/test_weapons.cpp` covering empty-ammo fire, reload-while-reloading, reload-at-full, reload-on-infinite-ammo, invalid switch index, can_fire during reload/cooldown, and switch_weapon cancelling an in-progress reload (closes #94) |
 | 2026-04-14 | 1.0.8 | DbC: replaced all runtime `assert` statements in `TPSWeapons.h` and `WaveSystem.h` with explicit `if (!cond) throw std::invalid_argument/std::logic_error(...)` guards that remain active in NDEBUG/release builds; added 11 negative-path tests to `test_tps_weapons.cpp` and 9 to `test_wave.cpp` verifying every guard throws on invalid input (closes #104) |
+| 2026-04-28 | 1.0.12 | Observability: added `src/core/Readiness.h` with embeddable `/alive` and `/ready` status helpers plus JSON serialization; added `tests/test_readiness.cpp` coverage for alive, ready, not-ready, and payload behavior (closes #157) |
 | 2026-04-14 | 1.0.9 | OBJLoader error handling: extracted `OBJParser.h` (pure-C++, no GL/SDL) from `OBJLoader.h`, replacing silent `std::stoi` throws and zero-fill on bad streams with explicit per-line error counting and face skipping; added `parse_content`/`parse_stream` public API; added `tests/test_objloader.cpp` with 18 tests covering triangle/quad parse, v//vn/vt/vt+vn formats, missing normals, malformed tokens, out-of-range indices, zero index, incomplete vertex records, face-before-vertices, fewer-than-3-vertex faces, and good-face-after-bad-face; total ctest count raised to 24 (closes #105) |
-<<<<<<< HEAD
-=======
 | 2026-04-22 | 1.0.11 | Refactor: split TPS level data contracts and JSON loading out of `LevelSystem.h` into `LevelTypes.h` and `LevelLoader.h`; added `test_tps_level_modules.cpp` to pin standalone include behavior and level loading without the state machine (addresses #119) |
->>>>>>> origin/main
 | 2026-03-28 | 1.0.0 | Initial specification |
 | 2026-03-30 | 1.0.1 | A-N Assessment remediation: add .env to .gitignore, add MIT LICENSE, add DbC assertions to Combat.h/Scoring.h, add Camera::set_aspect/set_smoothing interface methods (LoD), update main.cpp to use new Camera interface |
 
