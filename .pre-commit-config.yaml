@@ -36,3 +36,12 @@ repos:
       # Formatter
       - id: ruff-format
         name: ruff (format)
+
+  # ── Debt marker tracking ──────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: debt-marker-tracking
+        name: debt marker tracking
+        entry: python scripts/check_debt_markers.py
+        language: system
+        pass_filenames: false
