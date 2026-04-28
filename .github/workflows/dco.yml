@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   dco:
-    runs-on: ubuntu-latest
+    runs-on: d-sorg-fleet
     steps:
       - name: Checkout
         uses: actions/checkout@v6
