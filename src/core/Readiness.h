@@ -8,6 +8,8 @@
 #ifndef QE_CORE_READINESS_H
 #define QE_CORE_READINESS_H
 
+#include "Metrics.h"
+
 #include <string>
 #include <string_view>
 
@@ -27,12 +29,14 @@ struct HealthStatus {
 };
 
 inline HealthStatus alive_status() {
+    Metrics::record_alive_check();
     return {"/alive", "QuatEngine", "alive", true};
 }
 
 inline HealthStatus ready_status(const ReadinessInputs& inputs = {}) {
     const bool ready = inputs.configuration_loaded && inputs.assets_available &&
         inputs.renderer_available;
+    Metrics::record_ready_check(ready);
     return {"/ready", "QuatEngine", ready ? "ready" : "not_ready", ready};
 }
 
