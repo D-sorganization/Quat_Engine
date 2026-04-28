@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fail when GitHub Actions workflows can route to hosted runners."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -35,8 +36,7 @@ def main() -> int:
             for token in BANNED:
                 if token in line:
                     failures.append(
-                        f"{path}:{line_number}: "
-                        f"banned hosted-runner token {token!r}"
+                        f"{path}:{line_number}: banned hosted-runner token {token!r}"
                     )
 
     if failures:

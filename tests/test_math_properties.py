@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import os
 import shutil
 import subprocess
@@ -22,9 +21,11 @@ FLOATS = st.floats(
     allow_infinity=False,
     width=32,
 )
+MIN_ANGLE = -3.1415927410125732
+MAX_ANGLE = 3.1415927410125732
 ANGLES = st.floats(
-    min_value=-math.pi,
-    max_value=math.pi,
+    min_value=MIN_ANGLE,
+    max_value=MAX_ANGLE,
     allow_nan=False,
     allow_infinity=False,
     width=32,
@@ -36,10 +37,8 @@ UNIT_T = st.floats(
     allow_infinity=False,
     width=32,
 )
-NONZERO_VECTOR = (
-    st.tuples(FLOATS, FLOATS, FLOATS).filter(
-        lambda v: (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) > 1e-4
-    )
+NONZERO_VECTOR = st.tuples(FLOATS, FLOATS, FLOATS).filter(
+    lambda v: (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) > 1e-4
 )
 
 
@@ -130,7 +129,9 @@ def math_probe(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     build_dir = tmp_path_factory.mktemp("qe_math_probe")
     source = build_dir / "math_property_probe.cpp"
-    executable = build_dir / ("math_property_probe.exe" if os.name == "nt" else "math_property_probe")
+    executable = build_dir / (
+        "math_property_probe.exe" if os.name == "nt" else "math_property_probe"
+    )
     source.write_text(PROBE_SOURCE, encoding="utf-8")
 
     subprocess.run(
@@ -162,7 +163,9 @@ def _run_probe(executable: Path, *args: float | str) -> list[float]:
     return [float(part) for part in completed.stdout.split()]
 
 
-@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.filter_too_much])
+@settings(
+    max_examples=60, deadline=None, suppress_health_check=[HealthCheck.filter_too_much]
+)
 @given(axis=NONZERO_VECTOR, vector=NONZERO_VECTOR, angle=ANGLES)
 def test_axis_angle_rotation_preserves_length_and_inverse_restores_vector(
     math_probe: Path,
@@ -183,7 +186,9 @@ def test_axis_angle_rotation_preserves_length_and_inverse_restores_vector(
     assert (restored_x, restored_y, restored_z) == pytest.approx(vector, abs=1e-3)
 
 
-@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.filter_too_much])
+@settings(
+    max_examples=60, deadline=None, suppress_health_check=[HealthCheck.filter_too_much]
+)
 @given(source=NONZERO_VECTOR, target=NONZERO_VECTOR)
 def test_from_two_vectors_aligns_normalized_directions(
     math_probe: Path,
@@ -197,8 +202,16 @@ def test_from_two_vectors_aligns_normalized_directions(
     assert alignment == pytest.approx(1.0, abs=1e-3)
 
 
-@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.filter_too_much])
-@given(axis_a=NONZERO_VECTOR, angle_a=ANGLES, axis_b=NONZERO_VECTOR, angle_b=ANGLES, t=UNIT_T)
+@settings(
+    max_examples=60, deadline=None, suppress_health_check=[HealthCheck.filter_too_much]
+)
+@given(
+    axis_a=NONZERO_VECTOR,
+    angle_a=ANGLES,
+    axis_b=NONZERO_VECTOR,
+    angle_b=ANGLES,
+    t=UNIT_T,
+)
 def test_slerp_between_axis_angle_rotations_stays_unit_length(
     math_probe: Path,
     axis_a: tuple[float, float, float],
