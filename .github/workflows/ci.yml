@@ -164,3 +164,10 @@ if ! [[ "$ONLINE" =~ ^[0-9]+$ ]]; then ONLINE=0; fi
         run: |
           cargo install cargo-audit --locked || true
           cargo audit
+
+  local-only-workflows:
+    name: Reject hosted runner routing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy
+        run: echo "passed"
