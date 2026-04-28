@@ -28,6 +28,7 @@ jobs:
             "${HEAD_SHA}"
           git checkout --force "${HEAD_SHA}"
           git clean -ffdx
+
       - name: Verify DCO signoffs
         shell: bash
         env:
