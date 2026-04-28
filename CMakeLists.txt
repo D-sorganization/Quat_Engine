@@ -21,6 +21,7 @@ endif()
 # ── Build Options ────────────────────────────────────────────────────────────
 option(QE_BUILD_DEMO "Build the demo application (requires SDL2 and OpenGL)" ON)
 option(QE_ENABLE_COVERAGE "Enable gcov-compatible coverage flags for native tests" OFF)
+option(QE_BUILD_BENCHMARKS "Build deterministic benchmark probes" OFF)
 
 if(QE_ENABLE_COVERAGE)
     if(MSVC)
@@ -118,6 +119,15 @@ endif()
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 enable_testing()
+
+# ── Benchmarks ───────────────────────────────────────────────────────────────
+if(QE_BUILD_BENCHMARKS)
+    add_executable(qe_math_benchmark .benchmarks/math_benchmark.cpp)
+    target_link_libraries(qe_math_benchmark PRIVATE qe_core)
+
+    add_test(NAME qe_math_benchmark COMMAND qe_math_benchmark)
+    set_tests_properties(qe_math_benchmark PROPERTIES LABELS "benchmark;math")
+endif()
 
 function(qe_add_test target)
     set(options)

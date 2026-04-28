@@ -89,6 +89,15 @@ jobs:
       - name: Run integration tests
         run: ctest --test-dir build --output-on-failure -L integration
 
+      - name: Configure benchmarks
+        run: cmake -S . -B build-bench -DCMAKE_BUILD_TYPE=Release -DQE_BUILD_DEMO=OFF -DQE_BUILD_BENCHMARKS=ON
+
+      - name: Build benchmark probes
+        run: cmake --build build-bench --target qe_math_benchmark --parallel
+
+      - name: Run benchmark probes
+        run: ctest --test-dir build-bench --output-on-failure -L benchmark
+
       - name: Generate coverage report
         run: |
           gcovr --root . \
