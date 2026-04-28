@@ -53,10 +53,14 @@ public:
     Gamepad() = default;
     ~Gamepad() { close(); }
 
-    // Non-copyable, movable
+    /** Gamepad owns an SDL controller handle and therefore cannot be copied. */
     Gamepad(const Gamepad&) = delete;
     Gamepad& operator=(const Gamepad&) = delete;
+
+    /** Transfer the SDL controller handle from another Gamepad. */
     Gamepad(Gamepad&& other) noexcept { swap(other); }
+
+    /** Exchange controller ownership with another Gamepad instance. */
     Gamepad& operator=(Gamepad&& other) noexcept { swap(other); return *this; }
 
     // --- Lifecycle ---
@@ -109,7 +113,10 @@ public:
 
     // --- State Queries ---
 
+    /** Return true when a controller handle is open and usable. */
     bool is_connected() const noexcept { return connected_; }
+
+    /** SDL-reported controller name, or "None" when disconnected. */
     const std::string& name() const noexcept { return name_; }
 
     /** Poll current state. Call once per frame. */
@@ -142,23 +149,36 @@ public:
 
     // --- Accessors ---
 
+    /** Normalized left stick after radial deadzone processing. */
     const StickState& left_stick() const noexcept { return left_stick_; }
+
+    /** Normalized right stick after radial deadzone processing. */
     const StickState& right_stick() const noexcept { return right_stick_; }
+
+    /** Normalized trigger pressure values in [0, 1]. */
     const TriggerState& triggers() const noexcept { return triggers_; }
 
+    /** Return true while the mapped button is held down. */
     bool button_held(Button b) const noexcept {
         return buttons_[static_cast<int>(b)];
     }
+
+    /** Return true only on the frame the mapped button transitions down. */
     bool button_pressed(Button b) const noexcept {
         return buttons_pressed_[static_cast<int>(b)];
     }
+
+    /** Return true only on the frame the mapped button transitions up. */
     bool button_released(Button b) const noexcept {
         return buttons_released_[static_cast<int>(b)];
     }
 
     // --- Configuration ---
 
+    /** Radial stick deadzone below which stick input is treated as zero. */
     float deadzone() const noexcept { return deadzone_; }
+
+    /** Set the radial stick deadzone used by subsequent poll() calls. */
     void set_deadzone(float dz) noexcept { deadzone_ = dz; }
 
 private:
