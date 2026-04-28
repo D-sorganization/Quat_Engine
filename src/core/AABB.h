@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 // Copyright (c) 2026 D-Sorganization. All rights reserved.
 

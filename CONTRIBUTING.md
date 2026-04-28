@@ -12,6 +12,13 @@ workflow before opening or updating a pull request.
   practical.
 - Keep fixes narrow. One issue should usually map to one pull request.
 
+## Reporting Issues
+
+- Use GitHub Issues for bugs, regressions, or feature requests.
+- Include a clear description, reproduction steps, and expected versus actual
+  behavior.
+- When relevant, include your platform, compiler, and renderer context.
+
 ## Developer Certificate of Origin
 
 QuatEngine enforces the Developer Certificate of Origin (DCO) on all commits.

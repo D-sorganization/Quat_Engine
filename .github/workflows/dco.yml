@@ -2,13 +2,72 @@ name: DCO
 on:
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
   dco:
-    runs-on: ubuntu-latest
+    runs-on: d-sorg-fleet
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: DCO Check
-        uses: proaction/dco@v1
-        with:
-          setup_git: false
+      - name: Checkout repository without external actions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          auth_header="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          git init "$GITHUB_WORKSPACE"
+          cd "$GITHUB_WORKSPACE"
+          git remote remove origin 2>/dev/null || true
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth_header}" fetch origin \
+            "${BASE_SHA}" \
+            "${HEAD_SHA}"
+          git checkout --force "${HEAD_SHA}"
+          git clean -ffdx
+
+      - name: Verify DCO signoffs
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          commits="$(git rev-list --no-merges "${BASE_SHA}..${HEAD_SHA}")"
+          if [ -z "${commits}" ]; then
+            echo "No non-merge commits to inspect."
+            exit 0
+          fi
+
+          failed=0
+          for commit in ${commits}; do
+            author_name="$(git log -1 --format='%an' "${commit}")"
+            author_email="$(git log -1 --format='%ae' "${commit}" | tr '[:upper:]' '[:lower:]')"
+            signoffs="$(git log -1 --format=%B "${commit}" | git interpret-trailers --parse | grep -i '^Signed-off-by:' || true)"
+
+            if [ -z "${signoffs}" ]; then
+              echo "::error title=Missing DCO signoff::Commit ${commit} by ${author_name} <${author_email}> is missing a Signed-off-by trailer."
+              failed=1
+              continue
+            fi
+
+            matched=0
+            while IFS= read -r signoff; do
+              signoff_email="$(echo "${signoff}" | sed -E 's/^Signed-off-by:[[:space:]]*.*<([^>]+)>.*/\1/I' | tr '[:upper:]' '[:lower:]')"
+              if [ "${signoff_email}" = "${author_email}" ]; then
+                matched=1
+                break
+              fi
+            done <<< "${signoffs}"
+
+            if [ "${matched}" -ne 1 ]; then
+              echo "::error title=Invalid DCO signoff::Commit ${commit} by ${author_name} <${author_email}> does not contain a matching Signed-off-by trailer."
+              failed=1
+            fi
+          done
+
+          exit "${failed}"
