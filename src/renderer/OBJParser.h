@@ -21,6 +21,11 @@
  *     cause the face line to be skipped with an error count increment.
  *   - Faces with fewer than 3 valid vertices are skipped.
  *   - Empty or comment-only content is not an error (ok=true, zero geometry).
+ *
+ * Complexity: parse_stream is O(L + F) time and O(V + T + N + F) space, where
+ * L is input text length, V/T/N are position/texcoord/normal records, and F is
+ * the number of triangulated face vertices emitted. Each face token is parsed
+ * once; n-gon faces are triangulated with O(k) work for k vertices.
  */
 
 #include <sstream>
@@ -58,7 +63,9 @@ struct OBJParseResult {
 
 class OBJParser {
 public:
-    /** Parse OBJ content from an already-open istream. */
+    /** Parse OBJ content from an already-open istream.
+     *  Complexity: O(L + F) time, O(V + T + N + F) space.
+     */
     static OBJParseResult parse_stream(std::istream& stream) {
         OBJParseResult result;
         result.ok = true;
@@ -66,7 +73,9 @@ public:
         return result;
     }
 
-    /** Parse OBJ content from a string (convenience wrapper for tests). */
+    /** Parse OBJ content from a string (convenience wrapper for tests).
+     *  Complexity: O(L + F) time, O(V + T + N + F) space.
+     */
     static OBJParseResult parse_content(const std::string& content) {
         std::istringstream ss(content);
         return parse_stream(ss);

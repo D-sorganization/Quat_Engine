@@ -9,6 +9,9 @@
  * Provides a high-performance 3D vector with standard operations:
  * dot product, cross product, normalization, and linear interpolation.
  * Follows modern C++ (C++17) conventions with constexpr support.
+ *
+ * Complexity: all Vec3 operations are O(1) time and O(1) auxiliary space
+ * because the type stores exactly three scalar components.
  */
 
 #include <cmath>

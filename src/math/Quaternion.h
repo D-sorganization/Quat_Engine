@@ -18,6 +18,10 @@
  *   - Rotation of Vec3 points
  *   - Conversion to 4x4 rotation matrix
  *
+ * Complexity: all quaternion constructors, arithmetic operations,
+ * interpolation routines, and Vec3 rotations are O(1) time and O(1)
+ * auxiliary space because quaternions have fixed four-component storage.
+ *
  * Reference: "Quaternions and Rotation Sequences" by Jack B. Kuipers
  */
 
