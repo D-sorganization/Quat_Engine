@@ -104,7 +104,7 @@ private:
 
         int next = (current + 1) % waypoint_count;
         float fraction = total - static_cast<float>(current);
-        float step = math::TWO_PI / static_cast<float>(waypoint_count);
+        float step = 2.0f * qe::math::PI / static_cast<float>(waypoint_count);
 
         PatrolProgress progress;
         progress.rotation_from = math::Quaternion::from_axis_angle(
@@ -281,7 +281,7 @@ public:
         case BehaviorType::Spiral: {
             float t = time * speed + phase;
             return math::Quaternion::from_axis_angle(
-                math::Vec3::up(), t + math::PI * 0.5f);
+                math::Vec3::up(), t + qe::math::PI * 0.5f);
         }
 
         case BehaviorType::Patrol: {
@@ -320,7 +320,7 @@ public:
         // Pick a random angle and rotate a forward offset around the up axis.
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> dist(0.0f, math::TWO_PI);
+        std::uniform_real_distribution<float> dist(0.0f, 6.28f);
         float random_angle = dist(gen);
         math::Quaternion dodge_rot = math::Quaternion::from_axis_angle(
             math::Vec3::up(), random_angle);

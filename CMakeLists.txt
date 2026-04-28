@@ -174,6 +174,12 @@ qe_add_test(test_particles
     LABELS unit core
 )
 
+qe_add_test(test_readiness
+    SOURCE tests/test_readiness.cpp
+    LIBS qe_core
+    LABELS unit core
+)
+
 qe_add_test(test_powerup
     SOURCE tests/test_powerup.cpp
     LIBS qe_game

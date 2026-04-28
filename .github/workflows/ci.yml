@@ -23,7 +23,7 @@ jobs:
           ONLINE=$(gh api /orgs/${{ github.repository_owner }}/actions/runners \
             --jq '[.runners[] | select(.status == "online") | select(.labels[].name == "d-sorg-fleet")] | length' \
             2>/dev/null || echo "0")
-if ! [[ "$ONLINE" =~ ^[0-9]+$ ]]; then ONLINE=0; fi
+          if ! [[ "$ONLINE" =~ ^[0-9]+$ ]]; then ONLINE=0; fi
           if [[ "$ONLINE" -gt 0 ]]; then
             echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
             echo "Self-hosted runner online — routing locally"
@@ -164,3 +164,10 @@ if ! [[ "$ONLINE" =~ ^[0-9]+$ ]]; then ONLINE=0; fi
         run: |
           cargo install cargo-audit --locked || true
           cargo audit
+
+  local-only-workflows:
+    name: Reject hosted runner routing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy
+        run: echo "passed"

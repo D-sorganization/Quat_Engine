@@ -28,7 +28,8 @@ QuatEngine/
 │   │   ├── Entity.h             #   Game object with health, bounds, state
 │   │   ├── AABB.h               #   Axis-aligned bounding box
 │   │   ├── Projectile.h         #   Projectile physics
-│   │   └── EngineConfig.h       #   Centralized configuration constants
+│   │   ├── EngineConfig.h       #   Centralized configuration constants
+│   │   └── Readiness.h          #   Embeddable /alive and /ready status surface
 │   ├── renderer/                # OpenGL 3.3 rendering (requires SDL2)
 │   │   ├── GLLoader.h           #   Minimal GL function pointer loader
 │   │   ├── Shader.h             #   GLSL compilation and uniform management
@@ -73,6 +74,7 @@ QuatEngine/
 | `Quaternion` | `qe::math` | Hamilton-convention quaternion with SLERP/NLERP |
 | `Mat4` | `qe::math` | Column-major 4x4 matrix (OpenGL layout) |
 | `Transform` | `qe::core` | Position + rotation (quaternion) + scale, cached matrix |
+| `HealthStatus` | `qe::core` | Machine-readable `/alive` and `/ready` status records for hosts |
 | `Camera` | `qe::renderer` | Dual FPS/TPS camera with SLERP smoothing |
 | `Shader` | `qe::renderer` | GLSL compile/link and uniform setters |
 | `Mesh` | `qe::renderer` | GPU geometry with primitive generators (cube, sphere, etc.) |
@@ -173,6 +175,10 @@ Gamepad (Xbox layout) is fully supported in both modes.
 ## Configuration
 
 Engine defaults (window size, camera speed, fog, lighting, etc.) are centralized in `src/core/EngineConfig.h`. Modify constants there to tune the engine without searching through application code.
+
+## Health and Readiness
+
+QuatEngine is an embeddable C++ engine, not a network service, so it does not start an HTTP server. Hosts and launchers can expose `qe::core::alive_status()` as `/alive` and `qe::core::ready_status(...)` as `/ready`, then serialize either status with `qe::core::to_json(...)`.
 
 ## Key Concepts
 
