@@ -26,6 +26,10 @@ cmake-build-*/
 Thumbs.db
 .DS_Store
 
+# Python cache
+__pycache__/
+*.py[cod]
+
 # Compiled test binaries (Linux, no extension)
 test_particles
 test_powerup
@@ -38,6 +42,12 @@ tests/test_weapons
 
 # Package managers
 vcpkg_installed/
+
+# Coverage data
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
 
 # Environment / secrets
 .env
