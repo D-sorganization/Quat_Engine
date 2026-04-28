@@ -1,0 +1,43 @@
+name: SAST
+
+on:
+  push:
+    branches: [ main, 'claude/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-sast:
+    name: bandit-python-scan
+    runs-on: d-sorg-fleet
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Bandit
+        run: python3 -m pip install bandit
+
+      - name: Run Bandit on Python files
+        run: |
+          bandit -r . -f json -o bandit_output.json || true
+          # Also generate human-readable summary
+          bandit -r . -f txt -o bandit_summary.txt || true
+
+      - name: Upload SAST artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-report
+          path: |
+            bandit_output.json
+            bandit_summary.txt
+
+      - name: Check for high-severity issues
+        run: |
+          if [ -s bandit_output.json ]; then
+            HIGH=$(python3 -c "import json,sys; d=json.load(open('bandit_output.json')); print(len([r for r in d.get('results',[]) if r.get('issue_severity')=='HIGH']))" 2>/dev/null || echo "0")
+            if [ "$HIGH" -gt 0 ]; then
+              echo "::error::Found $HIGH high-severity security issues"
+              exit 1
+            fi
+          fi
+          echo "No high-severity issues found"
