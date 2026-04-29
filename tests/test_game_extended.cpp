@@ -24,6 +24,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 
 
 // ============================================================================
@@ -214,6 +216,48 @@ void test_scoring_multiplier_at_boundaries() {
     combo.register_hit();  // streak=4
     combo.register_hit();  // streak=5
     ASSERT_NEAR(combo.multiplier(), 2.0f, 1e-5f);
+}
+
+void test_scoring_record_kill_rejects_negative_base_score() {
+    qe::game::ScoreTracker tracker;
+    ASSERT_THROWS_AS(tracker.record_kill(-1), std::invalid_argument);
+}
+
+void test_scoring_record_kill_rejects_invalid_powerup_multiplier() {
+    qe::game::ScoreTracker tracker;
+    ASSERT_THROWS_AS(tracker.record_kill(100, 0.99f), std::invalid_argument);
+    ASSERT_THROWS_AS(
+        tracker.record_kill(100, std::numeric_limits<float>::quiet_NaN()),
+        std::invalid_argument
+    );
+}
+
+void test_scoring_record_kill_rejects_negative_wave_bonus() {
+    qe::game::ScoreTracker tracker;
+    ASSERT_THROWS_AS(tracker.record_kill(100, 1.0f, -1), std::invalid_argument);
+}
+
+void test_scoring_add_bonus_rejects_negative_points() {
+    qe::game::ScoreTracker tracker;
+    ASSERT_THROWS_AS(tracker.add_bonus(-1), std::invalid_argument);
+}
+
+void test_scoring_update_rejects_invalid_dt() {
+    qe::game::ScoreTracker tracker;
+    ASSERT_THROWS_AS(tracker.update(-0.1f), std::invalid_argument);
+    ASSERT_THROWS_AS(
+        tracker.update(std::numeric_limits<float>::infinity()),
+        std::invalid_argument
+    );
+}
+
+void test_combo_update_rejects_invalid_dt() {
+    qe::game::ComboState combo;
+    ASSERT_THROWS_AS(combo.update(-0.1f), std::invalid_argument);
+    ASSERT_THROWS_AS(
+        combo.update(std::numeric_limits<float>::quiet_NaN()),
+        std::invalid_argument
+    );
 }
 
 // ============================================================================
@@ -440,6 +484,12 @@ int main() {
     RUN_TEST(test_combo_register_kill_increments_total_kills);
     RUN_TEST(test_combo_reset_clears_total_kills);
     RUN_TEST(test_scoring_multiplier_at_boundaries);
+    RUN_TEST(test_scoring_record_kill_rejects_negative_base_score);
+    RUN_TEST(test_scoring_record_kill_rejects_invalid_powerup_multiplier);
+    RUN_TEST(test_scoring_record_kill_rejects_negative_wave_bonus);
+    RUN_TEST(test_scoring_add_bonus_rejects_negative_points);
+    RUN_TEST(test_scoring_update_rejects_invalid_dt);
+    RUN_TEST(test_combo_update_rejects_invalid_dt);
 
     std::cout << "\n--- TargetBehavior Extended ---" << std::endl;
     RUN_TEST(test_behavior_dodge_rotation_with_offset);
