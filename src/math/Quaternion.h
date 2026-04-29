@@ -44,9 +44,13 @@ struct Quaternion {
 
     // --- Factory Methods ---
 
-    /** Create from axis-angle representation.
-     *  @param axis  Rotation axis (will be normalized).
-     *  @param angle Rotation angle in radians.
+    /** Create a quaternion from axis-angle representation.
+     *  Converts a rotation axis and angle to quaternion form.
+     *  Uses the half-angle formula: q = (cos(theta/2), sin(theta/2) * axis).
+     *  @param axis  Rotation axis (will be normalized internally)
+     *  @param angle Rotation angle in radians (positive = counterclockwise when looking along axis)
+     *  @return Unit quaternion representing the rotation
+     *  @complexity O(1) - axis normalization, sin/cos, and multiplications
      */
     static Quaternion from_axis_angle(const Vec3& axis, float angle) {
         Vec3 normalized_axis = axis.normalized();
@@ -60,10 +64,15 @@ struct Quaternion {
         };
     }
 
-    /** Create from Euler angles (yaw-pitch-roll, intrinsic ZYX convention).
-     *  @param pitch Rotation around X axis (radians).
-     *  @param yaw   Rotation around Y axis (radians).
-     *  @param roll  Rotation around Z axis (radians).
+    /** Create a quaternion from Euler angles.
+     *  Uses the yaw-pitch-roll convention with intrinsic ZYX rotation order.
+     *  Useful for intuitive camera or character facing angles.
+     *  Note: This order can produce gimbal lock for pitch = ±π/2.
+     *  @param pitch Rotation around X axis in radians (typically -π/2 to π/2)
+     *  @param yaw   Rotation around Y axis in radians (typically 0 to 2π)
+     *  @param roll  Rotation around Z axis in radians (typically -π to π)
+     *  @return Unit quaternion representing the combined rotation
+     *  @complexity O(1) - six sin/cos operations + quaternion algebra
      */
     static Quaternion from_euler(float pitch, float yaw, float roll) {
         float cy = std::cos(yaw * 0.5f);
@@ -81,7 +90,14 @@ struct Quaternion {
         };
     }
 
-    /** Create a quaternion that rotates from direction 'from' to direction 'to'. */
+    /** Create a quaternion that rotates the 'from' direction to the 'to' direction.
+     *  Computes the shortest rotation between two normalized directions.
+     *  Handles special cases: parallel vectors (returns identity) and anti-parallel vectors (180° rotation).
+     *  @param from Source direction (will be normalized)
+     *  @param to   Target direction (will be normalized)
+     *  @return Unit quaternion representing the rotation from 'from' to 'to'
+     *  @complexity O(1) - normalization, dot product, cross product, and quaternion operations
+     */
     static Quaternion from_two_vectors(const Vec3& from, const Vec3& to) {
         Vec3 a = from.normalized();
         Vec3 b = to.normalized();
@@ -110,7 +126,11 @@ struct Quaternion {
         return Quaternion(w_val, cross.x, cross.y, cross.z).normalized();
     }
 
-    /** Identity quaternion (no rotation). */
+    /** Return the identity quaternion (no rotation).
+     *  Represents a zero-angle rotation around any axis.
+     *  @return Unit quaternion (1, 0, 0, 0)
+     *  @complexity O(1)
+     */
     static constexpr Quaternion identity() noexcept {
         return {1.0f, 0.0f, 0.0f, 0.0f};
     }
@@ -118,7 +138,12 @@ struct Quaternion {
     // --- Core Operations ---
 
     /** Quaternion multiplication (Hamilton product).
-     *  Composes rotations: (q1 * q2) applies q2 first, then q1.
+     *  Composes two rotations: (q1 * q2) applies q2 first, then q1.
+     *  Used to chain rotations and build rotation sequences.
+     *  Not commutative: q1 * q2 != q2 * q1.
+     *  @param rhs The right quaternion
+     *  @return Product quaternion representing composed rotation
+     *  @complexity O(1) - 16 multiplications, 12 additions
      */
     constexpr Quaternion operator*(const Quaternion& rhs) const noexcept {
         return {

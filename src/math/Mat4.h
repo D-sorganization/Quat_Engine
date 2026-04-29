@@ -49,7 +49,13 @@ struct Mat4 {
 
     // --- Transform Factories ---
 
-    /** Translation matrix. */
+    /** Create a translation matrix.
+     *  Builds an identity matrix with translation in the last column.
+     *  Applied as: result * position_vector = translated_position.
+     *  @param t Translation vector in world space
+     *  @return 4x4 translation matrix
+     *  @complexity O(1) - identity creation + 3 assignments
+     */
     static Mat4 translation(const Vec3& t) noexcept {
         Mat4 result = identity();
         result.m[3][0] = t.x;
@@ -58,7 +64,13 @@ struct Mat4 {
         return result;
     }
 
-    /** Scale matrix. */
+    /** Create a scaling matrix.
+     *  Builds a diagonal matrix that scales each axis independently.
+     *  Applied as: result * position = scaled_position.
+     *  @param s Scale factors for X, Y, Z axes
+     *  @return 4x4 scale matrix
+     *  @complexity O(1) - 4 assignments
+     */
     static Mat4 scale(const Vec3& s) noexcept {
         Mat4 result;
         result.m[0][0] = s.x;
@@ -68,7 +80,13 @@ struct Mat4 {
         return result;
     }
 
-    /** Rotation matrix from quaternion. */
+    /** Create a rotation matrix from a quaternion.
+     *  Converts a unit quaternion to its equivalent 4x4 rotation matrix.
+     *  Avoids gimbal lock and provides numerically stable rotations.
+     *  @param q Unit quaternion representing the rotation
+     *  @return 4x4 rotation matrix (no translation or scale)
+     *  @complexity O(1) - fixed number of multiplications and assignments (~24 ops)
+     */
     static Mat4 rotation(const Quaternion& q) noexcept {
         Mat4 result;
 
@@ -98,7 +116,15 @@ struct Mat4 {
         return result;
     }
 
-    /** Model matrix: Translation * Rotation * Scale (TRS order). */
+    /** Create a model (TRS) matrix from Translation, Rotation, and Scale.
+     *  Combines the three transforms in the standard order: Translation * Rotation * Scale.
+     *  This produces a matrix that transforms from local object space to world space.
+     *  @param pos World-space position (translation)
+     *  @param rot Rotation as a unit quaternion
+     *  @param scl Scale factors for each axis
+     *  @return Combined 4x4 transformation matrix in TRS order
+     *  @complexity O(1) - three matrix multiplications (fixed 16x4x4 matrix multiplies each)
+     */
     static Mat4 trs(const Vec3& pos, const Quaternion& rot,
                     const Vec3& scl) noexcept {
         Mat4 t = translation(pos);
@@ -109,11 +135,15 @@ struct Mat4 {
 
     // --- Camera Matrices ---
 
-    /** Perspective projection matrix.
-     *  @param fov_y   Vertical field of view in radians.
-     *  @param aspect  Width / height ratio.
-     *  @param near_z  Near clipping plane distance.
-     *  @param far_z   Far clipping plane distance.
+    /** Create a perspective projection matrix.
+     *  Builds a standard OpenGL-style perspective matrix that maps a camera's view frustum
+     *  to the canonical [-1,1]^3 cube (with depth typically 0 to 1).
+     *  @param fov_y   Vertical field of view in radians (e.g., 1.57 for ~90 degrees)
+     *  @param aspect  Viewport width / height ratio (e.g., 16/9 = 1.778)
+     *  @param near_z  Near clipping plane distance (must be > 0, typically 0.01-1.0)
+     *  @param far_z   Far clipping plane distance (must be > near_z, typically 1000+)
+     *  @return 4x4 perspective projection matrix
+     *  @complexity O(1) - tan + 5 divisions + 5 assignments
      */
     static Mat4 perspective(float fov_y, float aspect,
                             float near_z, float far_z) noexcept {
@@ -128,10 +158,15 @@ struct Mat4 {
         return result;
     }
 
-    /** Look-at view matrix.
-     *  @param eye    Camera position.
-     *  @param target Point to look at.
-     *  @param world_up  World up direction (typically {0,1,0}).
+    /** Create a look-at view matrix.
+     *  Builds a view matrix that positions and orients a camera to look at a target point.
+     *  Constructs an orthonormal basis from the eye position, target, and world up vector.
+     *  Result transforms from world space to camera (view) space.
+     *  @param eye      World-space camera position
+     *  @param target   World-space point the camera should look at
+     *  @param world_up World-space up reference vector (typically {0,1,0})
+     *  @return 4x4 view matrix (camera to world transformation)
+     *  @complexity O(1) - two vector subtractions, two cross products, normalizations, and assignments
      */
     static Mat4 look_at(const Vec3& eye, const Vec3& target,
                         const Vec3& world_up) {
