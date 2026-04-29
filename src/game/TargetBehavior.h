@@ -19,6 +19,10 @@
  *   - Spiral:   Orbit with time-varying radius
  *   - Patrol:   Waypoint traversal with SLERP-smoothed turning between legs
  *   - Dodge:    Random quaternion-based lateral dodge when alerted
+ *
+ * Complexity: all factory methods, position/rotation evaluation, alert, and
+ * update operations are O(1) time and O(1) auxiliary space. Patrol uses a
+ * fixed five-waypoint loop rather than a dynamic path container.
  */
 
 #include "../math/Constants.h"
@@ -168,7 +172,9 @@ public:
 
     // --- Core Methods ---
 
-    /** Compute the world-space position for this behavior at a given time. */
+    /** Compute the world-space position for this behavior at a given time.
+     *  Complexity: O(1) time and O(1) auxiliary space.
+     */
     math::Vec3 compute_position(float time) const {
         switch (type) {
         case BehaviorType::Static:
@@ -231,6 +237,7 @@ public:
 
     /** Compute the facing quaternion for this behavior at a given time.
      *  Uses SLERP to produce smooth, continuous rotations.
+     *  Complexity: O(1) time and O(1) auxiliary space.
      */
     math::Quaternion compute_rotation(float time) const {
         switch (type) {

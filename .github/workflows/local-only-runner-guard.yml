@@ -2,9 +2,6 @@ name: Local-Only Workflow Runner Guard
 
 on:
   pull_request:
-    paths:
-      - ".github/workflows/**"
-      - "scripts/check_local_only_workflows.py"
   push:
     branches: [main]
     paths:

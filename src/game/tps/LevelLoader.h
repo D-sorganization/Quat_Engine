@@ -5,6 +5,12 @@
 /**
  * @file LevelLoader.h
  * @brief JSON-backed TPS level loader and parser helpers.
+ *
+ * Complexity: the lightweight parser helpers scan strings with std::string
+ * find/substr. Loading a level is O(n + s * m) time and O(n + s) space in
+ * practice, where n is JSON byte length, s is spawn entry count, and m is the
+ * average spawn entry object length; top-level field extraction performs a
+ * bounded number of passes over the level text.
  */
 
 #include "LevelTypes.h"
@@ -181,6 +187,10 @@ inline TPSWeaponType parse_weapon_type(const std::string& s) {
     throw std::runtime_error("Unknown TPSWeaponType: " + s);
 }
 
+/** Parse spawn_table entries.
+ *  Complexity: O(n + s * m) time and O(s) space, where n is the level JSON
+ *  length, s is spawn entry count, and m is average entry object length.
+ */
 inline std::vector<SpawnEntry> parse_spawn_table(const std::string& json) {
     std::string arr = json_value(json, "spawn_table");
     std::vector<SpawnEntry> table;
@@ -263,6 +273,11 @@ inline std::string load_level_json(int level) {
 
 } // namespace detail
 
+/** Load and parse a TPS level definition.
+ *  Complexity: O(n + s * m) time and O(n + s) space for current helper-based
+ *  field extraction, where n is JSON byte length, s is spawn entry count, and
+ *  m is average spawn entry object length.
+ */
 inline LevelData make_level(int level) {
     assert(level >= 1 && level <= TOTAL_LEVELS && "make_level: level out of range");
 

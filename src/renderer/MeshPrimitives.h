@@ -19,6 +19,15 @@
  *   create_wedge()       — triangular prism / ramp
  *   create_pyramid()     — square-base pyramid
  *   create_grid()        — reference grid lines on XZ (use GL_LINES)
+ *
+ * Complexity:
+ *   - Fixed primitives (cube, floor, wedge, pyramid) are O(1) CPU work/space.
+ *   - Cylinder and cone are O(s) for s radial segments.
+ *   - Capsule is O(s * r) for s segments and r latitude rings.
+ *   - Grid is O(n) for n = abs(half_size) because it emits 4 * (2n + 1)
+ *     vertices for non-negative half_size.
+ *   - Sphere is O(4^d) for d subdivisions because each triangle splits into
+ *     four triangles per subdivision.
  */
 
 #include "../math/Constants.h"
@@ -36,7 +45,9 @@ namespace renderer {
 //  rebuilding Mesh.h translation units when generators change.)
 // ---------------------------------------------------------------------------
 
-/** Unit cube with per-face normals, colors, and UV coordinates. */
+/** Unit cube with per-face normals, colors, and UV coordinates.
+ *  Complexity: O(1) CPU work/space before GPU upload.
+ */
 inline Mesh create_cube() {
     Mesh mesh;
     std::vector<Vertex> vertices = {
@@ -83,7 +94,9 @@ inline Mesh create_cube() {
     return mesh;
 }
 
-/** Large textured floor plane on XZ. UVs tile the texture. */
+/** Large textured floor plane on XZ. UVs tile the texture.
+ *  Complexity: O(1) CPU work/space before GPU upload.
+ */
 inline Mesh create_floor_plane(float half_size = 20.0f, float uv_scale = 4.0f) {
     Mesh mesh;
     float s = half_size;
@@ -101,7 +114,9 @@ inline Mesh create_floor_plane(float half_size = 20.0f, float uv_scale = 4.0f) {
     return mesh;
 }
 
-/** Low-poly sphere (icosphere with subdivisions). */
+/** Low-poly sphere (icosphere with subdivisions).
+ *  Complexity: O(4^subdivisions) CPU work/space before GPU upload.
+ */
 inline Mesh create_sphere(int subdivisions = 2, float r = 0.5f,
                            float cr = 0.8f, float cg = 0.6f, float cb = 0.3f) {
     Mesh mesh;
@@ -165,7 +180,9 @@ inline Mesh create_sphere(int subdivisions = 2, float r = 0.5f,
     return mesh;
 }
 
-/** Unit cylinder along Y axis with per-face normals. */
+/** Unit cylinder along Y axis with per-face normals.
+ *  Complexity: O(segments) CPU work/space before GPU upload.
+ */
 inline Mesh create_cylinder(int segments = 16, float radius = 0.5f, float height = 1.0f,
                               float cr = 0.6f, float cg = 0.6f, float cb = 0.6f) {
     Mesh mesh;
@@ -259,7 +276,9 @@ inline Mesh create_cylinder(int segments = 16, float radius = 0.5f, float height
     return mesh;
 }
 
-/** Cone along Y axis (apex at top). */
+/** Cone along Y axis (apex at top).
+ *  Complexity: O(segments) CPU work/space before GPU upload.
+ */
 inline Mesh create_cone(int segments = 16, float radius = 0.5f, float height = 1.0f,
                          float cr = 0.7f, float cg = 0.5f, float cb = 0.3f) {
     Mesh mesh;
@@ -340,7 +359,9 @@ inline Mesh create_cone(int segments = 16, float radius = 0.5f, float height = 1
     return mesh;
 }
 
-/** Capsule (cylinder with hemisphere caps) along Y axis. */
+/** Capsule (cylinder with hemisphere caps) along Y axis.
+ *  Complexity: O(segments * rings) CPU work/space before GPU upload.
+ */
 inline Mesh create_capsule(int segments = 16, int rings = 8,
                              float radius = 0.3f, float height = 1.0f,
                              float cr = 0.5f, float cg = 0.7f, float cb = 0.9f) {
@@ -436,7 +457,9 @@ inline Mesh create_capsule(int segments = 16, int rings = 8,
     return mesh;
 }
 
-/** Wedge/ramp shape — triangular prism along Z axis. */
+/** Wedge/ramp shape — triangular prism along Z axis.
+ *  Complexity: O(1) CPU work/space before GPU upload.
+ */
 inline Mesh create_wedge(float cr = 0.5f, float cg = 0.4f, float cb = 0.3f) {
     Mesh mesh;
     std::vector<Vertex> vertices;
@@ -483,7 +506,9 @@ inline Mesh create_wedge(float cr = 0.5f, float cg = 0.4f, float cb = 0.3f) {
     return mesh;
 }
 
-/** Pyramid with square base, apex at Y+. */
+/** Pyramid with square base, apex at Y+.
+ *  Complexity: O(1) CPU work/space before GPU upload.
+ */
 inline Mesh create_pyramid(float cr = 0.7f, float cg = 0.6f, float cb = 0.3f) {
     Mesh mesh;
     std::vector<Vertex> vertices;
@@ -551,7 +576,9 @@ inline Mesh create_pyramid(float cr = 0.7f, float cg = 0.6f, float cb = 0.3f) {
     return mesh;
 }
 
-/** Grid lines on XZ plane (for spatial reference; draw with GL_LINES). */
+/** Grid lines on XZ plane (for spatial reference; draw with GL_LINES).
+ *  Complexity: O(abs(half_size)) CPU work/space before GPU upload.
+ */
 inline Mesh create_grid(int half_size = 10, float spacing = 1.0f) {
     Mesh mesh;
     std::vector<Vertex> vertices;

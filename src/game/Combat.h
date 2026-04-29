@@ -50,6 +50,8 @@ struct CombatConfig {
  *  @pre config.projectile_speed > 0
  *  @pre config.projectile_damage > 0
  *  @pre config.projectile_lifetime > 0
+ *  Complexity: O(e) time for e entities; O(1) auxiliary space plus one
+ *  appended projectile.
  */
 inline void shoot(const math::Vec3& origin, const math::Vec3& direction,
                   const CombatConfig& config,
@@ -95,6 +97,7 @@ inline void shoot(const math::Vec3& origin, const math::Vec3& direction,
 
 /** Update all projectiles and remove dead ones.
  *  @pre dt >= 0
+ *  Complexity: O(p) time for p projectiles; O(1) auxiliary space.
  */
 inline void update_projectiles(std::vector<core::Projectile>& projectiles, float dt) {
     assert(dt >= 0.0f && "update_projectiles: dt must be non-negative");
@@ -107,6 +110,8 @@ inline void update_projectiles(std::vector<core::Projectile>& projectiles, float
 
 /** Check projectile-entity AABB collisions.
  *  @pre kill_score >= 0
+ *  Complexity: O(p * e) time for p projectiles and e entities; O(1)
+ *  auxiliary space.
  */
 inline void check_projectile_collisions(
         std::vector<core::Projectile>& projectiles,

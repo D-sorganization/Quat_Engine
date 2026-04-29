@@ -18,11 +18,14 @@ the public surface of ``src/game/Weapons.h``.
 from __future__ import annotations
 
 import importlib.util
+import logging
 import re
 import sys
 from pathlib import Path
 
 import pytest
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC = REPO_ROOT / "src"
@@ -71,11 +74,30 @@ def _forbidden_layer_includes(
     source_subdir: str, forbidden_prefixes: tuple[str, ...]
 ) -> list[tuple[Path, str]]:
     """Find any includes in ``source_subdir`` that reference forbidden layers."""
+    logger.debug(
+        "Checking for forbidden layer includes",
+        extra={
+            "source_subdir": source_subdir,
+            "forbidden_prefixes": forbidden_prefixes,
+        },
+    )
     violations: list[tuple[Path, str]] = []
     for file in _iter_headers(source_subdir):
         for inc in _resolved_includes(file):
             if inc.startswith(forbidden_prefixes):
+                logger.warning(
+                    "Found forbidden layer include",
+                    extra={"file": str(file), "include": inc},
+                )
                 violations.append((file, inc))
+    if violations:
+        logger.error(
+            "Forbidden layer includes detected",
+            extra={
+                "source_subdir": source_subdir,
+                "violation_count": len(violations),
+            },
+        )
     return violations
 
 
@@ -84,8 +106,11 @@ def _forbidden_layer_includes(
 
 def test_math_has_no_upward_dependencies():
     """``src/math`` is the foundation — it must not include from any other layer."""
+    logger.info("Testing math layer has no upward dependencies")
     forbidden = ("core/", "renderer/", "input/", "game/", "demo/")
     violations = _forbidden_layer_includes("math", forbidden)
+    if not violations:
+        logger.info("Math layer dependency check passed")
     assert not violations, f"math/ has forbidden upward includes: {violations}"
 
 

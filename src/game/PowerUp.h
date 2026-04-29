@@ -189,7 +189,10 @@ public:
 
     // --- Update ---
 
-    /** Update all pickups and effects, removing expired ones. */
+    /** Update all pickups and effects, removing expired ones.
+     *  Complexity: O(p + e) time for p pickups and e active effects; O(1)
+     *  auxiliary space.
+     */
     void update(float dt) {
         // Update pickups
         for (auto& p : pickups_) {
@@ -219,6 +222,7 @@ public:
     /**
      * Check collection against player position.
      * Returns PowerUpType as int, or -1 if nothing collected.
+     * Complexity: O(p) time for p pickups; O(1) auxiliary space.
      */
     int try_collect(const math::Vec3& player_pos) {
         for (auto& p : pickups_) {
@@ -248,6 +252,8 @@ public:
      * Eliminates duplicated iteration in get_fire_rate_multiplier(),
      * get_damage_multiplier(), get_score_multiplier(), and
      * get_enemy_speed_multiplier(). See D-sorganization/QuatEngine#93.
+     *
+     * Complexity: O(e) time for e active effects; O(1) auxiliary space.
      */
     float get_effect_value(PowerUpType type, float default_val = 1.0f) const {
         for (const auto& e : effects_) {
