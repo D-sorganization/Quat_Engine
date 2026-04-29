@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
@@ -10,6 +11,8 @@ from pathlib import Path
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = REPO_ROOT / "src"
@@ -113,11 +116,17 @@ int main(int argc, char** argv) {
 def _compiler() -> str | None:
     configured = os.environ.get("CXX")
     if configured:
+        logger.debug("Using configured C++ compiler", extra={"compiler": configured})
         return configured
     for candidate in ("c++", "g++", "clang++"):
         path = shutil.which(candidate)
         if path:
+            logger.debug(
+                "Found C++ compiler in PATH",
+                extra={"compiler": candidate, "path": path},
+            )
             return path
+    logger.warning("No C++ compiler found in system PATH")
     return None
 
 
@@ -125,12 +134,21 @@ def _compiler() -> str | None:
 def math_probe(tmp_path_factory: pytest.TempPathFactory) -> Path:
     compiler = _compiler()
     if compiler is None:
+        logger.error("No C++ compiler found for Hypothesis math probe")
         pytest.skip("No C++ compiler found for Hypothesis math probe")
 
     build_dir = tmp_path_factory.mktemp("qe_math_probe")
     source = build_dir / "math_property_probe.cpp"
     executable = build_dir / (
         "math_property_probe.exe" if os.name == "nt" else "math_property_probe"
+    )
+    logger.info(
+        "Building math property probe",
+        extra={
+            "source": str(source),
+            "executable": str(executable),
+            "compiler": compiler,
+        },
     )
     source.write_text(PROBE_SOURCE, encoding="utf-8")
 
@@ -149,10 +167,15 @@ def math_probe(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         capture_output=True,
     )
+    logger.debug("Math property probe built successfully", extra={"executable": str(executable)})
     return executable
 
 
 def _run_probe(executable: Path, *args: float | str) -> list[float]:
+    logger.debug(
+        "Running math probe",
+        extra={"executable": str(executable), "arg_count": len(args)},
+    )
     completed = subprocess.run(
         [str(executable), *(str(arg) for arg in args)],
         check=True,
@@ -160,7 +183,12 @@ def _run_probe(executable: Path, *args: float | str) -> list[float]:
         text=True,
         capture_output=True,
     )
-    return [float(part) for part in completed.stdout.split()]
+    results = [float(part) for part in completed.stdout.split()]
+    logger.debug(
+        "Math probe execution completed",
+        extra={"result_count": len(results)},
+    )
+    return results
 
 
 @settings(

@@ -41,12 +41,21 @@ struct Entity {
     int id = 0;
     bool destructible = true;
 
-    /** Get world-space AABB. */
+    /** Get world-space AABB.
+     *  Transforms the local-space bounding box to world coordinates using position and scale.
+     *  @return World-space AABB
+     *  @complexity O(1) - only performs 6 scalar multiplications and additions
+     */
     AABB world_bounds() const {
         return local_bounds.transformed(position, scale);
     }
 
-    /** Apply damage. Returns true if this killed the entity. */
+    /** Apply damage to this entity.
+     *  Reduces health, triggers hit flash visual feedback, and handles entity death state.
+     *  @param dmg Damage amount (will be subtracted from health)
+     *  @return True if this damage killed the entity (health <= 0), false otherwise
+     *  @complexity O(1) - constant time damage application and state update
+     */
     bool take_damage(float dmg) {
         if (!alive || !destructible) return false;
 
@@ -62,7 +71,12 @@ struct Entity {
         return false;
     }
 
-    /** Update entity state (hit flash decay, death animation, respawn). */
+    /** Update entity state for a given delta time.
+     *  Handles hit flash animation decay, death animation timer, and respawn logic.
+     *  Call once per frame with the frame delta time.
+     *  @param dt Delta time in seconds
+     *  @complexity O(1) - only updates internal timers and conditionals
+     */
     void update(float dt) {
         if (hit_flash > 0.0f) {
             hit_flash -= dt;
@@ -77,7 +91,11 @@ struct Entity {
         }
     }
 
-    /** Respawn at original position with full health. */
+    /** Respawn the entity at its original spawn position.
+     *  Restores health to maximum, resets death timers, and marks entity as alive.
+     *  Used when respawn_delay has elapsed or when explicitly respawning.
+     *  @complexity O(1) - only updates member variables
+     */
     void respawn() {
         position = spawn_position;
         health = max_health;
@@ -86,7 +104,12 @@ struct Entity {
         hit_flash = 0.0f;
     }
 
-    /** Health as 0-1 fraction. */
+    /** Get health as a normalized 0-1 fraction.
+     *  Useful for rendering health bars and UI displays.
+     *  Returns 0.0 if max_health is 0 to avoid division by zero.
+     *  @return Health fraction: 0.0 (dead) to 1.0 (full health)
+     *  @complexity O(1) - single division operation
+     */
     float health_fraction() const {
         return max_health > 0.0f ? health / max_health : 0.0f;
     }
