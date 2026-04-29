@@ -37,12 +37,16 @@ def main() -> int:
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logger.debug("Workflow file required UTF-8-sig encoding", extra={"path": str(path)})
+            logger.debug(
+                "Workflow file required UTF-8-sig encoding", extra={"path": str(path)}
+            )
             text = path.read_text(encoding="utf-8-sig")
         for line_number, line in enumerate(text.splitlines(), start=1):
             for token in BANNED:
                 if token in line:
-                    failure_msg = f"{path}:{line_number}: banned hosted-runner token {token!r}"
+                    failure_msg = (
+                        f"{path}:{line_number}: banned hosted-runner token {token!r}"
+                    )
                     logger.warning(
                         "Found banned hosted-runner token",
                         extra={

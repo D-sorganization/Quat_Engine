@@ -167,7 +167,9 @@ def math_probe(tmp_path_factory: pytest.TempPathFactory) -> Path:
         text=True,
         capture_output=True,
     )
-    logger.debug("Math property probe built successfully", extra={"executable": str(executable)})
+    logger.debug(
+        "Math property probe built successfully", extra={"executable": str(executable)}
+    )
     return executable
 
 

@@ -85,7 +85,10 @@ def main() -> int:
             marker_count += 1
             if not ISSUE_RE.search(line):
                 failure_msg = f"{path}:{line_number}: debt marker lacks issue reference"
-                logger.warning("Debt marker lacks issue reference", extra={"file": str(path), "line_number": line_number})
+                logger.warning(
+                    "Debt marker lacks issue reference",
+                    extra={"file": str(path), "line_number": line_number},
+                )
                 failures.append(failure_msg)
 
     if failures:
