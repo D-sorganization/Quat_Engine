@@ -13,7 +13,8 @@ def require(condition: Callable[..., bool], message: str = "Precondition failed"
                     extra={
                         "function": func.__name__,
                         "contract_message": message,
-                        "call_args": args,
+                        "arg_count": len(args),
+                        "kwarg_count": len(kwargs),
                     },
                 )
                 raise ValueError(message)
@@ -38,7 +39,7 @@ def ensure(condition: Callable[..., bool], message: str = "Postcondition failed"
                     extra={
                         "function": func.__name__,
                         "contract_message": message,
-                        "result": result,
+                        "result_type": type(result).__name__,
                     },
                 )
                 raise RuntimeError(message)

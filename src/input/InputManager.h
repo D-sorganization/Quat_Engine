@@ -28,6 +28,14 @@
 namespace qe {
 namespace input {
 
+/**
+ * Facade that merges keyboard, mouse, and gamepad input into gameplay actions.
+ *
+ * Call begin_frame(), feed SDL events through handle_event(), then call poll()
+ * once before querying movement, look, camera, weapon, or quit actions. Query
+ * methods intentionally expose logical controls instead of SDL device details so
+ * gameplay code can stay device-agnostic.
+ */
 class InputManager {
 public:
     InputManager() = default;
@@ -141,6 +149,7 @@ public:
         return shoot_held_ || gamepad_.triggers().right > 0.5f;
     }
 
+    /** Shoot edge trigger: left click this frame or gamepad A button press. */
     bool shoot_pressed() const {
         return shoot_pressed_ || gamepad_.button_pressed(Gamepad::Button::A);
     }
@@ -183,9 +192,13 @@ public:
 
     // --- Direct Access ---
 
+    /** Read-only access to raw gamepad state for specialized UI/gameplay needs. */
     const Gamepad& gamepad() const noexcept { return gamepad_; }
+
+    /** Return whether an SDL game controller is currently open. */
     bool gamepad_connected() const noexcept { return gamepad_.is_connected(); }
 
+    /** Tune right-stick look scaling in pixels-per-frame equivalent units. */
     void set_gamepad_look_speed(float speed) noexcept {
         gamepad_look_speed_ = speed;
     }
