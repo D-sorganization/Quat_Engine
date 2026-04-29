@@ -190,6 +190,12 @@ qe_add_test(test_readiness
     LABELS unit core
 )
 
+qe_add_test(test_metrics
+    SOURCE tests/test_metrics.cpp
+    LIBS qe_core
+    LABELS unit core
+)
+
 qe_add_test(test_powerup
     SOURCE tests/test_powerup.cpp
     LIBS qe_game

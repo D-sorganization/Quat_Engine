@@ -26,7 +26,7 @@
 | **Owner** | D-sorganization |
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
-| **Spec Version** | 1.0.15 |
+| **Spec Version** | 1.0.16 |
 | **Last Spec Update** | 2026-04-28 |
 
 ## 2. Purpose & Mission
@@ -74,6 +74,7 @@ QuatEngine/
 │   │   ├── Transform.h
 │   │   ├── Rng.h               # Shared xorshift32 PRNG
 │   │   ├── Logger.h            # Structured logging (DEBUG/INFO/WARN/ERROR)
+│   │   ├── Metrics.h           # In-process observability counters
 │   │   └── Readiness.h         # Embeddable /alive and /ready status records
 │   ├── renderer/                # Graphics pipeline
 │   │   ├── GLLoader.h
@@ -126,6 +127,7 @@ QuatEngine/
 | Transform Component | `src/core/Transform.h` | Game object positioning and rotation |
 | PRNG | `src/core/Rng.h` | Deterministic xorshift32 random number generator |
 | Logger | `src/core/Logger.h` | Structured logging with compile-time and runtime level control |
+| Metrics | `src/core/Metrics.h` | In-process counters with Prometheus text serialization for health/readiness probes |
 | Readiness | `src/core/Readiness.h` | Embeddable `/alive` and `/ready` status records for host processes |
 | GL Renderer | `src/renderer/GLLoader.h` | OpenGL initialization and context management |
 | Shader System | `src/renderer/Shader.h` | GLSL compilation, linking, and uniform management |
@@ -158,6 +160,7 @@ QuatEngine/
 | F8 | Post-Processing Pipeline | ✅ | Screen-space effects: bloom, blur, color grading |
 | F9 | NLERP vs. SLERP Visualization | ✅ | Comparison tool showing interpolation differences |
 | F10 | Health / Readiness Surface | ✅ | Header-only `/alive` and `/ready` status helpers for launchers and embedding hosts |
+| F11 | Core Observability Counters | ✅ | Header-only health/readiness counters with Prometheus-compatible text export |
 
 ### API / Interface Contract
 
@@ -219,6 +222,13 @@ auto ready = qe::core::ready_status({
 std::string payload = qe::core::to_json(ready);
 ```
 
+**Metrics API:**
+
+```cpp
+auto metrics = qe::core::Metrics::snapshot();
+std::string body = qe::core::to_prometheus(metrics);
+```
+
 ## 6. Data & Configuration
 
 ### Input Data
@@ -237,6 +247,7 @@ std::string payload = qe::core::to_json(ready);
 | Rendered Frame | Framebuffer | Screen | Real-time 3D scene via OpenGL |
 | Screenshot | PNG | `screenshots/` | User-captured game viewport |
 | Debug Logs | TXT | `logs/` | Frame time, memory, shader compilation |
+| Metrics Snapshot | Prometheus text | Host-exposed endpoint or diagnostics sink | Health/readiness counter totals |
 
 ### Configuration
 
@@ -426,6 +437,7 @@ gcovr --print-summary --html coverage/
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-03-31 | 1.0.2 | Added self-hosted runner fallback documentation and made CI dependency setup tolerant of runners without passwordless sudo |
+| 2026-04-28 | 1.0.16 | Observability: added `src/core/Metrics.h` with health/readiness counters and Prometheus-compatible text serialization, wired readiness probes to counters, and added focused native metrics tests (closes #135) |
 | 2026-04-28 | 1.0.15 | Documentation: added Big-O complexity annotations to public math, renderer parser/generator, and gameplay helper APIs so input-size-dependent work is explicit (closes #147) |
 | 2026-04-28 | 1.0.14 | Benchmarking: added deterministic `.benchmarks` math probe for quaternion SLERP/rotate and Vec3 normalize/cross workloads with finite checksum validation, wired behind `QE_BUILD_BENCHMARKS`, and added CI benchmark execution (closes #146) |
 | 2026-04-28 | 1.0.15 | Reliability: replaced `Scoring.h` debug-only public input assertions with release-active `std::invalid_argument` validation for negative scores/bonuses and non-finite timing or multiplier inputs; added focused negative-path coverage in `tests/test_game_extended.cpp` (closes #129) |
