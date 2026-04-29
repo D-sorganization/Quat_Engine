@@ -9,6 +9,9 @@
  * Column-major layout (OpenGL convention) for direct GPU upload.
  * Provides perspective projection, look-at view matrix, and
  * TRS (Translation-Rotation-Scale) model matrix construction.
+ *
+ * Complexity: matrix factories, 4x4 multiplication, and Vec3 transforms are
+ * O(1) time and O(1) auxiliary space because Mat4 has fixed 4x4 storage.
  */
 
 #include "Quaternion.h"
