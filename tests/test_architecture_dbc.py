@@ -180,6 +180,8 @@ def test_ensure_decorator_enforces_postcondition():
 # ── Weapons.h public contract surface ──────────────────────────────────────
 
 WEAPONS_H = SRC / "game" / "Weapons.h"
+INPUT_MANAGER_H = SRC / "input" / "InputManager.h"
+TPS_INPUT_H = SRC / "game" / "tps" / "TPSInput.h"
 
 
 def _weapons_source() -> str:
@@ -274,3 +276,63 @@ def test_weapons_header_fire_respects_can_fire():
     assert re.search(
         r"void\s+fire\s*\(\s*\)\s*\{\s*if\s*\(\s*!can_fire\(\)\s*\)\s*return", source
     ), "fire() no longer short-circuits on !can_fire()"
+
+
+# ── Scroll-wheel audit contract (issue #206) ───────────────────────────────
+
+
+def test_repo_has_no_editable_value_widget_framework_markers():
+    """QuatEngine ships no editable value widgets that wheel input could mutate.
+
+    The repo currently uses SDL gameplay input only. If a future change adds an
+    immediate-mode GUI or widget toolkit with editable controls, this test
+    forces an explicit audit instead of silently inheriting wheel-driven value
+    changes from the framework defaults.
+    """
+
+    forbidden_markers = (
+        "#include <imgui",
+        "#include \"imgui",
+        "ImGui::Input",
+        "ImGui::Slider",
+        "ImGui::Combo",
+        "QSpinBox",
+        "QDoubleSpinBox",
+        "QComboBox",
+        "QSlider",
+        "QDial",
+        "QLineEdit",
+        "nk_property",
+        "nk_combo",
+        "nk_slide",
+    )
+
+    offenders: list[tuple[str, str]] = []
+    for file in _iter_headers(""):
+        text = file.read_text(encoding="utf-8", errors="ignore")
+        for marker in forbidden_markers:
+            if marker in text:
+                offenders.append((str(file.relative_to(REPO_ROOT)), marker))
+
+    assert not offenders, (
+        "Editable UI widget markers were found in QuatEngine source. "
+        "Audit their wheel behavior before merging: "
+        f"{offenders}"
+    )
+
+
+def test_mouse_wheel_is_routed_through_gameplay_scroll_only():
+    """Mouse wheel input must stay a logical gameplay signal, not UI mutation."""
+
+    input_manager = INPUT_MANAGER_H.read_text(encoding="utf-8")
+    assert "case SDL_MOUSEWHEEL:" in input_manager
+    assert "scroll_ += static_cast<float>(event.wheel.y);" in input_manager
+    assert "float zoom() const" in input_manager
+    assert "return scroll_ + gp;" in input_manager
+
+
+def test_tps_wheel_exception_is_documented_as_weapon_selection():
+    """The only approved wheel exception is gameplay weapon selection."""
+
+    source = TPS_INPUT_H.read_text(encoding="utf-8")
+    assert "D-pad / Mouse Wheel   → Weapon select direct" in source

@@ -26,8 +26,8 @@
 | **Owner** | D-sorganization |
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
-| **Spec Version** | 1.0.16 |
-| **Last Spec Update** | 2026-04-28 |
+| **Spec Version** | 1.0.17 |
+| **Last Spec Update** | 2026-05-07 |
 
 ## 2. Purpose & Mission
 
@@ -60,6 +60,11 @@ QuatEngine is a modern C++ 3D game engine built from first principles with a foc
 ### System Context
 
 QuatEngine is a standalone, self-contained engine with no external fleet dependencies. It depends on SDL2 (auto-fetched via CMake FetchContent) and OpenGL. Optionally, the project roadmap includes potential migration to Unreal Engine as Phase 6, but this is exploratory and not a dependency.
+
+The runtime currently exposes gameplay input only; it does not ship editable
+application widgets such as spin boxes, combo boxes, sliders, or text-entry
+fields. Mouse-wheel input is therefore reserved for gameplay controls
+(camera zoom plus TPS weapon selection) rather than mutable UI values.
 
 ### Module Map
 
@@ -161,6 +166,7 @@ QuatEngine/
 | F9 | NLERP vs. SLERP Visualization | ✅ | Comparison tool showing interpolation differences |
 | F10 | Health / Readiness Surface | ✅ | Header-only `/alive` and `/ready` status helpers for launchers and embedding hosts |
 | F11 | Core Observability Counters | ✅ | Header-only health/readiness counters with Prometheus-compatible text export |
+| F12 | Scroll-wheel value safety | ✅ | The engine ships no editable value widgets; mouse-wheel input is limited to gameplay zoom and TPS weapon selection, with source-contract coverage guarding future UI drift |
 
 ### API / Interface Contract
 
