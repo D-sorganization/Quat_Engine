@@ -22,12 +22,6 @@ BANNED = (
     "runner=macos-latest",
 )
 
-# The tripwire workflow itself MUST run on ubuntu-latest by design.
-# It is the ONE intentional hosted-runner workflow that catches drift in others.
-ALLOWLIST_FILES = {
-    'local-only-runner-guard.yml',
-}
-
 
 def main() -> int:
     logger.info("Starting GitHub Actions workflow validation")
@@ -38,9 +32,6 @@ def main() -> int:
 
     for path in sorted(WORKFLOW_DIR.rglob("*")):
         if path.suffix not in {".yml", ".yaml"}:
-            continue
-        if path.name in ALLOWLIST_FILES:
-            logger.debug("Skipping allowlisted tripwire file", extra={"path": str(path)})
             continue
         logger.debug("Validating workflow file", extra={"path": str(path)})
         try:
