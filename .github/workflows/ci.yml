@@ -33,6 +33,7 @@ jobs:
             exit 1
           fi
   build-and-test:
+    timeout-minutes: 90
     name: quality-gate
     needs: pick-runner
     runs-on: ${{ needs.pick-runner.outputs.runner }}

@@ -29,6 +29,7 @@ jobs:
             exit 1
           fi
   heavy-tests:
+    timeout-minutes: 60
     needs: pick-runner
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     steps:
