@@ -112,7 +112,7 @@ jobs:
                       continue
                   values = collect_runs_on(job)
                   if not values:
-                      # Could be an expression like ${{ needs.pick-runner.outputs.runner }};
+                      # Could be a GHA expression (e.g. needs.pick-runner.outputs.runner);
                       # treat the raw expression text as the value to inspect.
                       raw = job.get("runs-on")
                       if isinstance(raw, str):
