@@ -6,7 +6,6 @@
  */
 
 #include "demo/App.h"
-
 #include "demo/RuntimeSession.h"
 #include "math/Quaternion.h"
 #include "math/Vec3.h"
@@ -34,9 +33,8 @@ void spawn_wave_targets(App& app) {
 
     for (int i = 0; i < count; ++i) {
         const float angle = (2.0f * PI * i) / count;
-        const float radius = cfg.spawn_radius_min +
-                             (cfg.spawn_radius_max - cfg.spawn_radius_min) *
-                                 (static_cast<float>(i % 5) / 5.0f);
+        const float radius = cfg.spawn_radius_min + (cfg.spawn_radius_max - cfg.spawn_radius_min) *
+                                                        (static_cast<float>(i % 5) / 5.0f);
         const float height = 1.0f + (i % 4) * 0.8f;
         const Vec3 pos(std::cos(angle) * radius, height, std::sin(angle) * radius);
 
@@ -44,10 +42,7 @@ void spawn_wave_targets(App& app) {
         entity.id = i;
         entity.position = pos;
         entity.spawn_position = pos;
-        entity.scale = Vec3(
-            0.7f + (i % 3) * 0.3f,
-            0.7f + (i % 3) * 0.3f,
-            0.7f + (i % 3) * 0.3f);
+        entity.scale = Vec3(0.7f + (i % 3) * 0.3f, 0.7f + (i % 3) * 0.3f, 0.7f + (i % 3) * 0.3f);
         entity.health = hp;
         entity.max_health = hp;
         entity.local_bounds = AABB::from_center(Vec3::zero(), 0.5f);
@@ -59,8 +54,7 @@ void spawn_wave_targets(App& app) {
                 behavior = TargetBehavior::create_orbit(pos, 3.0f, speed * 0.8f, angle);
                 break;
             case 1:
-                behavior =
-                    TargetBehavior::create_figure8(pos, 2.5f, speed * 0.6f, angle);
+                behavior = TargetBehavior::create_figure8(pos, 2.5f, speed * 0.6f, angle);
                 break;
             case 2:
                 behavior = TargetBehavior::create_zigzag(pos, 2.0f, speed, angle);
@@ -92,8 +86,7 @@ void handle_events(App& app) {
             app.running = false;
             return;
         }
-        if (ev.type == SDL_WINDOWEVENT &&
-            ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        if (ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             qe::renderer::gl::glViewport(0, 0, ev.window.data1, ev.window.data2);
             app.camera.set_aspect(static_cast<float>(ev.window.data1) / ev.window.data2);
             if (app.post_process) {
@@ -112,19 +105,25 @@ void handle_events(App& app) {
     }
     if (app.input.toggle_wireframe()) {
         app.wireframe = !app.wireframe;
-        qe::renderer::gl::glPolygonMode(
-            GL_FRONT_AND_BACK, app.wireframe ? GL_LINE : GL_FILL);
+        qe::renderer::gl::glPolygonMode(GL_FRONT_AND_BACK, app.wireframe ? GL_LINE : GL_FILL);
     }
 
     const Uint8* keys = SDL_GetKeyboardState(nullptr);
     if (keys) {
-        if (keys[SDL_SCANCODE_1]) app.weapons.switch_weapon(0);
-        if (keys[SDL_SCANCODE_2]) app.weapons.switch_weapon(1);
-        if (keys[SDL_SCANCODE_3]) app.weapons.switch_weapon(2);
-        if (keys[SDL_SCANCODE_4]) app.weapons.switch_weapon(3);
-        if (keys[SDL_SCANCODE_5]) app.weapons.switch_weapon(4);
-        if (keys[SDL_SCANCODE_Q]) app.weapons.prev_weapon();
-        if (keys[SDL_SCANCODE_E]) app.weapons.next_weapon();
+        if (keys[SDL_SCANCODE_1])
+            app.weapons.switch_weapon(0);
+        if (keys[SDL_SCANCODE_2])
+            app.weapons.switch_weapon(1);
+        if (keys[SDL_SCANCODE_3])
+            app.weapons.switch_weapon(2);
+        if (keys[SDL_SCANCODE_4])
+            app.weapons.switch_weapon(3);
+        if (keys[SDL_SCANCODE_5])
+            app.weapons.switch_weapon(4);
+        if (keys[SDL_SCANCODE_Q])
+            app.weapons.prev_weapon();
+        if (keys[SDL_SCANCODE_E])
+            app.weapons.next_weapon();
     }
 
     if (app.input.reset()) {
@@ -145,7 +144,7 @@ void handle_events(App& app) {
         app.slerp_on = false;
     }
     if (app.input.slerp_on()) {
-        app.camera.set_smoothing(qe::config::DEFAULT_CAMERA_SMOOTHING);
+        app.camera.set_smoothing(qe::config::DEFAULT_CAMERA_SMOOTHING());
         app.slerp_on = true;
     }
 }
@@ -155,12 +154,11 @@ void handle_events(App& app) {
 static void update_camera(App& app, float dt) {
     app.camera.process_mouse(app.input.look_x(), app.input.look_y());
     app.camera.process_scroll(app.input.zoom());
-    app.camera.process_movement(
-        app.input.move_forward(),
-        app.input.move_right(),
-        app.input.move_up(),
-        app.input.sprint(),
-        dt);
+    app.camera.process_movement(app.input.move_forward(),
+                                app.input.move_right(),
+                                app.input.move_up(),
+                                app.input.sprint(),
+                                dt);
     app.camera.update(dt);
 }
 
@@ -186,9 +184,9 @@ static void update_combat_config(App& app) {
     app.combat_cfg.fire_rate = weapon.fire_rate * fire_rate_mult;
     app.combat_cfg.projectile_damage = weapon.damage * damage_mult;
     app.combat_cfg.projectile_speed = weapon.projectile_speed;
-    app.combat_cfg.projectile_lifetime = qe::config::PROJECTILE_LIFETIME;
-    app.combat_cfg.projectile_radius = qe::config::PROJECTILE_RADIUS;
-    app.combat_cfg.kill_score = qe::config::KILL_SCORE;
+    app.combat_cfg.projectile_lifetime = qe::config::PROJECTILE_LIFETIME();
+    app.combat_cfg.projectile_radius = qe::config::PROJECTILE_RADIUS();
+    app.combat_cfg.kill_score = qe::config::KILL_SCORE();
 }
 
 static void process_new_kills(App& app, const qe::math::Vec3& /*dir*/) {
@@ -198,10 +196,9 @@ static void process_new_kills(App& app, const qe::math::Vec3& /*dir*/) {
     for (auto& ent : app.entities) {
         if (!ent.alive && ent.health <= 0 && ent.death_timer < 0.01f) {
             const float score_mult = app.powerups.get_score_multiplier();
-            app.score.record_kill(
-                app.combat_cfg.kill_score,
-                score_mult,
-                app.waves.wave_config().bonus_points / 10);
+            app.score.record_kill(app.combat_cfg.kill_score,
+                                  score_mult,
+                                  app.waves.wave_config().bonus_points / 10);
 
             auto death_cfg = qe::renderer::ParticleSystem::preset_death_burst();
             death_cfg.position = ent.position;
@@ -210,10 +207,8 @@ static void process_new_kills(App& app, const qe::math::Vec3& /*dir*/) {
             app.powerups.try_spawn_random(ent.position + Vec3(0, 0.5f, 0));
 
             for (size_t j = 0; j < app.behaviors.size(); ++j) {
-                if (app.behaviors[j].type == BehaviorType::Dodge &&
-                    app.entities[j].alive) {
-                    const float dist =
-                        ent.position.distance_to(app.entities[j].position);
+                if (app.behaviors[j].type == BehaviorType::Dodge && app.entities[j].alive) {
+                    const float dist = ent.position.distance_to(app.entities[j].position);
                     if (dist < 8.0f) {
                         app.behaviors[j].alert();
                     }
@@ -234,18 +229,12 @@ static void update_shooting(App& app) {
 
     app.weapons.fire();
 
-    const auto directions =
-        app.weapons.compute_fire_directions(app.camera.forward(), Vec3::up());
+    const auto directions = app.weapons.compute_fire_directions(app.camera.forward(), Vec3::up());
 
     for (const auto& dir : directions) {
         qe::game::CombatStats dummy_stats;
         qe::game::shoot(
-            app.camera.position(),
-            dir,
-            app.combat_cfg,
-            app.projectiles,
-            app.entities,
-            dummy_stats);
+            app.camera.position(), dir, app.combat_cfg, app.projectiles, app.entities, dummy_stats);
 
         if (dummy_stats.total_hits > 0) {
             app.score.record_hit();
@@ -257,8 +246,7 @@ static void update_shooting(App& app) {
 
         auto muzzle_cfg = qe::renderer::ParticleSystem::preset_muzzle_flash();
         muzzle_cfg.position = app.camera.position() + dir * 0.8f;
-        muzzle_cfg.orientation =
-            qe::math::Quaternion::from_two_vectors(Vec3(0, 0, 1), dir);
+        muzzle_cfg.orientation = qe::math::Quaternion::from_two_vectors(Vec3(0, 0, 1), dir);
         app.particles.emit(muzzle_cfg);
     }
 }
@@ -341,24 +329,18 @@ void update(App& app, float dt) {
 }
 
 void update_title(App& app) {
-    const char* mode = (app.camera.mode() == qe::renderer::CameraMode::FirstPerson)
-                           ? "FPS"
-                           : "TPS";
+    const char* mode = (app.camera.mode() == qe::renderer::CameraMode::FirstPerson) ? "FPS" : "TPS";
     const int alive = count_alive(app.entities);
-    const std::string_view weapon_name =
-        weapon_name_for_index(app.weapons.current_index());
+    const std::string_view weapon_name = weapon_name_for_index(app.weapons.current_index());
     const char* combo = app.score.combo().combo_name();
 
     std::ostringstream title;
     title << "QuatEngine | " << static_cast<int>(app.current_fps) << " FPS"
-          << " | " << mode
-          << " | Wave:" << app.waves.current_wave()
-          << " | Score:" << app.score.score()
-          << " | " << weapon_name;
+          << " | " << mode << " | Wave:" << app.waves.current_wave()
+          << " | Score:" << app.score.score() << " | " << weapon_name;
 
     if (app.weapons.current().max_ammo != -1) {
-        title << " [" << app.weapons.current().ammo << "/"
-              << app.weapons.current().max_ammo << "]";
+        title << " [" << app.weapons.current().ammo << "/" << app.weapons.current().max_ammo << "]";
     }
 
     title << " | Targets:" << alive << "/" << app.entities.size();

@@ -4,10 +4,10 @@
 
 /**
  * @file EngineConfig.h
- * @brief Centralized engine configuration constants.
+ * @brief Centralized engine configuration variables resolved at runtime.
  *
  * All hardcoded "magic numbers" from main.cpp, tps_main.cpp, and subsystems
- * are collected here so they can be tuned from a single location.
+ * are resolved dynamically via ConfigManager.
  *
  * Categories:
  *   - Window:     Default resolution, title, OpenGL version
@@ -17,62 +17,122 @@
  *   - Physics:    Max delta-time cap, gravity
  */
 
+#include "ConfigManager.h"
+
+#include <string>
+
 namespace qe {
 namespace config {
 
 // ── Window Defaults ────────────────────────────────────────────────────────
 
-constexpr int    DEFAULT_WINDOW_WIDTH   = 1280;
-constexpr int    DEFAULT_WINDOW_HEIGHT  = 720;
-constexpr char   WINDOW_TITLE[]         = "QuatEngine";
-constexpr int    GL_MAJOR_VERSION       = 3;
-constexpr int    GL_MINOR_VERSION       = 3;
-constexpr int    MSAA_SAMPLES           = 4;
+inline int DEFAULT_WINDOW_WIDTH() {
+    return ConfigManager::instance().get_default_window_width();
+}
+inline int DEFAULT_WINDOW_HEIGHT() {
+    return ConfigManager::instance().get_default_window_height();
+}
+inline std::string WINDOW_TITLE() {
+    return ConfigManager::instance().get_window_title();
+}
+inline int GL_MAJOR_VERSION() {
+    return ConfigManager::instance().get_gl_major_version();
+}
+inline int GL_MINOR_VERSION() {
+    return ConfigManager::instance().get_gl_minor_version();
+}
+inline int MSAA_SAMPLES() {
+    return ConfigManager::instance().get_msaa_samples();
+}
 
 // ── Timing ─────────────────────────────────────────────────────────────────
 
 /** Maximum frame delta-time (seconds).  Prevents physics explosions on lag. */
-constexpr float  MAX_DELTA_TIME         = 0.1f;
+inline float MAX_DELTA_TIME() {
+    return ConfigManager::instance().get_max_delta_time();
+}
 
 /** Interval (seconds) between FPS counter updates in the title bar. */
-constexpr float  FPS_UPDATE_INTERVAL    = 0.5f;
+inline float FPS_UPDATE_INTERVAL() {
+    return ConfigManager::instance().get_fps_update_interval();
+}
 
 // ── Rendering ──────────────────────────────────────────────────────────────
 
-constexpr float  CLEAR_R = 0.02f;
-constexpr float  CLEAR_G = 0.02f;
-constexpr float  CLEAR_B = 0.06f;
-constexpr float  CLEAR_A = 1.0f;
+inline float CLEAR_R() {
+    return ConfigManager::instance().get_clear_r();
+}
+inline float CLEAR_G() {
+    return ConfigManager::instance().get_clear_g();
+}
+inline float CLEAR_B() {
+    return ConfigManager::instance().get_clear_b();
+}
+inline float CLEAR_A() {
+    return ConfigManager::instance().get_clear_a();
+}
 
-constexpr float  FOG_NEAR  = 30.0f;
-constexpr float  FOG_FAR   = 80.0f;
+inline float FOG_NEAR() {
+    return ConfigManager::instance().get_fog_near();
+}
+inline float FOG_FAR() {
+    return ConfigManager::instance().get_fog_far();
+}
 
-constexpr float  RIM_POWER = 3.0f;
+inline float RIM_POWER() {
+    return ConfigManager::instance().get_rim_power();
+}
 
-constexpr int    MAX_POINT_LIGHTS = 8;
+inline int MAX_POINT_LIGHTS() {
+    return ConfigManager::instance().get_max_point_lights();
+}
 
 // ── Camera Defaults ────────────────────────────────────────────────────────
 
-constexpr float  DEFAULT_CAMERA_SMOOTHING    = 0.85f;
-constexpr float  DEFAULT_CAMERA_MOVE_SPEED   = 5.0f;
-constexpr float  DEFAULT_CAMERA_SPRINT_MULT  = 2.5f;
-constexpr float  DEFAULT_CAMERA_SENSITIVITY  = 0.003f;
+inline float DEFAULT_CAMERA_SMOOTHING() {
+    return ConfigManager::instance().get_default_camera_smoothing();
+}
+inline float DEFAULT_CAMERA_MOVE_SPEED() {
+    return ConfigManager::instance().get_default_camera_move_speed();
+}
+inline float DEFAULT_CAMERA_SPRINT_MULT() {
+    return ConfigManager::instance().get_default_camera_sprint_mult();
+}
+inline float DEFAULT_CAMERA_SENSITIVITY() {
+    return ConfigManager::instance().get_default_camera_sensitivity();
+}
 
 // TPS orbit
-constexpr float  DEFAULT_ORBIT_DISTANCE      = 5.0f;
-constexpr float  DEFAULT_ORBIT_HEIGHT         = 2.0f;
-constexpr float  DEFAULT_ORBIT_SMOOTHING      = 0.9f;
+inline float DEFAULT_ORBIT_DISTANCE() {
+    return ConfigManager::instance().get_default_orbit_distance();
+}
+inline float DEFAULT_ORBIT_HEIGHT() {
+    return ConfigManager::instance().get_default_orbit_height();
+}
+inline float DEFAULT_ORBIT_SMOOTHING() {
+    return ConfigManager::instance().get_default_orbit_smoothing();
+}
 
 // ── Gameplay ───────────────────────────────────────────────────────────────
 
-constexpr float  PROJECTILE_LIFETIME   = 3.0f;
-constexpr float  PROJECTILE_RADIUS     = 0.08f;
-constexpr int    KILL_SCORE            = 100;
-constexpr float  GAMEPAD_LOOK_SPEED    = 5.0f;
+inline float PROJECTILE_LIFETIME() {
+    return ConfigManager::instance().get_projectile_lifetime();
+}
+inline float PROJECTILE_RADIUS() {
+    return ConfigManager::instance().get_projectile_radius();
+}
+inline int KILL_SCORE() {
+    return ConfigManager::instance().get_kill_score();
+}
+inline float GAMEPAD_LOOK_SPEED() {
+    return ConfigManager::instance().get_gamepad_look_speed();
+}
 
 // ── Physics ────────────────────────────────────────────────────────────────
 
-constexpr float  DEFAULT_GRAVITY       = -9.8f;
+inline float DEFAULT_GRAVITY() {
+    return ConfigManager::instance().get_default_gravity();
+}
 
-} // namespace config
-} // namespace qe
+}  // namespace config
+}  // namespace qe
