@@ -26,8 +26,8 @@
 | **Owner** | D-sorganization |
 | **Primary Language(s)** | C++17 |
 | **License** | MIT |
-| **Spec Version** | 1.0.17 |
-| **Last Spec Update** | 2026-05-07 |
+| **Spec Version** | 1.0.18 |
+| **Last Spec Update** | 2026-05-22 |
 
 ## 2. Purpose & Mission
 
@@ -77,6 +77,8 @@ QuatEngine/
 │   │   └── Mat4.h
 │   ├── core/                    # Component system, transforms, utilities
 │   │   ├── Transform.h
+│   │   ├── ConfigManager.h      # Runtime config defaults, dotenv, and environment overrides
+│   │   ├── EngineConfig.h       # Accessors for resolved engine configuration values
 │   │   ├── Rng.h               # Shared xorshift32 PRNG
 │   │   ├── Logger.h            # Structured logging (DEBUG/INFO/WARN/ERROR)
 │   │   ├── Metrics.h           # In-process observability counters
@@ -130,6 +132,7 @@ QuatEngine/
 |-----------|----------|---------|
 | Math Library | `src/math/` | Vec3, Quaternion, Mat4 with SLERP, matrix ops |
 | Transform Component | `src/core/Transform.h` | Game object positioning and rotation |
+| Runtime Configuration | `src/core/ConfigManager.h`, `src/core/EngineConfig.h` | Centralized engine defaults with dotenv and environment-variable overrides |
 | PRNG | `src/core/Rng.h` | Deterministic xorshift32 random number generator |
 | Logger | `src/core/Logger.h` | Structured logging with compile-time and runtime level control |
 | Metrics | `src/core/Metrics.h` | In-process counters with Prometheus text serialization for health/readiness probes |
@@ -167,6 +170,7 @@ QuatEngine/
 | F10 | Health / Readiness Surface | ✅ | Header-only `/alive` and `/ready` status helpers for launchers and embedding hosts |
 | F11 | Core Observability Counters | ✅ | Header-only health/readiness counters with Prometheus-compatible text export |
 | F12 | Scroll-wheel value safety | ✅ | The engine ships no editable value widgets; mouse-wheel input is limited to gameplay zoom and TPS weapon selection, with source-contract coverage guarding future UI drift |
+| F13 | Runtime Configuration Overrides | ✅ | Engine defaults for windowing, rendering, camera, gameplay, and physics can be loaded from `.env` files or process environment variables through `ConfigManager` |
 
 ### API / Interface Contract
 
@@ -260,7 +264,8 @@ std::string body = qe::core::to_prometheus(metrics);
 Configuration is managed via:
 - **CMake variables**: Engine features, SDL2 version, OpenGL profile
 - **JSON config files**: Input bindings, graphics settings (resolution, FOV, lighting)
-- **Environment variables**: Debug logging level, asset paths
+- **Environment variables**: Debug logging level, asset paths, and `QE_*` runtime overrides for window size/title, OpenGL version, MSAA, timing, clear color, fog, camera defaults, projectile settings, kill score, gamepad look speed, and gravity
+- **Dotenv files**: Optional `.env` files can be parsed before environment overrides; `.env.example` documents supported keys and valid value ranges
 - **Shader compilation flags**: Optimization level, extensions enabled
 
 ## 7. Testing Specification
@@ -268,6 +273,7 @@ Configuration is managed via:
 ### Testing Strategy
 
 Three-tier testing with unit tests for math (vectors, quaternions), integration tests for renderer systems, and heavy integration tests for full game loops. Labels distinguish quick unit tests (run in every CI) from slow integration/render tests (run selectively). Coverage tracked via gcov/gcovr. Demo runtime helpers are kept in native ctest coverage so `main.cpp` can stay a thin composition root. Python pytest coverage includes architecture/contract checks plus Hypothesis-backed properties that compile a temporary C++ probe against the real math headers.
+Runtime configuration has dedicated native coverage in `tests/test_config.cpp` for defaults, dotenv-style stream parsing, validation failures, and parse errors.
 
 ### Test Organization
 
@@ -444,6 +450,7 @@ gcovr --print-summary --html coverage/
 |------|---------|---------|
 | 2026-03-31 | 1.0.2 | Added self-hosted runner fallback documentation and made CI dependency setup tolerant of runners without passwordless sudo |
 | 2026-04-28 | 1.0.16 | Observability: added `src/core/Metrics.h` with health/readiness counters and Prometheus-compatible text serialization, wired readiness probes to counters, and added focused native metrics tests (closes #135) |
+| 2026-05-22 | 1.0.18 | Runtime configuration: added `src/core/ConfigManager.h` and runtime-backed `EngineConfig.h` accessors for dotenv and environment overrides, documented supported `QE_*` keys in `.env.example`, and added `tests/test_config.cpp` coverage for defaults, parsing, and validation |
 | 2026-04-28 | 1.0.15 | Documentation: added Big-O complexity annotations to public math, renderer parser/generator, and gameplay helper APIs so input-size-dependent work is explicit (closes #147) |
 | 2026-04-28 | 1.0.14 | Benchmarking: added deterministic `.benchmarks` math probe for quaternion SLERP/rotate and Vec3 normalize/cross workloads with finite checksum validation, wired behind `QE_BUILD_BENCHMARKS`, and added CI benchmark execution (closes #146) |
 | 2026-04-28 | 1.0.15 | Reliability: replaced `Scoring.h` debug-only public input assertions with release-active `std::invalid_argument` validation for negative scores/bonuses and non-finite timing or multiplier inputs; added focused negative-path coverage in `tests/test_game_extended.cpp` (closes #129) |
