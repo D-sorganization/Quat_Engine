@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
 
   # ── Dispatcher: route to self-hosted if available ──────────────────────────
@@ -62,6 +66,14 @@ jobs:
           python3 -m pip install --user $PIP_BREAK_SYSTEM_PACKAGES pytest pytest-cov hypothesis
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: Resolve CMake executable
+        run: |
+          if [ -x /usr/bin/cmake ]; then
+            echo "CMAKE_BIN=/usr/bin/cmake" >> "$GITHUB_ENV"
+          else
+            echo "CMAKE_BIN=$(command -v cmake)" >> "$GITHUB_ENV"
+          fi
+
       - name: Run Python contract tests with coverage
         run: |
           mkdir -p build
@@ -80,10 +92,12 @@ jobs:
             build/python-coverage.xml
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
+        run: |
+          "$CMAKE_BIN" -S . -B build -DCMAKE_BUILD_TYPE=Debug -DQE_BUILD_DEMO=OFF -DQE_ENABLE_COVERAGE=ON
 
       - name: Build native test suite
-        run: cmake --build build --parallel
+        run: |
+          "$CMAKE_BIN" --build build --parallel
 
       - name: Run unit tests
         run: ctest --test-dir build --output-on-failure -L unit
@@ -92,10 +106,12 @@ jobs:
         run: ctest --test-dir build --output-on-failure -L integration
 
       - name: Configure benchmarks
-        run: cmake -S . -B build-bench -DCMAKE_BUILD_TYPE=Release -DQE_BUILD_DEMO=OFF -DQE_BUILD_BENCHMARKS=ON
+        run: |
+          "$CMAKE_BIN" -S . -B build-bench -DCMAKE_BUILD_TYPE=Release -DQE_BUILD_DEMO=OFF -DQE_BUILD_BENCHMARKS=ON
 
       - name: Build benchmark probes
-        run: cmake --build build-bench --target qe_math_benchmark --parallel
+        run: |
+          "$CMAKE_BIN" --build build-bench --target qe_math_benchmark --parallel
 
       - name: Run benchmark probes
         run: ctest --test-dir build-bench --output-on-failure -L benchmark

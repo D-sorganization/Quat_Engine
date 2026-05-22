@@ -11,12 +11,16 @@
  */
 
 #include "core/EngineConfig.h"
-#include "game/tps/TPSGameState.h"
-#include "game/tps/TPSScene.h"
-#include "game/tps/TPSHUD.h"
 #include "game/tps/DamageFeedback.h"
-
+#include "game/tps/TPSGameState.h"
+#include "game/tps/TPSHUD.h"
+#include "game/tps/TPSScene.h"
+#include "input/InputManager.h"
+#include "math/Mat4.h"
+#include "math/Quaternion.h"
+#include "math/Vec3.h"
 #include "renderer/Camera.h"
+#include "renderer/GLLoader.h"
 #include "renderer/HUD.h"
 #include "renderer/Mesh.h"
 #include "renderer/MeshPrimitives.h"
@@ -24,16 +28,12 @@
 #include "renderer/PostProcess.h"
 #include "renderer/Shader.h"
 
-#include "input/InputManager.h"
-
-#include "math/Mat4.h"
-#include "math/Quaternion.h"
-#include "math/Vec3.h"
-
-#include <SDL.h>
 #include <iostream>
 #include <memory>
 #include <string>
+
+#include <SDL.h>
+using namespace qe::renderer::gl;
 
 // ── App State ────────────────────────────────────────────────────────────────
 
@@ -41,8 +41,8 @@ struct TPSApp {
     SDL_Window* window = nullptr;
     SDL_GLContext gl_context = nullptr;
     bool running = true;
-    int window_w = qe::config::DEFAULT_WINDOW_WIDTH;
-    int window_h = qe::config::DEFAULT_WINDOW_HEIGHT;
+    int window_w = qe::config::DEFAULT_WINDOW_WIDTH();
+    int window_h = qe::config::DEFAULT_WINDOW_HEIGHT();
 
     // Engine systems
     qe::input::InputManager input;
@@ -89,23 +89,43 @@ static void shutdown(TPSApp& app);
 /** Draw the mesh corresponding to a SceneObjectType. */
 static void draw_mesh(TPSApp& app, qe::game::tps::SceneObjectType type) {
     switch (type) {
-        case qe::game::tps::SceneObjectType::Cube:     app.cube.draw(); break;
-        case qe::game::tps::SceneObjectType::Sphere:   app.sphere.draw(); break;
-        case qe::game::tps::SceneObjectType::Floor:    app.floor_mesh.draw(); break;
-        case qe::game::tps::SceneObjectType::Cylinder: app.cylinder.draw(); break;
-        case qe::game::tps::SceneObjectType::Cone:     app.cone.draw(); break;
-        case qe::game::tps::SceneObjectType::Capsule:  app.capsule.draw(); break;
-        case qe::game::tps::SceneObjectType::Wedge:    app.wedge.draw(); break;
-        case qe::game::tps::SceneObjectType::Pyramid:  app.pyramid.draw(); break;
+        case qe::game::tps::SceneObjectType::Cube:
+            app.cube.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Sphere:
+            app.sphere.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Floor:
+            app.floor_mesh.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Cylinder:
+            app.cylinder.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Cone:
+            app.cone.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Capsule:
+            app.capsule.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Wedge:
+            app.wedge.draw();
+            break;
+        case qe::game::tps::SceneObjectType::Pyramid:
+            app.pyramid.draw();
+            break;
     }
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 int main(int /*argc*/, char** /*argv*/) {
+    // Load config from .env and environment
+    qe::config::ConfigManager::instance().load();
+
     TPSApp app;
 
-    if (!init_window(app)) return 1;
+    if (!init_window(app))
+        return 1;
     init_gl(app);
     init_assets(app);
 
@@ -115,10 +135,10 @@ int main(int /*argc*/, char** /*argv*/) {
 
     // Set camera to TPS mode
     app.camera.set_mode(qe::renderer::CameraMode::ThirdPerson);
-    app.camera.config.orbit_distance = qe::config::DEFAULT_ORBIT_DISTANCE;
-    app.camera.config.orbit_height = qe::config::DEFAULT_ORBIT_HEIGHT;
-    app.camera.config.orbit_smoothing = qe::config::DEFAULT_ORBIT_SMOOTHING;
-    app.camera.config.sensitivity = qe::config::DEFAULT_CAMERA_SENSITIVITY;
+    app.camera.config.orbit_distance = qe::config::DEFAULT_ORBIT_DISTANCE();
+    app.camera.config.orbit_height = qe::config::DEFAULT_ORBIT_HEIGHT();
+    app.camera.config.orbit_smoothing = qe::config::DEFAULT_ORBIT_SMOOTHING();
+    app.camera.config.sensitivity = qe::config::DEFAULT_CAMERA_SENSITIVITY();
 
     Uint64 prev_time = SDL_GetPerformanceCounter();
     Uint64 freq = SDL_GetPerformanceFrequency();
@@ -127,7 +147,8 @@ int main(int /*argc*/, char** /*argv*/) {
         Uint64 now = SDL_GetPerformanceCounter();
         float dt = static_cast<float>(now - prev_time) / static_cast<float>(freq);
         prev_time = now;
-        if (dt > qe::config::MAX_DELTA_TIME) dt = qe::config::MAX_DELTA_TIME;
+        if (dt > qe::config::MAX_DELTA_TIME())
+            dt = qe::config::MAX_DELTA_TIME();
 
         app.time += dt;
 
@@ -135,14 +156,15 @@ int main(int /*argc*/, char** /*argv*/) {
         update(app, dt);
 
         // Render
-        if (app.post_process) app.post_process->bind();
+        if (app.post_process)
+            app.post_process->bind();
 
         render_world(app);
         render_particles(app);
 
         if (app.post_process) {
             app.post_process->unbind();
-            app.post_process->draw();
+            app.post_process->render(app.time);
         }
 
         render_hud(app);
@@ -151,7 +173,7 @@ int main(int /*argc*/, char** /*argv*/) {
         // FPS counter
         app.fps_frames++;
         app.fps_timer += dt;
-        if (app.fps_timer >= qe::config::FPS_UPDATE_INTERVAL) {
+        if (app.fps_timer >= qe::config::FPS_UPDATE_INTERVAL()) {
             app.current_fps = static_cast<float>(app.fps_frames) / app.fps_timer;
             app.fps_frames = 0;
             app.fps_timer = 0.0f;
@@ -170,16 +192,17 @@ static bool init_window(TPSApp& app) {
         return false;
     }
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, qe::config::GL_MAJOR_VERSION);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, qe::config::GL_MINOR_VERSION);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, qe::config::GL_MAJOR_VERSION());
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, qe::config::GL_MINOR_VERSION());
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, qe::config::MSAA_SAMPLES);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, qe::config::MSAA_SAMPLES());
 
-    app.window = SDL_CreateWindow(
-        "QuatEngine TPS — Wasteland Protocol",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        app.window_w, app.window_h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    app.window = SDL_CreateWindow("QuatEngine TPS — Wasteland Protocol",
+                                  SDL_WINDOWPOS_CENTERED,
+                                  SDL_WINDOWPOS_CENTERED,
+                                  app.window_w,
+                                  app.window_h,
+                                  SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (!app.window) {
         std::cerr << "Window Error: " << SDL_GetError() << std::endl;
@@ -204,9 +227,9 @@ static void init_gl(TPSApp& app) {
 }
 
 static void init_assets(TPSApp& app) {
-    app.world_shader.load("shaders/world.vert", "shaders/world.frag");
-    app.particle_shader.load("shaders/particle.vert", "shaders/particle.frag");
-    app.hud_shader.load("shaders/hud.vert", "shaders/hud.frag");
+    app.world_shader.load_from_files("shaders/world.vert", "shaders/world.frag");
+    app.particle_shader.load_from_files("shaders/particle.vert", "shaders/particle.frag");
+    app.hud_shader.load_from_files("shaders/hud.vert", "shaders/hud.frag");
 
     app.cube = qe::renderer::create_cube();
     app.sphere = qe::renderer::create_sphere(2, 0.5f);
@@ -221,13 +244,12 @@ static void init_assets(TPSApp& app) {
     app.hud.init_crosshair();
     app.input.init();
 
-    app.post_process = std::make_unique<qe::renderer::PostProcess>(
-        app.window_w, app.window_h);
+    app.post_process = std::make_unique<qe::renderer::PostProcess>(app.window_w, app.window_h);
 
     app.camera.config.fov_y = 1.0472f;
     app.camera.config.aspect = static_cast<float>(app.window_w) / app.window_h;
-    app.camera.config.move_speed = qe::config::DEFAULT_CAMERA_MOVE_SPEED;
-    app.camera.config.smoothing = qe::config::DEFAULT_CAMERA_SMOOTHING;
+    app.camera.config.move_speed = qe::config::DEFAULT_CAMERA_MOVE_SPEED();
+    app.camera.config.smoothing = qe::config::DEFAULT_CAMERA_SMOOTHING();
 }
 
 // ── Input ────────────────────────────────────────────────────────────────────
@@ -236,12 +258,16 @@ static void handle_events(TPSApp& app) {
     app.input.begin_frame();
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) { app.running = false; return; }
+        if (event.type == SDL_QUIT) {
+            app.running = false;
+            return;
+        }
         app.input.handle_event(event);
     }
     app.input.poll();
 
-    if (app.input.quit()) app.running = false;
+    if (app.input.quit())
+        app.running = false;
 }
 
 static qe::game::tps::TPSInputState build_input(TPSApp& app) {
@@ -275,12 +301,15 @@ static qe::game::tps::TPSInputState build_input(TPSApp& app) {
     prev_lock = lock_now;
 
     // Weapon switching
-    if (keys[SDL_SCANCODE_Q]) input.prev_weapon_pressed = true;
-    if (keys[SDL_SCANCODE_E]) input.next_weapon_pressed = true;
+    if (keys[SDL_SCANCODE_Q])
+        input.prev_weapon_pressed = true;
+    if (keys[SDL_SCANCODE_E])
+        input.next_weapon_pressed = true;
 
     // Number keys for weapon select
     for (int i = 0; i < 7; ++i) {
-        if (keys[SDL_SCANCODE_1 + i]) input.weapon_select = i + 1;
+        if (keys[SDL_SCANCODE_1 + i])
+            input.weapon_select = i + 1;
     }
 
     return input;
@@ -317,8 +346,8 @@ static void update(TPSApp& app, float dt) {
     if (tps_input.shoot_pressed || tps_input.shoot_held) {
         if (app.game.phase() == qe::game::tps::GamePhase::Playing) {
             auto muzzle_cfg = qe::renderer::ParticleSystem::preset_muzzle_flash();
-            muzzle_cfg.position = player.position() + qe::math::Vec3(0, 1.0f, 0)
-                + player.rotation().rotate(qe::math::Vec3(0, 0, -1.0f));
+            muzzle_cfg.position = player.position() + qe::math::Vec3(0, 1.0f, 0) +
+                                  player.rotation().rotate(qe::math::Vec3(0, 0, -1.0f));
             muzzle_cfg.orientation = player.rotation();
             app.particles.emit(muzzle_cfg);
         }
@@ -349,8 +378,7 @@ static void update(TPSApp& app, float dt) {
 static void setup_tps_world_shader(TPSApp& app) {
     const auto& env = app.game.scene_data().environment;
 
-    glClearColor(env.sky_color.x * 0.3f, env.sky_color.y * 0.3f,
-                 env.sky_color.z * 0.3f, 1.0f);
+    glClearColor(env.sky_color.x * 0.3f, env.sky_color.y * 0.3f, env.sky_color.z * 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     app.world_shader.use();
@@ -360,10 +388,11 @@ static void setup_tps_world_shader(TPSApp& app) {
     app.world_shader.set_vec3("u_CameraPos", app.camera.position());
 
     app.world_shader.set_vec3("u_LightDir",
-        env.light_direction.length_squared() > 0.01f
-        ? env.light_direction.normalized() : qe::math::Vec3(0.3f, -0.8f, 0.5f));
+                              env.light_direction.length_squared() > 0.01f
+                                  ? env.light_direction.normalized()
+                                  : qe::math::Vec3(0.3f, -0.8f, 0.5f));
     app.world_shader.set_vec3("u_LightColor",
-        qe::math::Vec3(1.0f, 0.95f, 0.9f) * env.light_intensity);
+                              qe::math::Vec3(1.0f, 0.95f, 0.9f) * env.light_intensity);
     app.world_shader.set_vec3("u_AmbientColor", env.ambient_color);
 
     app.world_shader.set_vec3("u_FogColor", env.fog_color);
@@ -376,10 +405,9 @@ static void setup_tps_world_shader(TPSApp& app) {
 static void render_tps_scene_objects(TPSApp& app) {
     // Floor
     {
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            qe::math::Vec3(0, -0.01f, 0),
-            qe::math::Quaternion::identity(),
-            app.game.scene_data().ground_scale);
+        qe::math::Mat4 model = qe::math::Mat4::trs(qe::math::Vec3(0, -0.01f, 0),
+                                                   qe::math::Quaternion::identity(),
+                                                   app.game.scene_data().ground_scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", qe::math::Vec3(0.25f, 0.22f, 0.18f));
         app.floor_mesh.draw();
@@ -387,8 +415,7 @@ static void render_tps_scene_objects(TPSApp& app) {
 
     // Cover objects
     for (const auto& obj : app.game.scene_data().cover_objects) {
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            obj.position, obj.rotation, obj.scale);
+        qe::math::Mat4 model = qe::math::Mat4::trs(obj.position, obj.rotation, obj.scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", obj.color);
         draw_mesh(app, obj.mesh_type);
@@ -396,8 +423,7 @@ static void render_tps_scene_objects(TPSApp& app) {
 
     // Decorations
     for (const auto& deco : app.game.scene_data().decorations) {
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            deco.position, deco.rotation, deco.scale);
+        qe::math::Mat4 model = qe::math::Mat4::trs(deco.position, deco.rotation, deco.scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", deco.color);
         draw_mesh(app, deco.mesh_type);
@@ -423,9 +449,10 @@ static void render_tps_characters(TPSApp& app) {
     {
         const auto& player = app.game.player();
         qe::math::Vec3 player_scale(0.4f, 0.9f, 0.4f);
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            player.position() + qe::math::Vec3(0, player_scale.y * 0.5f, 0),
-            player.rotation(), player_scale);
+        qe::math::Mat4 model =
+            qe::math::Mat4::trs(player.position() + qe::math::Vec3(0, player_scale.y * 0.5f, 0),
+                                player.rotation(),
+                                player_scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", player_class_color(player.class_type()));
         app.capsule.draw();
@@ -433,7 +460,8 @@ static void render_tps_characters(TPSApp& app) {
 
     // Enemies
     for (const auto& enemy : app.game.enemies()) {
-        if (!enemy.alive) continue;
+        if (!enemy.alive)
+            continue;
 
         qe::math::Vec3 scale = qe::game::tps::mutant_scale(enemy.config.type);
         qe::math::Vec3 color = qe::game::tps::mutant_color(enemy.config.type);
@@ -442,9 +470,10 @@ static void render_tps_characters(TPSApp& app) {
             // Recently damaged — brief white flash
         }
 
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            enemy.position + qe::math::Vec3(0, scale.y * 0.5f, 0),
-            enemy.rotation, scale);
+        qe::math::Mat4 model =
+            qe::math::Mat4::trs(enemy.position + qe::math::Vec3(0, scale.y * 0.5f, 0),
+                                enemy.rotation,
+                                scale);
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", color);
 
@@ -453,10 +482,11 @@ static void render_tps_characters(TPSApp& app) {
 
     // Projectiles
     for (const auto& proj : app.game.projectiles()) {
-        if (!proj.active) continue;
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            proj.position, qe::math::Quaternion::identity(),
-            qe::math::Vec3(0.1f, 0.1f, 0.1f));
+        if (!proj.active)
+            continue;
+        qe::math::Mat4 model = qe::math::Mat4::trs(proj.position,
+                                                   qe::math::Quaternion::identity(),
+                                                   qe::math::Vec3(0.1f, 0.1f, 0.1f));
         app.world_shader.set_mat4("u_Model", model);
         app.world_shader.set_vec3("u_Tint", proj.color);
         app.sphere.draw();
@@ -479,7 +509,8 @@ static void render_world(TPSApp& app) {
 // ── Render Particles ─────────────────────────────────────────────────────────
 
 static void render_particles(TPSApp& app) {
-    if (app.particles.alive_count() == 0) return;
+    if (app.particles.alive_count() == 0)
+        return;
 
     glDepthMask(GL_FALSE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -489,11 +520,11 @@ static void render_particles(TPSApp& app) {
     app.particle_shader.set_mat4("u_VP", vp);
 
     for (const auto& p : app.particles.particles()) {
-        if (!p.alive) continue;
+        if (!p.alive)
+            continue;
         float s = p.current_size();
         qe::math::Vec3 color = p.current_color();
-        qe::math::Mat4 model = qe::math::Mat4::trs(
-            p.position, p.rotation, qe::math::Vec3(s, s, s));
+        qe::math::Mat4 model = qe::math::Mat4::trs(p.position, p.rotation, qe::math::Vec3(s, s, s));
         app.particle_shader.set_mat4("u_Model", model);
         app.particle_shader.set_vec3("u_Color", color);
         app.particle_shader.set_float("u_Alpha", 1.0f - p.progress());
@@ -509,8 +540,7 @@ static void render_particles(TPSApp& app) {
 // ── render_hud helpers ───────────────────────────────────────────────────────
 
 /** Convert a TPSHUDBarData to a renderer HUDBar and draw it. */
-static void draw_hud_bar(qe::renderer::HUD& hud,
-                          const qe::game::tps::HUDBarData& src) {
+static void draw_hud_bar(qe::renderer::HUD& hud, const qe::game::tps::HUDBarData& src) {
     qe::renderer::HUDBar bar;
     bar.x = src.x;
     bar.y = src.y;
@@ -523,8 +553,7 @@ static void draw_hud_bar(qe::renderer::HUD& hud,
     hud.draw_bar(bar);
 }
 
-static void render_hud_status_bars(TPSApp& app,
-                                    const qe::game::tps::TPSHUDState& hud_state) {
+static void render_hud_status_bars(TPSApp& app, const qe::game::tps::TPSHUDState& hud_state) {
     draw_hud_bar(app.hud, hud_state.health_bar);
     draw_hud_bar(app.hud, hud_state.stamina_bar);
 
@@ -533,15 +562,13 @@ static void render_hud_status_bars(TPSApp& app,
     }
 }
 
-static void render_hud_combat_indicators(TPSApp& app,
-                                          const qe::game::tps::TPSHUDState& hud_state) {
+static void render_hud_combat_indicators(TPSApp& app, const qe::game::tps::TPSHUDState& hud_state) {
     // Crosshair / Lock-on reticle
     if (hud_state.lock_on_reticle.visible) {
         float rx = hud_state.lock_on_reticle.wobble_x;
         float ry = hud_state.lock_on_reticle.wobble_y;
         float pulse = hud_state.lock_on_reticle.pulse;
-        app.hud.draw_indicator(rx, ry, 0.03f + pulse * 0.01f,
-            1.0f, 0.3f, 0.2f);
+        app.hud.draw_indicator(rx, ry, 0.03f + pulse * 0.01f, 1.0f, 0.3f, 0.2f);
     } else {
         app.hud.draw_crosshair();
     }
@@ -557,8 +584,7 @@ static void render_hud_combat_indicators(TPSApp& app,
     }
 
     // Weapon slots
-    app.hud.draw_weapon_slots(hud_state.weapon_slot_current,
-                               hud_state.weapon_slot_total);
+    app.hud.draw_weapon_slots(hud_state.weapon_slot_current, hud_state.weapon_slot_total);
 
     // Damage direction indicators
     for (size_t i = 0; i < hud_state.damage_indicator_angles.size(); ++i) {
@@ -598,7 +624,7 @@ static void shutdown(TPSApp& app) {
     app.world_shader.destroy();
     app.particle_shader.destroy();
     app.hud_shader.destroy();
-    if (app.post_process) app.post_process->destroy();
+    app.post_process.reset();
 
     SDL_GL_DeleteContext(app.gl_context);
     SDL_DestroyWindow(app.window);

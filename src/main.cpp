@@ -10,6 +10,9 @@
 #include <SDL.h>
 
 int main(int /*argc*/, char* /*argv*/[]) {
+    // Load config from .env and environment
+    qe::config::ConfigManager::instance().load();
+
     qe::demo::App app;
 
     if (!qe::demo::init_window(app)) {
@@ -27,8 +30,8 @@ int main(int /*argc*/, char* /*argv*/[]) {
         float dt = static_cast<float>(now - app.last_time) /
                    static_cast<float>(SDL_GetPerformanceFrequency());
         app.last_time = now;
-        if (dt > qe::config::MAX_DELTA_TIME) {
-            dt = qe::config::MAX_DELTA_TIME;
+        if (dt > qe::config::MAX_DELTA_TIME()) {
+            dt = qe::config::MAX_DELTA_TIME();
         }
 
         qe::demo::handle_events(app);
@@ -49,7 +52,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
         ++app.frame_count;
         app.fps_timer += dt;
-        if (app.fps_timer >= qe::config::FPS_UPDATE_INTERVAL) {
+        if (app.fps_timer >= qe::config::FPS_UPDATE_INTERVAL()) {
             app.current_fps = static_cast<float>(app.frame_count) / app.fps_timer;
             qe::demo::update_title(app);
             app.frame_count = 0;

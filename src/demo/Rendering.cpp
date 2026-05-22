@@ -6,7 +6,6 @@
  */
 
 #include "demo/App.h"
-
 #include "math/Mat4.h"
 #include "math/Quaternion.h"
 #include "math/Vec3.h"
@@ -32,14 +31,13 @@ static void setup_world_shader(App& app) {
     app.world_shader.set_vec3("uCameraPos", app.camera.position());
     app.world_shader.set_int("uTexture0", 0);
     app.world_shader.set_float("uTime", app.time);
-    app.world_shader.set_float("uFogNear", qe::config::FOG_NEAR);
-    app.world_shader.set_float("uFogFar", qe::config::FOG_FAR);
+    app.world_shader.set_float("uFogNear", qe::config::FOG_NEAR());
+    app.world_shader.set_float("uFogFar", qe::config::FOG_FAR());
     app.world_shader.set_vec3(
-        "uFogColor",
-        Vec3(qe::config::CLEAR_R, qe::config::CLEAR_G, qe::config::CLEAR_B));
+        "uFogColor", Vec3(qe::config::CLEAR_R(), qe::config::CLEAR_G(), qe::config::CLEAR_B()));
     app.world_shader.set_vec3("uEmission", Vec3::zero());
     app.world_shader.set_float("uEmissionStrength", 0.0f);
-    app.world_shader.set_float("uRimPower", qe::config::RIM_POWER);
+    app.world_shader.set_float("uRimPower", qe::config::RIM_POWER());
     app.world_shader.set_vec3("uRimColor", Vec3(0.1f, 0.2f, 0.4f));
 }
 
@@ -48,7 +46,7 @@ static void setup_point_lights(App& app) {
 
     int point_light_count = 0;
     auto set_point_light = [&](const Vec3& pos, const Vec3& color, float radius) {
-        if (point_light_count >= qe::config::MAX_POINT_LIGHTS) {
+        if (point_light_count >= qe::config::MAX_POINT_LIGHTS()) {
             return;
         }
         std::string prefix = "uPointLightPos[" + std::to_string(point_light_count) + "]";
@@ -62,18 +60,16 @@ static void setup_point_lights(App& app) {
 
     for (const auto& projectile : app.projectiles) {
         if (projectile.active && point_light_count < 6) {
-            set_point_light(
-                projectile.position,
-                Vec3(1.0f, 0.7f, 0.2f) * projectile.brightness,
-                5.0f);
+            set_point_light(projectile.position,
+                            Vec3(1.0f, 0.7f, 0.2f) * projectile.brightness,
+                            5.0f);
         }
     }
 
     for (const auto& pickup : app.powerups.pickups()) {
         if (pickup.alive && point_light_count < 8) {
             const auto cfg = qe::game::PowerUpManager::get_config(pickup.type);
-            set_point_light(
-                pickup.display_position(), cfg.color * pickup.glow_intensity(), 4.0f);
+            set_point_light(pickup.display_position(), cfg.color * pickup.glow_intensity(), 4.0f);
         }
     }
 
@@ -114,12 +110,10 @@ static void render_entities(App& app) {
         if (!ent.alive) {
             if (ent.death_timer < 1.0f) {
                 const float t = ent.death_timer;
-                app.world_shader.set_mat4(
-                    "uModel",
-                    Mat4::trs(
-                        ent.position + Vec3(0, t * 2, 0),
-                        Quaternion::from_axis_angle(Vec3::up(), t * 10),
-                        ent.scale * (1 - t)));
+                app.world_shader.set_mat4("uModel",
+                                          Mat4::trs(ent.position + Vec3(0, t * 2, 0),
+                                                    Quaternion::from_axis_angle(Vec3::up(), t * 10),
+                                                    ent.scale * (1 - t)));
                 app.world_shader.set_vec3("uEmission", Vec3(1.0f, 0.3f, 0.1f));
                 app.world_shader.set_float("uEmissionStrength", 1.0f - t);
                 app.sphere.draw();
@@ -132,8 +126,7 @@ static void render_entities(App& app) {
         app.world_shader.set_mat4("uModel", Mat4::trs(ent.position, ent.rotation, ent.scale));
         if (ent.hit_flash > 0) {
             const float flash = ent.hit_flash / 0.3f;
-            app.world_shader.set_vec3(
-                "uEmission", Vec3(flash, flash * 0.5f, flash * 0.2f));
+            app.world_shader.set_vec3("uEmission", Vec3(flash, flash * 0.5f, flash * 0.2f));
             app.world_shader.set_float("uEmissionStrength", flash);
         }
 
@@ -155,10 +148,10 @@ static void render_projectiles(App& app) {
         }
         app.world_shader.set_vec3("uEmission", Vec3(1.0f, 0.8f, 0.3f));
         app.world_shader.set_float("uEmissionStrength", projectile.brightness);
-        app.world_shader.set_mat4(
-            "uModel",
-            Mat4::trs(
-                projectile.position, Quaternion::identity(), Vec3(0.1f, 0.1f, 0.1f)));
+        app.world_shader.set_mat4("uModel",
+                                  Mat4::trs(projectile.position,
+                                            Quaternion::identity(),
+                                            Vec3(0.1f, 0.1f, 0.1f)));
         app.cube.draw();
     }
     app.world_shader.set_vec3("uEmission", Vec3::zero());
@@ -177,9 +170,10 @@ static void render_pickups(App& app) {
 
         app.world_shader.set_vec3("uEmission", cfg.color * glow);
         app.world_shader.set_float("uEmissionStrength", glow);
-        app.world_shader.set_mat4(
-            "uModel",
-            Mat4::trs(pickup.display_position(), pickup.rotation, Vec3(0.4f, 0.4f, 0.4f)));
+        app.world_shader.set_mat4("uModel",
+                                  Mat4::trs(pickup.display_position(),
+                                            pickup.rotation,
+                                            Vec3(0.4f, 0.4f, 0.4f)));
         app.cube.draw();
     }
     app.world_shader.set_vec3("uEmission", Vec3::zero());

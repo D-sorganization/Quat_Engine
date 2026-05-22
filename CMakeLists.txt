@@ -14,6 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ── Compiler Warnings ────────────────────────────────────────────────────────
 if(MSVC)
     add_compile_options(/W4 /WX- /permissive-)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -195,6 +196,13 @@ qe_add_test(test_metrics
     LIBS qe_core
     LABELS unit core
 )
+
+qe_add_test(test_config
+    SOURCE tests/test_config.cpp
+    LIBS qe_core
+    LABELS unit core config
+)
+
 
 qe_add_test(test_powerup
     SOURCE tests/test_powerup.cpp

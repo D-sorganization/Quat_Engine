@@ -292,7 +292,7 @@ def test_repo_has_no_editable_value_widget_framework_markers():
 
     forbidden_markers = (
         "#include <imgui",
-        "#include \"imgui",
+        '#include "imgui',
         "ImGui::Input",
         "ImGui::Slider",
         "ImGui::Combo",
