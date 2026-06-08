@@ -228,6 +228,12 @@ qe_add_test(test_quaternion_properties
     LABELS unit math
 )
 
+qe_add_test(test_quaternion_algebra
+    SOURCE tests/test_quaternion_algebra.cpp
+    LIBS qe_core
+    LABELS unit math
+)
+
 qe_add_test(test_game_extended
     SOURCE tests/test_game_extended.cpp
     LIBS qe_game
