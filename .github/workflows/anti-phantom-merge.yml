@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   guard:
+    timeout-minutes: 30
     runs-on: ${{ vars.RUNNER_TARGET == 'local' && 'd-sorg-fleet' || 'ubuntu-latest' }}
     if: >-
       github.event.pull_request.base.ref == 'main' &&
