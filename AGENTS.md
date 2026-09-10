@@ -43,6 +43,10 @@ ctest --test-dir build --output-on-failure -L unit
 ctest --test-dir build --output-on-failure -L integration
 ```
 
+## Architecture Map Contract
+
+- **C4 Architecture Map**: The maintainable visual and tabular architecture map is documented in `docs/architecture/C4.md` and enforced via `scripts/architecture_map_contract.py` and GitHub Actions (`.github/workflows/architecture-map-contract.yml`).
+
 ## Review Expectations
 
 - New behavior should not merge without matching tests.
