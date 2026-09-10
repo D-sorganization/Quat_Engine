@@ -16,6 +16,8 @@ A modern C++17 3D game engine built from first principles, using **quaternion ma
 
 ## Architecture
 
+- **C4 Architecture Map**: See [docs/architecture/C4.md](docs/architecture/C4.md) for system context, container boundaries, and feature mappings.
+
 ```
 QuatEngine/
 ├── src/
