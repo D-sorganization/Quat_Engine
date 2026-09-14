@@ -485,3 +485,4 @@ gcovr --print-summary --html coverage/
   5. VERSION: Bump the Spec Version field when making substantive changes.
      Use semver: major (structure change), minor (new features), patch (corrections).
 -->
+- 2026-09-14: Downgraded non-existent workflow action versions to @v4/@v5 across workflows (#235).
