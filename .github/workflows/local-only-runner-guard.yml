@@ -93,7 +93,7 @@ jobs:
                   )
                   with urllib.request.urlopen(req, timeout=15) as resp:
                       visibility = (json.load(resp).get("visibility") or "").lower()
-              except Exception as exc:  # noqa: BLE001 - any failure means "unknown"
+              except Exception as exc:  # any failure means "unknown" (ruff does not lint YAML-embedded Python)
                   print(f"::warning::could not read repository visibility: {exc}")
           is_public = visibility == "public"
           print(f"Repository visibility: {visibility or '<unknown>'}")
