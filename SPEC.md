@@ -448,6 +448,7 @@ gcovr --print-summary --html coverage/
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-10-07 | #255 | Security: guard fork PRs off the self-hosted fleet. Vendored `scripts/fork_pr_runner_guard.py` (RM#1989), routed fork PRs to hosted runners in CI/DCO/SAST/spec/lint/architecture workflows, same-repo guard on the anti-phantom job, and added a `Fork PR Runner Guard` workflow plus tests. |
 | 2026-09-10 | #1611 | Add maintainable Mermaid C4 architecture map contract and CI validation. |
 | 2026-03-31 | 1.0.2 | Added self-hosted runner fallback documentation and made CI dependency setup tolerant of runners without passwordless sudo |
 | 2026-04-28 | 1.0.16 | Observability: added `src/core/Metrics.h` with health/readiness counters and Prometheus-compatible text serialization, wired readiness probes to counters, and added focused native metrics tests (closes #135) |

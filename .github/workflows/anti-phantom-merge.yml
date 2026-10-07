@@ -20,9 +20,12 @@ jobs:
     timeout-minutes: 30
     runs-on: ${{ vars.RUNNER_TARGET == 'local' && 'd-sorg-fleet' || 'ubuntu-latest' }}
     if: >-
-      github.event.pull_request.base.ref == 'main' &&
+      (!github.event.pull_request ||
+      github.event.pull_request.head.repo.full_name == github.repository) &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.pull_request.base.ref == 'main' &&
       (github.event_name == 'pull_request' ||
-       github.event.label.name == 'phantom-guard-override') || github.event.pull_request.base.ref == 'master'
+       github.event.label.name == 'phantom-guard-override') || github.event.pull_request.base.ref == 'master')
     steps:
       - name: Checkout PR head with full history
         uses: actions/checkout@v4

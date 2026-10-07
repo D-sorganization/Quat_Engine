@@ -1,0 +1,43 @@
+name: Fork PR Runner Guard
+
+# Fails when a job can run fork pull-request code on the d-sorg-fleet
+# self-hosted runners (Repository_Management#1989). This repository is public,
+# so a fork PR must be skipped by the job `if:` or routed to a hosted runner.
+# Runs on a GitHub-hosted runner so it stays operable when the fleet is down and
+# never hands fork code to a self-hosted machine itself.
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches-ignore:
+      - "gh-readonly-queue/**"
+
+concurrency:
+  group: fork-pr-runner-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fork-pr-runner-guard:
+    name: Verify no job runs fork PR code on the self-hosted fleet
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check pyyaml pytest
+
+      - name: Verify no job runs fork PR code on the self-hosted fleet
+        run: python scripts/fork_pr_runner_guard.py --workflows-dir .github/workflows
+
+      - name: Run guard tests
+        run: pytest -o pythonpath=. -p no:cacheprovider tests/test_fork_pr_runner_guard.py tests/test_workflow_fork_pr_guard.py -v
