@@ -1,59 +1,54 @@
-"""Design by Contract (DbC) framework for Repository_Management.
+import logging
+from typing import Callable
 
-Provides ``require()`` and ``ensure()`` helpers that raise descriptive
-``ContractViolationError`` exceptions when preconditions or postconditions
-are not met.  Intended for use at the top of public functions to make
-expectations explicit and fail fast.
-
-Usage::
-
-    from src.contracts import require, ensure
-
-    def divide(a: float, b: float) -> float:
-        require(b != 0, "divisor must be non-zero")
-        result = a / b
-        ensure(isinstance(result, float), "result must be a float")
-        return result
-"""
-
-from __future__ import annotations
+logger = logging.getLogger(__name__)
 
 
-class ContractViolationError(Exception):
-    """Raised when a DbC precondition or postcondition is violated."""
+def require(condition: Callable[..., bool], message: str = "Precondition failed"):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if not condition(*args, **kwargs):
+                logger.error(
+                    "Precondition check failed",
+                    extra={
+                        "function": func.__name__,
+                        "contract_message": message,
+                        "arg_count": len(args),
+                        "kwarg_count": len(kwargs),
+                    },
+                )
+                raise ValueError(message)
+            logger.debug(
+                "Precondition check passed",
+                extra={"function": func.__name__},
+            )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
-class PreconditionError(ContractViolationError):
-    """Raised when a precondition (``require``) is violated."""
+def ensure(condition: Callable[..., bool], message: str = "Postcondition failed"):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if not condition(result):
+                logger.error(
+                    "Postcondition check failed",
+                    extra={
+                        "function": func.__name__,
+                        "contract_message": message,
+                        "result_type": type(result).__name__,
+                    },
+                )
+                raise RuntimeError(message)
+            logger.debug(
+                "Postcondition check passed",
+                extra={"function": func.__name__},
+            )
+            return result
 
+        return wrapper
 
-class PostconditionError(ContractViolationError):
-    """Raised when a postcondition (``ensure``) is violated."""
-
-
-def require(condition: bool, message: str = "Precondition violated") -> None:
-    """Assert a precondition before executing a function body.
-
-    Args:
-        condition: Boolean expression that must be ``True``.
-        message: Human-readable description of the expectation.
-
-    Raises:
-        PreconditionError: If *condition* is falsy.
-    """
-    if not condition:
-        raise PreconditionError(message)
-
-
-def ensure(condition: bool, message: str = "Postcondition violated") -> None:
-    """Assert a postcondition after computing a result.
-
-    Args:
-        condition: Boolean expression that must be ``True``.
-        message: Human-readable description of the guarantee.
-
-    Raises:
-        PostconditionError: If *condition* is falsy.
-    """
-    if not condition:
-        raise PostconditionError(message)
+    return decorator
